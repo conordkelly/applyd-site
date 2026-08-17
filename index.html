@@ -934,7 +934,13 @@ footer.site {
   for (var i = 0; i < 11; i++) addRow();
 
   if (!reduced) {
-    setInterval(addRow, 2200);
+    (function scheduleNextRow() {
+      var delay = 5000 + Math.random() * 5000;
+      setTimeout(function () {
+        addRow();
+        scheduleNextRow();
+      }, delay);
+    })();
   }
 
   var elapsed = 0;

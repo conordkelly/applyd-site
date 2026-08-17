@@ -1,0 +1,7 @@
+name = "applyd-site"
+pages_build_output_dir = "."
+compatibility_date = "2026-08-12"
+
+[[kv_namespaces]]
+binding = "WAITLIST"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"

@@ -259,7 +259,7 @@ a { color: inherit; }
   grid-template-columns: 1fr 1px 1fr;
   gap: 56px;
   padding: 76px 0 64px;
-  align-items: start;
+  align-items: stretch;
 }
 
 .spine {
@@ -401,6 +401,8 @@ a { color: inherit; }
   border-radius: 6px;
   background: var(--surface);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .manifest-head {
@@ -451,7 +453,8 @@ a { color: inherit; }
 }
 
 .manifest-rows {
-  height: 268px;
+  flex: 1;
+  min-height: 0;
   overflow: hidden;
   position: relative;
 }
@@ -695,6 +698,7 @@ footer.site {
 @media (max-width: 860px) {
   .hero { grid-template-columns: 1fr; }
   .spine { display: none; }
+  .manifest-rows { flex: none; height: 268px; }
   .stat-strip { grid-template-columns: 1fr; }
   .stat { border-left: none; border-top: 1px solid var(--hairline); }
   .stat:first-child { border-top: none; }
@@ -920,17 +924,23 @@ footer.site {
       '<span class="who"><span class="candidate">' + candidate + '</span> → ' + pick[0] + ' <span class="role">— ' + pick[1] + '</span></span>' +
       '<span class="status">SUBMITTED ✓</span>';
     rowsEl.insertBefore(row, rowsEl.firstChild);
-    while (rowsEl.children.length > 7) {
+    while (rowsEl.children.length > 20) {
       rowsEl.removeChild(rowsEl.lastChild);
     }
     count += 1;
     counterEl.textContent = count;
   }
 
-  for (var i = 0; i < 6; i++) addRow();
+  for (var i = 0; i < 14; i++) addRow();
 
   if (!reduced) {
-    setInterval(addRow, 2200);
+    (function scheduleNextRow() {
+      var delay = 30000 + Math.random() * 15000;
+      setTimeout(function () {
+        addRow();
+        scheduleNextRow();
+      }, delay);
+    })();
   }
 
   var elapsed = 0;

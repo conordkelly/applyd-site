@@ -73,6 +73,38 @@
 }
 
 :root {
+  --bg: #F2F4F7;
+  --surface: #FFFFFF;
+  --surface-2: #E8ECF1;
+  --text: #12151B;
+  --text-2: #525964;
+  --text-3: #868D98;
+  --accent: #1D5FD1;
+  --accent-ink: #F5F9FF;
+  --signal: #2F8F5B;
+  --hairline: rgba(18,21,27,0.10);
+  --hairline-strong: rgba(18,21,27,0.20);
+  --glow: rgba(29,95,209,0.08);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0A0C10;
+    --surface: #12151B;
+    --surface-2: #191D25;
+    --text: #EDEFF3;
+    --text-2: #98A0AC;
+    --text-3: #5B6270;
+    --accent: #4C8DFF;
+    --accent-ink: #071223;
+    --signal: #6DBF8B;
+    --hairline: rgba(237,239,243,0.09);
+    --hairline-strong: rgba(237,239,243,0.18);
+    --glow: rgba(76,141,255,0.16);
+  }
+}
+
+:root[data-theme="dark"] {
   --bg: #0A0C10;
   --surface: #12151B;
   --surface-2: #191D25;
@@ -750,7 +782,7 @@ footer.site {
     <div class="demo-frame">
       <div class="demo-play">
         <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M7 5.5v13l11-6.5-11-6.5z" fill="#4C8DFF"/>
+          <path d="M7 5.5v13l11-6.5-11-6.5z" fill="var(--accent)"/>
         </svg>
       </div>
       <p class="demo-label">Agency walkthrough — coming soon</p>

@@ -924,14 +924,14 @@ footer.site {
       '<span class="who"><span class="candidate">' + candidate + '</span> → ' + pick[0] + ' <span class="role">— ' + pick[1] + '</span></span>' +
       '<span class="status">SUBMITTED ✓</span>';
     rowsEl.insertBefore(row, rowsEl.firstChild);
-    while (rowsEl.children.length > 20) {
+    while (rowsEl.children.length > 11) {
       rowsEl.removeChild(rowsEl.lastChild);
     }
     count += 1;
     counterEl.textContent = count;
   }
 
-  for (var i = 0; i < 14; i++) addRow();
+  for (var i = 0; i < 11; i++) addRow();
 
   if (!reduced) {
     setInterval(addRow, 2200);

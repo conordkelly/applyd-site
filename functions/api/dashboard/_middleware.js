@@ -91,7 +91,7 @@ export async function onRequest(context) {
 
   // First request from this user ever: create their row.
   await env.DB.prepare(
-    "INSERT INTO users (id, email) VALUES (?, ?) ON CONFLICT(id) DO NOTHING"
+    "INSERT INTO users (id, email) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET email = excluded.email WHERE excluded.email != ''"
   )
     .bind(userId, email)
     .run();

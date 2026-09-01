@@ -689,6 +689,7 @@ table.list td.date-cell {
       document.getElementById('signed-out-view').style.display = 'none';
       document.getElementById('app-view').style.display = 'block';
       window.Clerk.mountUserButton(document.getElementById('user-button'));
+      console.log('admin check', { clerkUser: window.Clerk.user, userId: window.Clerk.user && window.Clerk.user.id, expected: ADMIN_USER_ID });
       if (window.Clerk.user && window.Clerk.user.id === ADMIN_USER_ID) {
         document.getElementById('admin-tab-btn').style.display = 'inline-block';
       }

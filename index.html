@@ -224,6 +224,22 @@ a { color: inherit; }
   letter-spacing: 0.01em;
 }
 
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
+.sign-in-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  color: var(--text-2);
+  text-decoration: none;
+}
+
+.sign-in-link:hover { color: var(--accent); }
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -727,7 +743,10 @@ footer.site {
         <div class="tagline">Fewer forms. More offers.</div>
       </div>
     </div>
-    <div class="status-pill"><span class="dot"></span>For agencies</div>
+    <div class="topbar-right">
+      <a class="sign-in-link" href="/dashboard">Sign in</a>
+      <div class="status-pill"><span class="dot"></span>For agencies</div>
+    </div>
   </header>
 
   <section class="hero">

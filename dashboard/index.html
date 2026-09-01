@@ -585,7 +585,10 @@ table.list td.date-cell {
     } else {
       document.getElementById('app-view').style.display = 'none';
       document.getElementById('signed-out-view').style.display = 'block';
-      window.Clerk.mountSignIn(document.getElementById('sign-in'));
+      window.Clerk.mountSignIn(document.getElementById('sign-in'), {
+        signInForceRedirectUrl: '/dashboard',
+        signUpForceRedirectUrl: '/dashboard'
+      });
     }
   });
 })();

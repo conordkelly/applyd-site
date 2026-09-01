@@ -231,14 +231,18 @@ a { color: inherit; }
 }
 
 .sign-in-link {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px;
-  letter-spacing: 0.04em;
-  color: var(--text-2);
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--accent-ink);
   text-decoration: none;
+  background: var(--accent);
+  border-radius: 6px;
+  padding: 9px 18px;
+  transition: filter 0.15s ease;
 }
 
-.sign-in-link:hover { color: var(--accent); }
+.sign-in-link:hover { filter: brightness(1.08); }
 
 .status-pill {
   display: inline-flex;
@@ -744,7 +748,7 @@ footer.site {
       </div>
     </div>
     <div class="topbar-right">
-      <a class="sign-in-link" href="/dashboard">Sign in</a>
+      <a class="sign-in-link" href="/dashboard">Sign In</a>
       <div class="status-pill"><span class="dot"></span>For agencies</div>
     </div>
   </header>

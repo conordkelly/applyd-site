@@ -13,4 +13,4 @@ database_id = "ff5d04bd-3619-47ea-b392-c6b7b039c6ad"
 
 [vars]
 CLERK_ISSUER = "https://solid-mallard-7796.clerk.accounts.dev"
-ADMIN_USER_ID = "user_3IkONIiJSvyv2gwwdVISFrQWSSd"
+ADMIN_USER_ID = "user_3Ik0NIiJSvyv2gwwdVISFrQWSSd"

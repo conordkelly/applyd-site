@@ -416,6 +416,45 @@ table.list td.date-cell {
   padding: 40px 0;
   text-align: center;
 }
+
+/* admin */
+
+.user-group {
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.user-group-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--hairline);
+}
+
+.user-group-head .email {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+}
+
+.user-group-head .count {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-2);
+}
+
+.user-group table.list {
+  margin: 0;
+}
+
+.user-group .empty-state {
+  padding: 16px;
+  font-size: 13px;
+}
 </style>
 
 <div class="page">
@@ -442,6 +481,7 @@ table.list td.date-cell {
       <button class="tab-btn active" data-tab="submission">Jobs Submission</button>
       <button class="tab-btn" data-tab="processing">Jobs Processing</button>
       <button class="tab-btn" data-tab="completed">Jobs Completed</button>
+      <button class="tab-btn" data-tab="admin" id="admin-tab-btn" style="display:none;">Admin</button>
     </nav>
 
     <section class="tab-panel active" id="panel-submission">
@@ -479,6 +519,14 @@ table.list td.date-cell {
       </div>
       <div id="completed-content"></div>
     </section>
+
+    <section class="tab-panel" id="panel-admin">
+      <div class="panel-head">
+        <h2>Admin</h2>
+        <p>Every user's jobs, grouped by account.</p>
+      </div>
+      <div id="admin-content"></div>
+    </section>
   </div>
 </div>
 
@@ -507,8 +555,11 @@ table.list td.date-cell {
       document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
       if (btn.dataset.tab === 'processing') loadJobs();
       if (btn.dataset.tab === 'completed') loadJobs();
+      if (btn.dataset.tab === 'admin') loadAdmin();
     });
   });
+
+  var ADMIN_USER_ID = 'user_3IkONIiJSvyv2gwwdVISFrQWSSd';
 
   async function getToken() {
     return window.Clerk.session ? window.Clerk.session.getToken() : null;
@@ -552,6 +603,41 @@ table.list td.date-cell {
       renderList(document.getElementById('processing-content'), data.processing, 'created_at', 'Submitted');
       renderList(document.getElementById('completed-content'), data.completed, 'completed_at', 'Date Submitted');
     } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function renderUserJobsTable(rows) {
+    if (!rows.length) return '<div class="empty-state">No jobs submitted yet.</div>';
+    var html = '<table class="list"><thead><tr><th>Job Link</th><th>Status</th><th>Submitted</th><th>Completed</th></tr></thead><tbody>';
+    rows.forEach(function (r) {
+      var statusClass = r.status === 'completed' ? 'status-chip completed' : 'status-chip';
+      html += '<tr><td class="link-cell"><a href="' + escapeHtml(r.job_url) + '" target="_blank" rel="noopener">' + escapeHtml(r.job_url) + '</a></td>' +
+        '<td><span class="' + statusClass + '">' + escapeHtml(r.status) + '</span></td>' +
+        '<td class="date-cell">' + escapeHtml((r.created_at || '').replace('T', ' ').slice(0, 16)) + '</td>' +
+        '<td class="date-cell">' + escapeHtml((r.completed_at || '').replace('T', ' ').slice(0, 16)) + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    return html;
+  }
+
+  async function loadAdmin() {
+    var container = document.getElementById('admin-content');
+    try {
+      var data = await apiFetch('/api/dashboard/admin');
+      if (!data.users.length) {
+        container.innerHTML = '<div class="empty-state">No users yet.</div>';
+        return;
+      }
+      container.innerHTML = data.users.map(function (u) {
+        return '<div class="user-group">' +
+          '<div class="user-group-head"><span class="email">' + escapeHtml(u.email || u.id) + '</span>' +
+          '<span class="count">' + u.jobs.length + ' job(s)</span></div>' +
+          renderUserJobsTable(u.jobs) +
+          '</div>';
+      }).join('');
+    } catch (e) {
+      container.innerHTML = '<div class="empty-state">Couldn\'t load — try again.</div>';
       console.error(e);
     }
   }
@@ -603,6 +689,9 @@ table.list td.date-cell {
       document.getElementById('signed-out-view').style.display = 'none';
       document.getElementById('app-view').style.display = 'block';
       window.Clerk.mountUserButton(document.getElementById('user-button'));
+      if (window.Clerk.user && window.Clerk.user.id === ADMIN_USER_ID) {
+        document.getElementById('admin-tab-btn').style.display = 'inline-block';
+      }
       loadJobs();
     } else {
       document.getElementById('app-view').style.display = 'none';

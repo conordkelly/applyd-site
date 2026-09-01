@@ -10,3 +10,6 @@ id = "662427b6b60745fabaa8430f7948574c"
 binding = "DB"
 database_name = "applyd-jobs"
 database_id = "ff5d04bd-3619-47ea-b392-c6b7b039c6ad"
+
+[vars]
+CLERK_ISSUER = "https://solid-mallard-7796.clerk.accounts.dev"

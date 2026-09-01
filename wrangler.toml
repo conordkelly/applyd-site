@@ -5,3 +5,8 @@ compatibility_date = "2026-08-12"
 [[kv_namespaces]]
 binding = "WAITLIST"
 id = "662427b6b60745fabaa8430f7948574c"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "applyd-jobs"
+database_id = "ff5d04bd-3619-47ea-b392-c6b7b039c6ad"

@@ -200,6 +200,58 @@ body {
 
 #user-button { display: flex; align-items: center; }
 
+.user-menu-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.user-menu-caret {
+  background: none;
+  border: none;
+  color: var(--text-2);
+  padding: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+.user-menu-caret:hover { color: var(--accent); }
+
+.user-dropdown {
+  display: none;
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  min-width: 140px;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  padding: 6px;
+  z-index: 20;
+}
+
+.user-dropdown.open { display: block; }
+
+.user-dropdown-item {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text);
+  background: none;
+  border: none;
+  border-radius: 5px;
+  padding: 9px 10px;
+  cursor: pointer;
+}
+
+.user-dropdown-item:hover { background: var(--surface-2); color: var(--accent); }
+
 .signed-out-note {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
@@ -471,7 +523,15 @@ table.list td.date-cell {
     </div>
     <div class="topbar-right">
       <a class="site-link" href="/">Back to site</a>
-      <div id="user-button"></div>
+      <div class="user-menu-wrap" id="user-menu-wrap">
+        <div id="user-button"></div>
+        <button class="user-menu-caret" id="user-menu-caret" style="display:none;" aria-label="Account menu">
+          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <div class="user-dropdown" id="user-dropdown">
+          <button class="user-dropdown-item" data-tab="admin">Admin</button>
+        </div>
+      </div>
     </div>
   </header>
 
@@ -484,7 +544,6 @@ table.list td.date-cell {
       <button class="tab-btn active" data-tab="submission">Submission</button>
       <button class="tab-btn" data-tab="processing">Processing</button>
       <button class="tab-btn" data-tab="completed">Completed</button>
-      <button class="tab-btn" data-tab="admin" id="admin-tab-btn" style="display:none;">Admin</button>
     </nav>
 
     <section class="tab-panel active" id="panel-submission">
@@ -550,15 +609,41 @@ table.list td.date-cell {
   for (var i = 0; i < ROW_MIN; i++) addRow();
   document.getElementById('add-row-btn').addEventListener('click', addRow);
 
+  function switchTab(tab) {
+    document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
+    var btn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
+    if (btn) btn.classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    if (tab === 'processing') loadJobs();
+    if (tab === 'completed') loadJobs();
+    if (tab === 'admin') loadAdmin();
+  }
+
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
-      document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
-      document.querySelectorAll('.tab-panel').forEach(function (p) { p.classList.remove('active'); });
-      btn.classList.add('active');
-      document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
-      if (btn.dataset.tab === 'processing') loadJobs();
-      if (btn.dataset.tab === 'completed') loadJobs();
-      if (btn.dataset.tab === 'admin') loadAdmin();
+      switchTab(btn.dataset.tab);
+    });
+  });
+
+  var userMenuCaret = document.getElementById('user-menu-caret');
+  var userDropdown = document.getElementById('user-dropdown');
+
+  userMenuCaret.addEventListener('click', function (e) {
+    e.stopPropagation();
+    userDropdown.classList.toggle('open');
+  });
+
+  document.addEventListener('click', function (e) {
+    if (!userDropdown.contains(e.target) && e.target !== userMenuCaret) {
+      userDropdown.classList.remove('open');
+    }
+  });
+
+  document.querySelectorAll('.user-dropdown-item').forEach(function (item) {
+    item.addEventListener('click', function () {
+      switchTab(item.dataset.tab);
+      userDropdown.classList.remove('open');
     });
   });
 
@@ -693,7 +778,7 @@ table.list td.date-cell {
       document.getElementById('app-view').style.display = 'block';
       window.Clerk.mountUserButton(document.getElementById('user-button'));
       if (window.Clerk.user && window.Clerk.user.id === ADMIN_USER_ID) {
-        document.getElementById('admin-tab-btn').style.display = 'inline-block';
+        document.getElementById('user-menu-caret').style.display = 'flex';
       }
       loadJobs();
     } else {

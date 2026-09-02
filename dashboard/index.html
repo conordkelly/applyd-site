@@ -476,6 +476,54 @@ table.list td.date-cell {
   font-size: 13px;
 }
 
+/* my info */
+
+.info-card {
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  max-width: 480px;
+  overflow: hidden;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--hairline);
+}
+
+.info-row:last-child { border-bottom: none; }
+
+.info-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.info-value {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  text-align: right;
+  word-break: break-all;
+}
+
+.manage-account-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 9px 14px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
 @media (max-width: 520px) {
   .page { padding: 0 18px 60px; }
   .topbar { padding: 20px 0; flex-wrap: wrap; gap: 12px; }
@@ -489,6 +537,8 @@ table.list td.date-cell {
   .panel-head h2 { font-size: 20px; }
   table.grid input[type="text"] { font-size: 12px; padding: 9px 8px; }
   table.list th, table.list td { font-size: 12px; }
+  .info-row { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .info-value { text-align: left; word-break: break-word; }
 }
 </style>
 
@@ -505,6 +555,7 @@ table.list td.date-cell {
       <div class="nav-group">
         <a class="nav-link" href="/">Home</a>
         <button class="nav-link active" id="jobs-view-link">My Jobs</button>
+        <button class="nav-link" id="info-view-link">My Info</button>
         <button class="nav-link" id="admin-view-link" style="display:none;">Admin</button>
       </div>
     </div>
@@ -562,6 +613,19 @@ table.list td.date-cell {
       </section>
     </div>
 
+    <div id="info-section" style="display:none;">
+      <div class="panel-head">
+        <h2>My Info</h2>
+        <p>Your account details.</p>
+      </div>
+      <div class="info-card">
+        <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="info-email">—</span></div>
+        <div class="info-row"><span class="info-label">Account ID</span><span class="info-value" id="info-id">—</span></div>
+        <div class="info-row"><span class="info-label">Member since</span><span class="info-value" id="info-since">—</span></div>
+      </div>
+      <button class="manage-account-btn" id="manage-account-btn">Manage account</button>
+    </div>
+
     <div id="admin-section" style="display:none;">
       <div class="panel-head">
         <h2>Admin</h2>
@@ -606,27 +670,58 @@ table.list td.date-cell {
   });
 
   var jobsViewLink = document.getElementById('jobs-view-link');
+  var infoViewLink = document.getElementById('info-view-link');
   var adminViewLink = document.getElementById('admin-view-link');
   var jobsSection = document.getElementById('jobs-section');
+  var infoSection = document.getElementById('info-section');
   var adminSection = document.getElementById('admin-section');
+
+  function setActiveView(link) {
+    [jobsViewLink, infoViewLink, adminViewLink].forEach(function (l) { l.classList.remove('active'); });
+    link.classList.add('active');
+  }
 
   function showJobsView() {
     jobsSection.style.display = 'block';
+    infoSection.style.display = 'none';
     adminSection.style.display = 'none';
-    jobsViewLink.classList.add('active');
-    adminViewLink.classList.remove('active');
+    setActiveView(jobsViewLink);
+  }
+
+  function showInfoView() {
+    jobsSection.style.display = 'none';
+    infoSection.style.display = 'block';
+    adminSection.style.display = 'none';
+    setActiveView(infoViewLink);
+    loadInfo();
   }
 
   function showAdminView() {
     jobsSection.style.display = 'none';
+    infoSection.style.display = 'none';
     adminSection.style.display = 'block';
-    jobsViewLink.classList.remove('active');
-    adminViewLink.classList.add('active');
+    setActiveView(adminViewLink);
     loadAdmin();
   }
 
   jobsViewLink.addEventListener('click', showJobsView);
+  infoViewLink.addEventListener('click', showInfoView);
   adminViewLink.addEventListener('click', showAdminView);
+
+  function loadInfo() {
+    var user = window.Clerk && window.Clerk.user;
+    if (!user) return;
+    var email = user.primaryEmailAddress ? user.primaryEmailAddress.emailAddress : '—';
+    document.getElementById('info-email').textContent = email;
+    document.getElementById('info-id').textContent = user.id;
+    document.getElementById('info-since').textContent = user.createdAt
+      ? new Date(user.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
+      : '—';
+  }
+
+  document.getElementById('manage-account-btn').addEventListener('click', function () {
+    if (window.Clerk) window.Clerk.openUserProfile();
+  });
 
   var ADMIN_USER_ID = 'user_3Ik0NIiJSvyv2gwwdVISFrQWSSd';
 

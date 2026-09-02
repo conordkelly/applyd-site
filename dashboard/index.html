@@ -191,9 +191,11 @@ body {
   letter-spacing: 0.04em;
   color: var(--text-2);
   text-decoration: none;
+  background: none;
   border: 1px solid var(--hairline-strong);
   border-radius: 6px;
   padding: 8px 12px;
+  cursor: pointer;
 }
 
 .site-link:hover { color: var(--accent); }
@@ -484,6 +486,7 @@ table.list td.date-cell {
     </div>
     <div class="topbar-right">
       <a class="site-link" href="/">Back to site</a>
+      <button class="site-link" id="admin-link" style="display:none;">Admin</button>
       <div id="user-button"></div>
     </div>
   </header>
@@ -580,6 +583,10 @@ table.list td.date-cell {
   });
 
   var ADMIN_USER_ID = 'user_3Ik0NIiJSvyv2gwwdVISFrQWSSd';
+
+  document.getElementById('admin-link').addEventListener('click', function () {
+    switchTab('admin');
+  });
 
   async function getToken() {
     return window.Clerk.session ? window.Clerk.session.getToken() : null;
@@ -708,15 +715,10 @@ table.list td.date-cell {
     if (window.Clerk.isSignedIn) {
       document.getElementById('signed-out-view').style.display = 'none';
       document.getElementById('app-view').style.display = 'block';
-      var isAdmin = window.Clerk.user && window.Clerk.user.id === ADMIN_USER_ID;
-      window.Clerk.mountUserButton(document.getElementById('user-button'), isAdmin ? {
-        customMenuItems: [
-          {
-            label: 'Admin',
-            onClick: function () { switchTab('admin'); }
-          }
-        ]
-      } : undefined);
+      window.Clerk.mountUserButton(document.getElementById('user-button'));
+      if (window.Clerk.user && window.Clerk.user.id === ADMIN_USER_ID) {
+        document.getElementById('admin-link').style.display = 'inline-block';
+      }
       loadJobs();
     } else {
       document.getElementById('app-view').style.display = 'none';

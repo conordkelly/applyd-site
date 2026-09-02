@@ -198,6 +198,8 @@ body {
   cursor: pointer;
 }
 
+.view-link.active { color: var(--accent); border-color: var(--accent); }
+
 .site-link:hover { color: var(--accent); }
 
 #user-button { display: flex; align-items: center; }
@@ -486,7 +488,8 @@ table.list td.date-cell {
     </div>
     <div class="topbar-right">
       <a class="site-link" href="/">Back to site</a>
-      <button class="site-link" id="admin-link" style="display:none;">Admin</button>
+      <button class="site-link view-link active" id="jobs-view-link">My Jobs</button>
+      <button class="site-link view-link" id="admin-view-link" style="display:none;">Admin</button>
       <div id="user-button"></div>
     </div>
   </header>
@@ -496,55 +499,57 @@ table.list td.date-cell {
   </div>
 
   <div id="app-view" style="display:none;">
-    <nav class="tabs">
-      <button class="tab-btn active" data-tab="submission">Submission</button>
-      <button class="tab-btn" data-tab="processing">Processing</button>
-      <button class="tab-btn" data-tab="completed">Completed</button>
-    </nav>
+    <div id="jobs-section">
+      <nav class="tabs">
+        <button class="tab-btn active" data-tab="submission">Submission</button>
+        <button class="tab-btn" data-tab="processing">Processing</button>
+        <button class="tab-btn" data-tab="completed">Completed</button>
+      </nav>
 
-    <section class="tab-panel active" id="panel-submission">
-      <div class="panel-head">
-        <h2>Jobs Submission</h2>
-        <p>Paste a link to each job posting you want to apply to. Add rows as you need, then submit — they'll move to Jobs Processing.</p>
-      </div>
-      <div class="grid-wrap">
-        <table class="grid">
-          <thead>
-            <tr><th class="row-num-col"></th><th>Job Link</th></tr>
-          </thead>
-          <tbody id="grid-body"></tbody>
-        </table>
-      </div>
-      <div class="grid-actions">
-        <button class="add-row-btn" id="add-row-btn">+ Add row</button>
-        <button class="submit-btn" id="submit-btn">Submit</button>
-      </div>
-      <p class="submit-note" id="submit-note" style="display:none;"></p>
-    </section>
+      <section class="tab-panel active" id="panel-submission">
+        <div class="panel-head">
+          <h2>Jobs Submission</h2>
+          <p>Paste a link to each job posting you want to apply to. Add rows as you need, then submit — they'll move to Jobs Processing.</p>
+        </div>
+        <div class="grid-wrap">
+          <table class="grid">
+            <thead>
+              <tr><th class="row-num-col"></th><th>Job Link</th></tr>
+            </thead>
+            <tbody id="grid-body"></tbody>
+          </table>
+        </div>
+        <div class="grid-actions">
+          <button class="add-row-btn" id="add-row-btn">+ Add row</button>
+          <button class="submit-btn" id="submit-btn">Submit</button>
+        </div>
+        <p class="submit-note" id="submit-note" style="display:none;"></p>
+      </section>
 
-    <section class="tab-panel" id="panel-processing">
-      <div class="panel-head">
-        <h2>Jobs Processing</h2>
-        <p>Submitted and being worked on.</p>
-      </div>
-      <div id="processing-content"></div>
-    </section>
+      <section class="tab-panel" id="panel-processing">
+        <div class="panel-head">
+          <h2>Jobs Processing</h2>
+          <p>Submitted and being worked on.</p>
+        </div>
+        <div id="processing-content"></div>
+      </section>
 
-    <section class="tab-panel" id="panel-completed">
-      <div class="panel-head">
-        <h2>Jobs Completed</h2>
-        <p>Applications that have gone all the way through.</p>
-      </div>
-      <div id="completed-content"></div>
-    </section>
+      <section class="tab-panel" id="panel-completed">
+        <div class="panel-head">
+          <h2>Jobs Completed</h2>
+          <p>Applications that have gone all the way through.</p>
+        </div>
+        <div id="completed-content"></div>
+      </section>
+    </div>
 
-    <section class="tab-panel" id="panel-admin">
+    <div id="admin-section" style="display:none;">
       <div class="panel-head">
         <h2>Admin</h2>
         <p>Every user's jobs, grouped by account.</p>
       </div>
       <div id="admin-content"></div>
-    </section>
+    </div>
   </div>
 </div>
 
@@ -573,7 +578,6 @@ table.list td.date-cell {
     document.getElementById('panel-' + tab).classList.add('active');
     if (tab === 'processing') loadJobs();
     if (tab === 'completed') loadJobs();
-    if (tab === 'admin') loadAdmin();
   }
 
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
@@ -582,11 +586,30 @@ table.list td.date-cell {
     });
   });
 
-  var ADMIN_USER_ID = 'user_3Ik0NIiJSvyv2gwwdVISFrQWSSd';
+  var jobsViewLink = document.getElementById('jobs-view-link');
+  var adminViewLink = document.getElementById('admin-view-link');
+  var jobsSection = document.getElementById('jobs-section');
+  var adminSection = document.getElementById('admin-section');
 
-  document.getElementById('admin-link').addEventListener('click', function () {
-    switchTab('admin');
-  });
+  function showJobsView() {
+    jobsSection.style.display = 'block';
+    adminSection.style.display = 'none';
+    jobsViewLink.classList.add('active');
+    adminViewLink.classList.remove('active');
+  }
+
+  function showAdminView() {
+    jobsSection.style.display = 'none';
+    adminSection.style.display = 'block';
+    jobsViewLink.classList.remove('active');
+    adminViewLink.classList.add('active');
+    loadAdmin();
+  }
+
+  jobsViewLink.addEventListener('click', showJobsView);
+  adminViewLink.addEventListener('click', showAdminView);
+
+  var ADMIN_USER_ID = 'user_3Ik0NIiJSvyv2gwwdVISFrQWSSd';
 
   async function getToken() {
     return window.Clerk.session ? window.Clerk.session.getToken() : null;
@@ -717,7 +740,7 @@ table.list td.date-cell {
       document.getElementById('app-view').style.display = 'block';
       window.Clerk.mountUserButton(document.getElementById('user-button'));
       if (window.Clerk.user && window.Clerk.user.id === ADMIN_USER_ID) {
-        document.getElementById('admin-link').style.display = 'inline-block';
+        document.getElementById('admin-view-link').style.display = 'inline-block';
       }
       loadJobs();
     } else {

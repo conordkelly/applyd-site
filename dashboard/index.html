@@ -200,58 +200,6 @@ body {
 
 #user-button { display: flex; align-items: center; }
 
-.user-menu-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.user-menu-caret {
-  background: none;
-  border: none;
-  color: var(--text-2);
-  padding: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-}
-
-.user-menu-caret:hover { color: var(--accent); }
-
-.user-dropdown {
-  display: none;
-  position: absolute;
-  top: calc(100% + 10px);
-  right: 0;
-  min-width: 140px;
-  background: var(--surface);
-  border: 1px solid var(--hairline-strong);
-  border-radius: 8px;
-  padding: 6px;
-  z-index: 20;
-}
-
-.user-dropdown.open { display: block; }
-
-.user-dropdown-item {
-  display: block;
-  width: 100%;
-  text-align: left;
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--text);
-  background: none;
-  border: none;
-  border-radius: 5px;
-  padding: 9px 10px;
-  cursor: pointer;
-}
-
-.user-dropdown-item:hover { background: var(--surface-2); color: var(--accent); }
-
 .signed-out-note {
   font-family: 'JetBrains Mono', monospace;
   font-size: 12px;
@@ -522,7 +470,6 @@ table.list td.date-cell {
   .panel-head h2 { font-size: 20px; }
   table.grid input[type="text"] { font-size: 12px; padding: 9px 8px; }
   table.list th, table.list td { font-size: 12px; }
-  .user-dropdown { right: -8px; }
 }
 </style>
 
@@ -537,15 +484,7 @@ table.list td.date-cell {
     </div>
     <div class="topbar-right">
       <a class="site-link" href="/">Back to site</a>
-      <div class="user-menu-wrap" id="user-menu-wrap">
-        <div id="user-button"></div>
-        <button class="user-menu-caret" id="user-menu-caret" style="display:none;" aria-label="Account menu">
-          <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </button>
-        <div class="user-dropdown" id="user-dropdown">
-          <button class="user-dropdown-item" data-tab="admin">Admin</button>
-        </div>
-      </div>
+      <div id="user-button"></div>
     </div>
   </header>
 
@@ -637,27 +576,6 @@ table.list td.date-cell {
   document.querySelectorAll('.tab-btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       switchTab(btn.dataset.tab);
-    });
-  });
-
-  var userMenuCaret = document.getElementById('user-menu-caret');
-  var userDropdown = document.getElementById('user-dropdown');
-
-  userMenuCaret.addEventListener('click', function (e) {
-    e.stopPropagation();
-    userDropdown.classList.toggle('open');
-  });
-
-  document.addEventListener('click', function (e) {
-    if (!userDropdown.contains(e.target) && e.target !== userMenuCaret) {
-      userDropdown.classList.remove('open');
-    }
-  });
-
-  document.querySelectorAll('.user-dropdown-item').forEach(function (item) {
-    item.addEventListener('click', function () {
-      switchTab(item.dataset.tab);
-      userDropdown.classList.remove('open');
     });
   });
 
@@ -790,10 +708,15 @@ table.list td.date-cell {
     if (window.Clerk.isSignedIn) {
       document.getElementById('signed-out-view').style.display = 'none';
       document.getElementById('app-view').style.display = 'block';
-      window.Clerk.mountUserButton(document.getElementById('user-button'));
-      if (window.Clerk.user && window.Clerk.user.id === ADMIN_USER_ID) {
-        document.getElementById('user-menu-caret').style.display = 'flex';
-      }
+      var isAdmin = window.Clerk.user && window.Clerk.user.id === ADMIN_USER_ID;
+      window.Clerk.mountUserButton(document.getElementById('user-button'), isAdmin ? {
+        customMenuItems: [
+          {
+            label: 'Admin',
+            onClick: function () { switchTab('admin'); }
+          }
+        ]
+      } : undefined);
       loadJobs();
     } else {
       document.getElementById('app-view').style.display = 'none';

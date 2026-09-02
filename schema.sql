@@ -14,3 +14,9 @@ CREATE TABLE IF NOT EXISTS jobs (
 );
 
 CREATE INDEX IF NOT EXISTS idx_jobs_user_id ON jobs(user_id);
+
+CREATE TABLE IF NOT EXISTS profiles (
+  user_id TEXT PRIMARY KEY REFERENCES users(id),
+  data TEXT NOT NULL DEFAULT '{}',
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);

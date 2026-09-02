@@ -478,51 +478,81 @@ table.list td.date-cell {
 
 /* my info */
 
-.info-card {
-  border: 1px solid var(--hairline-strong);
-  border-radius: 6px;
-  max-width: 480px;
-  overflow: hidden;
+.inline-link-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: inherit;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
 }
 
-.info-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 16px;
-  padding: 14px 16px;
-  border-bottom: 1px solid var(--hairline);
+.profile-form { max-width: 760px; }
+
+.field-group { margin: 32px 0; padding-top: 24px; border-top: 1px solid var(--hairline); }
+.field-group:first-child { margin-top: 28px; padding-top: 0; border-top: none; }
+
+.field-group h3 {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 4px;
 }
 
-.info-row:last-child { border-bottom: none; }
+.field-group-note {
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin: 0 0 16px;
+}
 
-.info-label {
+.field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px 18px;
+  margin-top: 16px;
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+.field.full { grid-column: 1 / -1; }
+
+.field label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
-  letter-spacing: 0.05em;
+  letter-spacing: 0.04em;
   text-transform: uppercase;
   color: var(--text-2);
 }
 
-.info-value {
+.field input, .field select, .field textarea {
   font-family: 'JetBrains Mono', monospace;
   font-size: 13px;
   color: var(--text);
-  text-align: right;
-  word-break: break-all;
-}
-
-.manage-account-btn {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 12.5px;
-  color: var(--accent);
-  background: none;
+  background: var(--surface);
   border: 1px solid var(--hairline-strong);
   border-radius: 6px;
-  padding: 9px 14px;
-  cursor: pointer;
-  margin-top: 20px;
+  padding: 10px 11px;
 }
+
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.field select { cursor: pointer; }
+
+.field textarea {
+  resize: vertical;
+  min-height: 160px;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.55;
+}
+
+#profile-save-btn { margin-top: 4px; }
 
 @media (max-width: 520px) {
   .page { padding: 0 18px 60px; }
@@ -537,8 +567,7 @@ table.list td.date-cell {
   .panel-head h2 { font-size: 20px; }
   table.grid input[type="text"] { font-size: 12px; padding: 9px 8px; }
   table.list th, table.list td { font-size: 12px; }
-  .info-row { flex-direction: column; align-items: flex-start; gap: 4px; }
-  .info-value { text-align: left; word-break: break-word; }
+  .field-grid { grid-template-columns: 1fr; }
 }
 </style>
 
@@ -616,14 +645,121 @@ table.list td.date-cell {
     <div id="info-section" style="display:none;">
       <div class="panel-head">
         <h2>My Info</h2>
-        <p>Your account details.</p>
+        <p>Answer these once and every application gets filled out the same way. Signed in as <span id="info-email">—</span> — <button class="inline-link-btn" id="manage-account-btn">manage account</button>.</p>
       </div>
-      <div class="info-card">
-        <div class="info-row"><span class="info-label">Email</span><span class="info-value" id="info-email">—</span></div>
-        <div class="info-row"><span class="info-label">Account ID</span><span class="info-value" id="info-id">—</span></div>
-        <div class="info-row"><span class="info-label">Member since</span><span class="info-value" id="info-since">—</span></div>
-      </div>
-      <button class="manage-account-btn" id="manage-account-btn">Manage account</button>
+
+      <form class="profile-form" id="profile-form">
+        <div class="field-group">
+          <h3>Personal</h3>
+          <div class="field-grid">
+            <div class="field"><label for="f-full_name">Full legal name</label><input type="text" id="f-full_name" placeholder="Jane Doe" /></div>
+            <div class="field"><label for="f-preferred_name">Preferred name</label><input type="text" id="f-preferred_name" placeholder="Jane" /></div>
+            <div class="field"><label for="f-phone">Phone</label><input type="tel" id="f-phone" placeholder="555-123-4567" /></div>
+            <div class="field"><label for="f-country">Country</label><input type="text" id="f-country" placeholder="Canada" /></div>
+            <div class="field full"><label for="f-address">Street address</label><input type="text" id="f-address" placeholder="31 Darby Rd" /></div>
+            <div class="field"><label for="f-city">City</label><input type="text" id="f-city" placeholder="Guelph" /></div>
+            <div class="field"><label for="f-state_province">State / province</label><input type="text" id="f-state_province" placeholder="ON" /></div>
+            <div class="field"><label for="f-postal_code">Postal / ZIP code</label><input type="text" id="f-postal_code" placeholder="N1K 1R4" /></div>
+            <div class="field"><label for="f-linkedin_url">LinkedIn URL</label><input type="url" id="f-linkedin_url" placeholder="https://linkedin.com/in/..." /></div>
+            <div class="field"><label for="f-github_url">GitHub URL</label><input type="url" id="f-github_url" placeholder="https://github.com/..." /></div>
+            <div class="field full"><label for="f-portfolio_url">Portfolio / website URL</label><input type="url" id="f-portfolio_url" placeholder="https://..." /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h3>Work Authorization</h3>
+          <div class="field-grid">
+            <div class="field">
+              <label for="f-legally_authorized">Authorized to work in your country?</label>
+              <select id="f-legally_authorized"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+            </div>
+            <div class="field">
+              <label for="f-require_sponsorship">Require visa sponsorship?</label>
+              <select id="f-require_sponsorship"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+            </div>
+            <div class="field full"><label for="f-work_permit_type">Status</label><input type="text" id="f-work_permit_type" placeholder="Citizen, Permanent Resident, Visa holder..." /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h3>Experience</h3>
+          <div class="field-grid">
+            <div class="field"><label for="f-current_title">Current title</label><input type="text" id="f-current_title" placeholder="Product Manager" /></div>
+            <div class="field"><label for="f-years_experience">Years of experience</label><input type="number" id="f-years_experience" min="0" placeholder="5" /></div>
+            <div class="field">
+              <label for="f-education_level">Highest education level</label>
+              <select id="f-education_level">
+                <option value="">—</option>
+                <option>High School</option>
+                <option>Associate's</option>
+                <option>Bachelor's</option>
+                <option>Master's</option>
+                <option>PhD</option>
+                <option>Other</option>
+              </select>
+            </div>
+            <div class="field"><label for="f-target_roles">Target roles</label><input type="text" id="f-target_roles" placeholder="Product Manager, Senior PM" /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h3>Compensation</h3>
+          <div class="field-grid">
+            <div class="field"><label for="f-salary_expectation">Desired salary</label><input type="number" id="f-salary_expectation" placeholder="100000" /></div>
+            <div class="field">
+              <label for="f-salary_currency">Currency</label>
+              <select id="f-salary_currency">
+                <option value="">—</option>
+                <option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field"><label for="f-salary_min">Minimum acceptable</label><input type="number" id="f-salary_min" placeholder="90000" /></div>
+            <div class="field"><label for="f-salary_max">Maximum range</label><input type="number" id="f-salary_max" placeholder="120000" /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h3>Resume</h3>
+          <p class="field-group-note">Paste your resume as plain text — this is what gets used to fill and tailor applications.</p>
+          <div class="field-grid">
+            <div class="field full"><label for="f-resume_text">Resume text</label><textarea id="f-resume_text" placeholder="Paste your resume here..."></textarea></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h3>Voluntary Disclosures</h3>
+          <p class="field-group-note">Optional — some applications include EEO questions like these. Leave as "Decline to self-identify" if you'd rather not say.</p>
+          <div class="field-grid">
+            <div class="field">
+              <label for="f-gender">Gender</label>
+              <select id="f-gender">
+                <option>Decline to self-identify</option><option>Man</option><option>Woman</option><option>Non-binary</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-race_ethnicity">Race / ethnicity</label>
+              <select id="f-race_ethnicity">
+                <option>Decline to self-identify</option><option>Black</option><option>East Asian</option><option>Hispanic or Latino</option><option>Middle Eastern</option><option>Native American</option><option>South Asian</option><option>Southeast Asian</option><option>White</option><option>Two or more races</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-veteran_status">Veteran status</label>
+              <select id="f-veteran_status">
+                <option>Decline to self-identify</option><option>I am a veteran</option><option>I am not a veteran</option>
+              </select>
+            </div>
+            <div class="field">
+              <label for="f-disability_status">Disability status</label>
+              <select id="f-disability_status">
+                <option>Decline to self-identify</option><option>Yes, I have a disability</option><option>No, I do not have a disability</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="profile-save-btn">Save info</button>
+        <p class="submit-note" id="profile-save-note" style="display:none;"></p>
+      </form>
     </div>
 
     <div id="admin-section" style="display:none;">
@@ -708,19 +844,77 @@ table.list td.date-cell {
   infoViewLink.addEventListener('click', showInfoView);
   adminViewLink.addEventListener('click', showAdminView);
 
-  function loadInfo() {
+  var PROFILE_FIELDS = [
+    'full_name', 'preferred_name', 'phone', 'country', 'address', 'city',
+    'state_province', 'postal_code', 'linkedin_url', 'github_url', 'portfolio_url',
+    'legally_authorized', 'require_sponsorship', 'work_permit_type',
+    'current_title', 'years_experience', 'education_level', 'target_roles',
+    'salary_expectation', 'salary_currency', 'salary_min', 'salary_max',
+    'resume_text',
+    'gender', 'race_ethnicity', 'veteran_status', 'disability_status'
+  ];
+
+  var profileLoaded = false;
+
+  function fillProfileForm(profile) {
+    profile = profile || {};
+    PROFILE_FIELDS.forEach(function (key) {
+      var el = document.getElementById('f-' + key);
+      if (el && profile[key] !== undefined && profile[key] !== null) el.value = profile[key];
+    });
+  }
+
+  function collectProfileForm() {
+    var out = {};
+    PROFILE_FIELDS.forEach(function (key) {
+      var el = document.getElementById('f-' + key);
+      if (el) out[key] = el.value;
+    });
+    return out;
+  }
+
+  async function loadInfo() {
     var user = window.Clerk && window.Clerk.user;
-    if (!user) return;
-    var email = user.primaryEmailAddress ? user.primaryEmailAddress.emailAddress : '—';
-    document.getElementById('info-email').textContent = email;
-    document.getElementById('info-id').textContent = user.id;
-    document.getElementById('info-since').textContent = user.createdAt
-      ? new Date(user.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })
-      : '—';
+    if (user) {
+      document.getElementById('info-email').textContent =
+        user.primaryEmailAddress ? user.primaryEmailAddress.emailAddress : '—';
+    }
+    if (profileLoaded) return;
+    try {
+      var data = await apiFetch('/api/dashboard/profile');
+      fillProfileForm(data.profile);
+      profileLoaded = true;
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   document.getElementById('manage-account-btn').addEventListener('click', function () {
     if (window.Clerk) window.Clerk.openUserProfile();
+  });
+
+  document.getElementById('profile-form').addEventListener('submit', async function (e) {
+    e.preventDefault();
+    var btn = document.getElementById('profile-save-btn');
+    var note = document.getElementById('profile-save-note');
+    btn.disabled = true;
+    btn.textContent = 'Saving...';
+    try {
+      await apiFetch('/api/dashboard/profile', {
+        method: 'POST',
+        body: JSON.stringify({ profile: collectProfileForm() })
+      });
+      note.textContent = 'Saved.';
+      note.className = 'submit-note ok';
+      note.style.display = 'block';
+    } catch (err) {
+      note.textContent = 'Something went wrong — try again in a moment.';
+      note.className = 'submit-note err';
+      note.style.display = 'block';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Save info';
+    }
   });
 
   var ADMIN_USER_ID = 'user_3Ik0NIiJSvyv2gwwdVISFrQWSSd';

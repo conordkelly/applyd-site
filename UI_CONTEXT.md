@@ -5,7 +5,7 @@ whenever the UI changes** — new views, new fields, restyled nav, new
 endpoints. Treat it as the source of truth for "what does the site currently
 do," separate from the marketing plan.
 
-Last updated: 2026-09-02.
+Last updated: 2026-09-10.
 
 ## Stack
 
@@ -28,9 +28,71 @@ Last updated: 2026-09-02.
 
 ## Pages
 
-- `index.html` — marketing/landing page.
+- `index.html` — marketing/landing page. Root domain, individual-job-seeker
+  focused as of 2026-09-10 (see below — was agency-focused before that).
+- `agencies-landing-archive.html` — a frozen copy of the agency-focused
+  homepage exactly as it was live before the 2026-09-10 rewrite. Kept so
+  the agency pitch isn't lost; not wired into any route. Candidate to
+  become a real `/agencies` page later, once there's an actual multi-user
+  agency flow to point it at — see "Positioning" below.
 - `dashboard/index.html` — the authenticated app. Everything below is this
   one file (styles, markup, and vanilla JS all inline).
+
+## Marketing page (`index.html`)
+
+Same design-token system as the dashboard (see table below — `index.html`
+defines its own copy of the same tokens plus `--surface-2` and `--glow`).
+One long page: topbar → hero → stat strip → demo (placeholder) → how it
+works → closing CTA → footer. No routing, no build step, just static
+HTML/CSS/JS with two forms wired to a Cloudflare Pages Function.
+
+**Positioning:** individuals are the primary audience at the root domain,
+not agencies. This was a deliberate call, not just a copy change — the
+actual product (the dashboard) is a single-user tool with no roster view,
+no multi-candidate management, and no agency-scoped admin. The old agency
+copy ("every candidate on your roster") was selling something the backend
+couldn't do. Onboarding an agency is still possible without new backend
+work (create N individual accounts, manage them the same way as any user
+via the existing global Admin view — see dashboard docs above) — it just
+isn't a self-serve landing-page flow, so it doesn't need to own the
+homepage. The archived agency page can come back as a `/agencies` page
+later, aimed at conversations already in progress rather than cold
+traffic.
+
+**Hero headline:** "Never Complete Another Job Application." — landed on
+after trying several directions (relatable/pain-first, outcome-driven
+with fabricated stats, a Squarespace-style full-bleed photo hero, a
+before/after comparison, a centered conversational layout). Outcome-driven
+copy with invented precision ("3.2x more interviews, on average", "142
+apps submitted since Monday") was explicitly rejected as reading like
+AI-generated filler — the fix was swapping fabricated numbers for either
+true capability statements (any ATS, one profile) or the real product UI
+itself. **Style rule carried into all shipped copy on this page: no em
+dashes.** Rewrite them as periods, commas, colons, or (inside the
+manifest rows) a middle dot — this was an explicit standing request, not
+a one-off edit, so keep applying it to anything new written for this
+page.
+
+**Manifest widget** (`.manifest`, `.manifest-row`, `#rows`/`#counter`/
+`#clock` in the closing `<script>`): a live-updating "activity feed" —
+counter ticks up from a seeded seed of 214, rows fade in (`rowIn`
+animation) picking a random `[company, role]` pair from the `companies`
+array in the script, clock next to it shows the real current time
+(`timeNow()`), not an elapsed timer. Originally showed a `candidate → company`
+format (built for the agency-roster framing); the candidate name and
+array were removed when the page went individual-first, since there's
+only one person applying, not a roster. Row format is now
+`Company · Role`.
+
+**Waitlist form:** `<form id="hero-form">` and `<form id="closing-form">`,
+each wired by the shared `wireForm(formId, blockId)` function at the
+bottom of the script. Submits POST to `/api/subscribe` with `{ email }`,
+toggles the block's class to `sent` or `error` based on the response —
+this is a real working Cloudflare Pages Function backed by the `WAITLIST`
+KV namespace (see `wrangler.toml`), not a placeholder. Any new landing
+copy that reuses these form ids keeps this working automatically; a
+fresh form needs its own `wireForm(...)` call added at the bottom of the
+script.
 
 ## Design tokens (`dashboard/index.html`)
 
@@ -232,6 +294,9 @@ Admin nav item). If these two ever drift, the fix is usually a typo
 
 ## Deferred / not built yet
 
+- No `/agencies` page live. `agencies-landing-archive.html` has the old
+  agency-focused homepage preserved for whenever there's a real reason to
+  stand it up as its own route (see Positioning above).
 - No connection to the real Google Sheet or `~/.applyd` worker. Worker
   currently polls one hardcoded tab; would need per-user tab support
   before this dashboard's job submissions mean anything to it.

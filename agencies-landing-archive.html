@@ -1,4 +1,4 @@
-<title>Applyd: Never Complete Another Job Application</title>
+<title>Applyd for Agencies — Autonomous Applications at Scale</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='40' fill='%23071223'/%3E%3Cpath d='M40 172 L100 32 L160 172' stroke='%23EDEFF3' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M70 118 L90 138 L124 96' stroke='%234C8DFF' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
@@ -513,6 +513,10 @@ a { color: inherit; }
   color: var(--text-2);
 }
 
+.manifest-row .who .candidate {
+  color: var(--accent);
+}
+
 .manifest-row .status {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
@@ -740,7 +744,7 @@ footer.site {
       </svg>
       <div class="brand-text">
         <div class="wordmark">Appl<span>y</span>d</div>
-        <div class="tagline">Apply less. Interview more.</div>
+        <div class="tagline">Fewer forms. More offers.</div>
       </div>
     </div>
     <div class="topbar-right">
@@ -750,21 +754,21 @@ footer.site {
 
   <section class="hero">
     <div class="hero-copy">
-      <div class="eyebrow">Paste a job link. We apply for you.</div>
-      <h1>Never Complete Another<br><span class="accent-word">Job Application</span>.</h1>
-      <p class="lede">Stop wasting hours on job application forms. Give Applyd your info once, send us the link, and relax. We'll fill it out and submit it for you, with a human reviewing every application before it goes out.</p>
+      <div class="eyebrow">Autonomous application engine — for staffing &amp; recruitment agencies</div>
+      <h1>Hundreds of applications.<br>Every <span class="accent-word">candidate</span> on your roster.</h1>
+      <p class="lede">Applyd applies for your entire candidate roster around the clock — reading postings, filling out applications, and submitting them autonomously across every open role. Every candidate applies to more roles, gets in front of more employers, and reaches interviews faster.</p>
 
       <div class="form-block" id="hero-form-block">
         <form class="email-form" id="hero-form">
-          <input type="email" required placeholder="you@email.com" aria-label="Email" id="hero-email">
-          <button type="submit">Get early access</button>
+          <input type="email" required placeholder="you@agency.com" aria-label="Work email" id="hero-email">
+          <button type="submit">Request early access</button>
         </form>
         <div class="form-success">
           <span class="tick">✓</span>
-          <p>You're on the list. We'll email you when it's your turn.</p>
+          <p>You're on the list. We'll reach out about early agency access.</p>
         </div>
-        <p class="form-note">We're onboarding a small number of job seekers before public launch.</p>
-        <p class="form-error">Something went wrong. Try again in a moment.</p>
+        <p class="form-note">For staffing &amp; recruitment agencies. We're onboarding a small number of agency partners before public launch.</p>
+        <p class="form-error">Something went wrong — try again in a moment.</p>
       </div>
     </div>
 
@@ -773,11 +777,11 @@ footer.site {
     <div class="hero-copy manifest">
       <div class="manifest-head">
         <span class="label">Live manifest</span>
-        <span class="clock mono" id="clock">00:00:00</span>
+        <span class="clock mono" id="clock">00:00:00 elapsed</span>
       </div>
       <div class="manifest-counter">
         <div class="num"><span class="accent" id="counter">0</span></div>
-        <div class="cap">Applications submitted in the last 24 hours</div>
+        <div class="cap">Applications submitted across your roster — last 24 hours</div>
       </div>
       <div class="manifest-rows" id="rows"></div>
     </div>
@@ -785,23 +789,23 @@ footer.site {
 
   <section class="stat-strip">
     <div class="stat">
-      <div class="figure mono">1</div>
-      <div class="desc">thing you have to do: paste the link</div>
+      <div class="figure mono">300+</div>
+      <div class="desc">applications submitted per candidate, per 24-hour run</div>
+    </div>
+    <div class="stat">
+      <div class="figure mono">15 sec</div>
+      <div class="desc">average time to complete and submit one application with Applyd</div>
     </div>
     <div class="stat">
       <div class="figure mono">0</div>
-      <div class="desc">extra tabs, extra forms, extra clicking</div>
-    </div>
-    <div class="stat">
-      <div class="figure mono">Any</div>
-      <div class="desc">ATS: Greenhouse, Lever, Workday, Ashby</div>
+      <div class="desc">forms your candidates fill out by hand</div>
     </div>
   </section>
 
   <section class="demo">
     <div class="section-head">
       <h2>See it in action</h2>
-      <div class="eyebrow">Product walkthrough, coming soon</div>
+      <div class="eyebrow">Agency walkthrough — coming soon</div>
     </div>
     <div class="demo-frame">
       <div class="demo-play">
@@ -809,7 +813,7 @@ footer.site {
           <path d="M7 5.5v13l11-6.5-11-6.5z" fill="var(--accent)"/>
         </svg>
       </div>
-      <p class="demo-label">Product walkthrough, coming soon</p>
+      <p class="demo-label">Agency walkthrough — coming soon</p>
     </div>
   </section>
 
@@ -821,40 +825,40 @@ footer.site {
     <div class="steps">
       <div class="step">
         <div class="idx mono">01</div>
-        <h3>Set up once</h3>
-        <p>Your details, your resume. Takes a couple minutes, then you never think about it again.</p>
+        <h3>Add candidate information</h3>
+        <p>Upload each candidate's resume and information. Applyd learns their experience, skills, and target roles.</p>
       </div>
       <div class="step">
         <div class="idx mono">02</div>
-        <h3>Paste links</h3>
-        <p>Whenever you find a role, one at a time or all at once.</p>
+        <h3>Candidates add job postings</h3>
+        <p>Candidates paste links to postings they want to apply to. Applyd applies to each one on their behalf.</p>
       </div>
       <div class="step">
         <div class="idx mono">03</div>
-        <h3>Walk away</h3>
-        <p>It applies. You get on with your day.</p>
+        <h3>Candidates start hearing back</h3>
+        <p>Interview requests come in for every candidate on your roster — the applying is already done.</p>
       </div>
     </div>
   </section>
 
   <section class="closing">
-    <h2>Job searching, automated.</h2>
-    <p class="lede">We're onboarding a small number of job seekers before public launch. Get early access and let your applications run themselves.</p>
+    <h2>Be the agency that moves first.</h2>
+    <p class="lede">We're onboarding a small number of agency partners before public launch. Request early access and we'll show you what it looks like with your roster.</p>
     <div class="form-block" id="closing-form-block">
       <form class="email-form" id="closing-form">
-        <input type="email" required placeholder="you@email.com" aria-label="Email" id="closing-email">
-        <button type="submit">Get early access</button>
+        <input type="email" required placeholder="you@agency.com" aria-label="Work email" id="closing-email">
+        <button type="submit">Request early access</button>
       </form>
       <div class="form-success">
         <span class="tick">✓</span>
-        <p>You're on the list. We'll email you when it's your turn.</p>
+        <p>You're on the list. We'll reach out about early agency access.</p>
       </div>
-      <p class="form-error">Something went wrong. Try again in a moment.</p>
+      <p class="form-error">Something went wrong — try again in a moment.</p>
     </div>
   </section>
 
   <footer class="site">
-    <span>Applyd © 2026</span>
+    <span>Applyd for Agencies © 2026</span>
     <span>Status: pre-launch</span>
   </footer>
 </div>
@@ -906,6 +910,17 @@ footer.site {
     ["Wavelength Media", "Video Editor"]
   ];
 
+  var candidates = [
+    "J. Ramirez", "A. Chen", "M. Okafor", "S. Patel", "D. Novak",
+    "R. Alvarez", "K. Lindqvist", "T. Boateng", "E. Fischer", "N. Sato",
+    "L. Moreau", "P. Singh", "C. Dubois", "H. Kowalski", "Y. Tanaka",
+    "B. O'Connor", "F. Haddad", "W. Nakamura", "G. Petrov", "I. Odom",
+    "Z. Kimura", "O. Adeyemi", "V. Castillo", "Q. Larsen", "X. Delgado",
+    "U. Mbeki", "A. Kessler", "J. Whitfield", "E. Marchetti", "R. Osei",
+    "T. Lindberg", "M. Abara", "S. Voronova", "D. Kilgore", "N. Farrukh",
+    "C. Bergström", "T. Martin", "T. James"
+  ];
+
   var rowsEl = document.getElementById("rows");
   var counterEl = document.getElementById("counter");
   var clockEl = document.getElementById("clock");
@@ -923,11 +938,12 @@ footer.site {
 
   function addRow() {
     var pick = companies[Math.floor(Math.random() * companies.length)];
+    var candidate = candidates[Math.floor(Math.random() * candidates.length)];
     var row = document.createElement("div");
     row.className = "manifest-row";
     row.innerHTML =
       '<span class="time">' + timeNow() + '</span>' +
-      '<span class="who">' + pick[0] + ' <span class="role">&middot; ' + pick[1] + '</span></span>' +
+      '<span class="who"><span class="candidate">' + candidate + '</span> → ' + pick[0] + ' <span class="role">— ' + pick[1] + '</span></span>' +
       '<span class="status">SUBMITTED ✓</span>';
     rowsEl.insertBefore(row, rowsEl.firstChild);
     while (rowsEl.children.length > 11) {
@@ -949,11 +965,14 @@ footer.site {
     })();
   }
 
-  function updateClock() {
-    clockEl.textContent = timeNow();
-  }
-  updateClock();
-  setInterval(updateClock, 1000);
+  var elapsed = 0;
+  setInterval(function () {
+    elapsed += 1;
+    var h = Math.floor(elapsed / 3600) % 24;
+    var m = Math.floor(elapsed / 60) % 60;
+    var s = elapsed % 60;
+    clockEl.textContent = pad(h) + ":" + pad(m) + ":" + pad(s) + " elapsed";
+  }, 1000);
 
   function wireForm(formId, blockId) {
     var form = document.getElementById(formId);

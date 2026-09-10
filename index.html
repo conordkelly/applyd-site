@@ -481,7 +481,7 @@ a { color: inherit; }
 
 .manifest-row {
   display: grid;
-  grid-template-columns: 64px 1fr auto;
+  grid-template-columns: 88px 1fr auto;
   gap: 14px;
   align-items: baseline;
   padding: 10px 18px;
@@ -499,6 +499,7 @@ a { color: inherit; }
   font-family: 'JetBrains Mono', monospace;
   color: var(--text-3);
   font-size: 12px;
+  white-space: nowrap;
 }
 
 .manifest-row .who {
@@ -918,7 +919,11 @@ footer.site {
 
   function timeNow() {
     var d = new Date();
-    return pad(d.getHours()) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+    var h = d.getHours();
+    var ampm = h >= 12 ? "PM" : "AM";
+    h = h % 12;
+    if (h === 0) h = 12;
+    return h + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds()) + " " + ampm;
   }
 
   function addRow() {

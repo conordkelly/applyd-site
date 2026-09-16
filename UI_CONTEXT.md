@@ -92,26 +92,41 @@ person applying, not a roster. Row format is now `Company · Role`.
 "10 secs / time to complete 1 application, versus 30 minutes by hand"
 (does it save time? — an honest comparison of typical application time
 vs. the product's actual mechanics, not a fabricated outcome stat),
-"All Major ATS / Workday, Greenhouse, Ashby, Lever, and more" (will it
-work with the job sites I use?). Keep each stat's `.figure` short (a
-number or a couple words) — a full phrase there wraps to multiple lines
-and makes that column visibly taller than the other two, breaking the
-row's alignment. Caption tone should stay plain across all three: no
+"All Major Application Platforms" plus the real ATS logos (will it work
+with the job sites I use?). Keep each stat's `.figure` short (a number
+or a couple words) — a full phrase there wraps to multiple lines and
+makes that column visibly taller than the other two, breaking the row's
+alignment. Caption tone should stay plain across all three: no
 parentheses, no abbreviations like "vs" (spell out "versus"), no em
 dashes.
 
-The "All Major ATS" stat also carries the real Workday, Greenhouse, Ashby,
-and Lever logos (`.stat-ats-row` > `.stat-ats-logos`, inline to the right
-of the figure text, wrapping below it on narrow screens). Images are
-embedded as base64 `data:` URIs directly in the HTML — same convention as
-this file's fonts and favicon, so the page stays one self-contained file
-with no external asset requests. `.stat-strip` stays `repeat(3, 1fr)` —
-an earlier version widened the third column (`1fr 1fr 1.5fr`) to give the
-logos more room, but that made the row look lopsided once it actually
-rendered, so it was reverted; the logos fit fine at an equal 1fr share.
-Source files aren't kept in the repo (they were embedded once from the
-user's Downloads folder); to swap or add a logo, get the new image file,
-base64-encode it, and replace the relevant `data:` URI.
+Every `.stat` is a centered flex column (`align-items: center`,
+`justify-content: center`, `text-align: center`) so shorter stats sit
+centered within the row's full height instead of top-aligned against
+whichever stat is tallest — this matters because the third stat (ATS)
+is taller than the other two once its logos/heading are accounted for.
+
+The ATS stat's heading was originally "All Major ATS" with a
+"Workday, Greenhouse, Ashby, Lever, and more" caption underneath. Once
+the real logos (`.stat-ats-row` > `.stat-ats-logos`, inline to the right
+of the figure text, wrapping below it on narrow screens) were added,
+that caption became redundant and was removed, and the heading was
+changed to the fuller "All Major Application Platforms" — but that
+phrase is too long for the shared 34px `.figure` size (it wraps to
+three lines and makes the column visibly taller than the other two).
+Fix: a `.figure-ats` modifier class (`.stat .figure.figure-ats`, note
+the specificity — a bare `.figure-ats` alone loses to `.stat .figure`)
+drops it to 20px, which wraps to a clean two lines instead. Images are
+embedded as base64 `data:` URIs directly in the HTML — same convention
+as this file's fonts and favicon, so the page stays one self-contained
+file with no external asset requests. `.stat-strip` stays
+`repeat(3, 1fr)` — an earlier version widened the third column
+(`1fr 1fr 1.5fr`) to give the logos more room, but that made the row
+look lopsided once it actually rendered, so it was reverted; the logos
+fit fine at an equal 1fr share. Source logo files aren't kept in the
+repo (they were embedded once from the user's Downloads folder); to
+swap or add a logo, get the new image file, base64-encode it, and
+replace the relevant `data:` URI.
 
 **Waitlist form:** `<form id="hero-form">` and `<form id="closing-form">`,
 each wired by the shared `wireForm(formId, blockId)` function at the

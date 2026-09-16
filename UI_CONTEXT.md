@@ -5,7 +5,7 @@ whenever the UI changes** — new views, new fields, restyled nav, new
 endpoints. Treat it as the source of truth for "what does the site currently
 do," separate from the marketing plan.
 
-Last updated: 2026-09-16.
+Last updated: 2026-09-16 (later same day: ATS logos added).
 
 ## Stack
 
@@ -99,6 +99,17 @@ and makes that column visibly taller than the other two, breaking the
 row's alignment. Caption tone should stay plain across all three: no
 parentheses, no abbreviations like "vs" (spell out "versus"), no em
 dashes.
+
+The "All Major ATS" stat also carries the real Workday, Greenhouse, Ashby,
+and Lever logos (`.stat-ats-row` > `.stat-ats-logos`, inline to the right
+of the figure text, wrapping below it on narrow screens). Images are
+embedded as base64 `data:` URIs directly in the HTML — same convention as
+this file's fonts and favicon, so the page stays one self-contained file
+with no external asset requests. The third `.stat-strip` column is
+widened (`1fr 1fr 1.5fr` instead of `repeat(3, 1fr)`) to give the logo
+row room. Source files aren't kept in the repo (they were embedded once
+from the user's Downloads folder); to swap or add a logo, get the new
+image file, base64-encode it, and replace the relevant `data:` URI.
 
 **Waitlist form:** `<form id="hero-form">` and `<form id="closing-form">`,
 each wired by the shared `wireForm(formId, blockId)` function at the

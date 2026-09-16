@@ -5,7 +5,7 @@ whenever the UI changes** — new views, new fields, restyled nav, new
 endpoints. Treat it as the source of truth for "what does the site currently
 do," separate from the marketing plan.
 
-Last updated: 2026-09-10.
+Last updated: 2026-09-16.
 
 ## Stack
 
@@ -74,25 +74,48 @@ a one-off edit, so keep applying it to anything new written for this
 page.
 
 **Manifest widget** (`.manifest`, `.manifest-row`, `#rows`/`#counter`/
-`#clock` in the closing `<script>`): a live-updating "activity feed" —
-counter ticks up from a seeded seed of 214, rows fade in (`rowIn`
-animation) picking a random `[company, role]` pair from the `companies`
-array in the script, clock next to it shows the real current time
-(`timeNow()`), not an elapsed timer. Originally showed a `candidate → company`
-format (built for the agency-roster framing); the candidate name and
-array were removed when the page went individual-first, since there's
-only one person applying, not a roster. Row format is now
-`Company · Role`.
+`#clock` in the closing `<script>`), labeled "Live Application Tracker" in
+the UI: a live-updating "activity feed" — counter ticks up from a seeded
+seed of 214, rows fade in (`rowIn` animation) picking a random
+`[company, role]` pair from the `companies` array in the script, clock
+next to it shows the real current time (`timeNow()`), 12-hour with
+AM/PM (not 24-hour, not an elapsed timer). `timeNow()` is also used for
+each row's timestamp; the row's fixed-width time column was widened
+(64px → 88px, plus `white-space: nowrap`) to fit the longer `h:mm:ss AM`
+string without wrapping. Originally showed a `candidate → company` format
+(built for the agency-roster framing); the candidate name and array were
+removed when the page went individual-first, since there's only one
+person applying, not a roster. Row format is now `Company · Role`.
+
+**Stat strip:** three stats, each answering a different objection —
+"1 / thing you have to do: paste the link" (is this hard to use?),
+"10 secs / time to complete 1 application, versus 30 minutes by hand"
+(does it save time? — an honest comparison of typical application time
+vs. the product's actual mechanics, not a fabricated outcome stat),
+"All Major ATS / Workday, Greenhouse, Ashby, Lever, and more" (will it
+work with the job sites I use?). Keep each stat's `.figure` short (a
+number or a couple words) — a full phrase there wraps to multiple lines
+and makes that column visibly taller than the other two, breaking the
+row's alignment. Caption tone should stay plain across all three: no
+parentheses, no abbreviations like "vs" (spell out "versus"), no em
+dashes.
 
 **Waitlist form:** `<form id="hero-form">` and `<form id="closing-form">`,
 each wired by the shared `wireForm(formId, blockId)` function at the
 bottom of the script. Submits POST to `/api/subscribe` with `{ email }`,
 toggles the block's class to `sent` or `error` based on the response —
 this is a real working Cloudflare Pages Function backed by the `WAITLIST`
-KV namespace (see `wrangler.toml`), not a placeholder. Any new landing
-copy that reuses these form ids keeps this working automatically; a
-fresh form needs its own `wireForm(...)` call added at the bottom of the
-script.
+KV namespace (see `wrangler.toml`), not a placeholder. Both submit
+buttons read "Start Today" (renamed from "Get early access"). Any new
+landing copy that reuses these form ids keeps this working automatically;
+a fresh form needs its own `wireForm(...)` call added at the bottom of
+the script.
+
+**Topbar auth links:** `.create-account-link` (outlined, secondary) and
+`.sign-in-link` (solid accent, primary) sit side by side in
+`.topbar-right`, both pointing at `/dashboard` — there's no separate
+sign-up route; Clerk's `mountSignIn()` widget on that page handles both
+sign-in and account creation in one embedded flow.
 
 ## Design tokens (`dashboard/index.html`)
 

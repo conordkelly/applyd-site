@@ -105,11 +105,13 @@ and Lever logos (`.stat-ats-row` > `.stat-ats-logos`, inline to the right
 of the figure text, wrapping below it on narrow screens). Images are
 embedded as base64 `data:` URIs directly in the HTML — same convention as
 this file's fonts and favicon, so the page stays one self-contained file
-with no external asset requests. The third `.stat-strip` column is
-widened (`1fr 1fr 1.5fr` instead of `repeat(3, 1fr)`) to give the logo
-row room. Source files aren't kept in the repo (they were embedded once
-from the user's Downloads folder); to swap or add a logo, get the new
-image file, base64-encode it, and replace the relevant `data:` URI.
+with no external asset requests. `.stat-strip` stays `repeat(3, 1fr)` —
+an earlier version widened the third column (`1fr 1fr 1.5fr`) to give the
+logos more room, but that made the row look lopsided once it actually
+rendered, so it was reverted; the logos fit fine at an equal 1fr share.
+Source files aren't kept in the repo (they were embedded once from the
+user's Downloads folder); to swap or add a logo, get the new image file,
+base64-encode it, and replace the relevant `data:` URI.
 
 **Waitlist form:** `<form id="hero-form">` and `<form id="closing-form">`,
 each wired by the shared `wireForm(formId, blockId)` function at the

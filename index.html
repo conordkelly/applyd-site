@@ -244,6 +244,21 @@ a { color: inherit; }
 
 .sign-in-link:hover { filter: brightness(1.08); }
 
+.create-account-link {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 13px;
+  color: var(--text);
+  text-decoration: none;
+  background: none;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 8px 17px;
+  transition: border-color 0.15s ease, color 0.15s ease;
+}
+
+.create-account-link:hover { border-color: var(--accent); color: var(--accent); }
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -745,6 +760,7 @@ footer.site {
       </div>
     </div>
     <div class="topbar-right">
+      <a class="create-account-link" href="/dashboard">Create Account</a>
       <a class="sign-in-link" href="/dashboard">Sign In</a>
     </div>
   </header>
@@ -758,7 +774,7 @@ footer.site {
       <div class="form-block" id="hero-form-block">
         <form class="email-form" id="hero-form">
           <input type="email" required placeholder="you@email.com" aria-label="Email" id="hero-email">
-          <button type="submit">Get early access</button>
+          <button type="submit">Start Today</button>
         </form>
         <div class="form-success">
           <span class="tick">✓</span>
@@ -844,7 +860,7 @@ footer.site {
     <div class="form-block" id="closing-form-block">
       <form class="email-form" id="closing-form">
         <input type="email" required placeholder="you@email.com" aria-label="Email" id="closing-email">
-        <button type="submit">Get early access</button>
+        <button type="submit">Start Today</button>
       </form>
       <div class="form-success">
         <span class="tick">✓</span>

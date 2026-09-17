@@ -5,7 +5,7 @@ it. This is a planning doc, not a build log — update it as decisions get made 
 reversed, before code exists to document instead (see `UI_CONTEXT.md` for that once
 this actually gets built).
 
-Last updated: 2026-09-17 (pricing decided).
+Last updated: 2026-09-17 (pricing and resume/profile fields decided).
 
 ## The flow (as specified by the user)
 
@@ -67,10 +67,29 @@ Design rules behind these numbers, worth preserving if they change again later:
   labor). Sanity-check Starter's margin specifically once real cost data
   exists — it's the tier most likely to get squeezed.
 
+## Resume and profile fields (decided)
+
+Resume upload is a **real PDF file**, not plain text — a genuine change from
+the existing "My Info" tab, which today has a plain textarea for pasting
+resume text (`dashboard/index.html`, `f-resume_text` field). That textarea
+either needs to become a file upload or sit alongside one.
+
+Separately, and in addition to the resume file, onboarding also collects
+**structured fields that correspond to what the worker actually fills in on
+applications** — name, phone, address, work authorization, experience,
+compensation expectations, EEO disclosures, etc. This is exactly what the
+existing "My Info" tab's `PROFILE_FIELDS` already does (see `UI_CONTEXT.md`)
+— it doesn't need to be reinvented, but it does need to become part of the
+onboarding wizard's flow (step 2) rather than something only reachable after
+the fact from inside the dashboard.
+
+Build implication: a real PDF upload needs object storage — **Cloudflare R2
+isn't set up yet** (this was already a known gap, see `UI_CONTEXT.md`
+"Deferred / not built yet"). This is now a hard requirement for onboarding,
+not a someday nice-to-have.
+
 ## Open questions — need answers before building
 
-- **Resume upload:** an actual file (PDF/DOCX, needs object storage — R2 isn't set
-  up yet), or plain text like the existing "My Info" resume field?
 - **"They can also check this email but can't change details":** does the user get
   the literal mailbox login, or a read-only inbox view built into the Applyd
   dashboard? Different builds, needs a decision.

@@ -5,7 +5,7 @@ it. This is a planning doc, not a build log — update it as decisions get made 
 reversed, before code exists to document instead (see `UI_CONTEXT.md` for that once
 this actually gets built).
 
-Last updated: 2026-09-17 (pricing and resume/profile fields decided).
+Last updated: 2026-09-17 (all open questions resolved — email access, EOD timing).
 
 ## The flow (as specified by the user)
 
@@ -88,13 +88,39 @@ isn't set up yet** (this was already a known gap, see `UI_CONTEXT.md`
 "Deferred / not built yet"). This is now a hard requirement for onboarding,
 not a someday nice-to-have.
 
+## Checking the dedicated email (decided)
+
+Read-only viewer inside the Applyd dashboard — **not** real mailbox login
+credentials handed to the user. Reasons:
+
+- It's the only option that actually guarantees "can check it but can't
+  change details." Real credentials would let a user change the password or
+  recovery settings unless locked down via Workspace admin policy, which
+  could be misconfigured or forgotten. A dashboard viewer makes changing
+  anything impossible by construction.
+- Less new integration work than it looks like. The backend already needs to
+  read this mailbox programmatically (that's what the app-specific password
+  from the security section above is for, so the worker can check it) —
+  showing a filtered version of those same messages in a new dashboard tab
+  reuses that access rather than requiring a second integration.
+- Keeps the whole experience inside the Applyd product instead of sending
+  users out to a Gmail login screen, and lets the dashboard surface things
+  usefully (e.g. "reply from Acme Corp") rather than a raw inbox dump.
+
+Build implication: needs a new dashboard view (e.g. alongside My Jobs / My
+Info) that lists messages from the dedicated mailbox, read-only, no
+send/reply/delete.
+
+## EOD summary email (decided)
+
+Sends at **12:01am**, covering the previous day's activity (not literally
+noon as the original notes said — that was a typo/ambiguity, now resolved).
+
 ## Open questions — need answers before building
 
-- **"They can also check this email but can't change details":** does the user get
-  the literal mailbox login, or a read-only inbox view built into the Applyd
-  dashboard? Different builds, needs a decision.
-- **EOD summary email timing:** spec says "12:01pm" — likely means 12:01am (just
-  past midnight, i.e. actual end-of-day rollover)? Needs confirming.
+All resolved for now. Next step is turning this plan into an actual build
+(onboarding wizard, Stripe one-time checkout, R2 for resume storage, the
+Workspace mailbox provisioning, the read-only email viewer tab).
 
 ## Decided: dedicated mailbox, not the user's real email
 

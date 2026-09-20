@@ -375,17 +375,19 @@ every user** (`/api/dashboard/resume`) rather than a unique per-file URL —
 whoever calls it (the browser today, a future worker) must present their
 own auth and gets back *their own* resume, not a specific file by URL.
 
-**Future worker access (designed for, not built here):** the worker will
-need to fetch a specific *user's* resume without a Clerk browser session.
-`_middleware.js` currently hard-requires a Clerk JWT for everything under
-`/api/dashboard/*`, so a worker call would fail before reaching
-`resume.js`. The plan: either (a) add a second accepted auth scheme to
-`_middleware.js` — a `WORKER_API_KEY` env var checked via a header like
-`X-Worker-Key`, which sets `context.data.userId` from an explicit
-`?userId=` param instead of a JWT `sub` claim when that header is present,
-or (b) stand up a separate `/api/worker/resume` route outside this
-middleware with its own key check. Not implemented — no Python worker
-changes were in scope for this task.
+**Worker access (built):** separate routes under `/api/worker/*` with their
+own middleware — not the Clerk dashboard middleware. Auth is
+`X-Worker-Key: <WORKER_API_KEY>` (or `Authorization: Bearer …`). Set
+`WORKER_API_KEY` as an encrypted Pages secret (Production + Preview).
+
+| Route | Returns |
+|---|---|
+| `GET /api/worker/profile?userId=` | `{ user, profile, canonical, resume }` |
+| `GET /api/worker/resume?userId=` | PDF stream from R2 for that user |
+| `GET /api/worker/jobs?status=processing` | Job queue rows (optional `userId`, `limit`) |
+
+Python `apply_worker.py` does not call these yet — next step after the
+R2 bucket is live.
 
 **Validation on upload:** PDF only, checked three ways — filename ends in
 `.pdf`, `Content-Type` is `application/pdf` if the browser sent one, and
@@ -491,9 +493,10 @@ Admin nav item). If these two ever drift, the fix is usually a typo
   in `wrangler.toml`, but **the R2 bucket itself still needs to be
   created** (`wrangler r2 bucket create applyd-resumes` or via dashboard)
   before uploads actually work in production; until then the endpoint
-  returns a clean 503 instead of crashing. The Python worker also doesn't
-  consume `assets.resume_url` yet — that's a separate, not-yet-started
-  piece of work.
+  returns a clean 503 instead of crashing.
+- Worker HTTP API exists (`/api/worker/profile`, `/resume`, `/jobs`) behind
+  `WORKER_API_KEY`, but the Python worker does not call it yet, and the
+  secret must be set in Pages before those routes return anything but 503.
 - "My Info" field set covers the `SHARED_PROFILE_SCHEMA.md` contract as of
   2026-09-20 — expect it to keep growing as real application forms surface
   fields it doesn't cover yet.

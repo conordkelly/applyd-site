@@ -23,3 +23,7 @@ bucket_name = "applyd-resumes"
 [vars]
 CLERK_ISSUER = "https://solid-mallard-7796.clerk.accounts.dev"
 ADMIN_USER_ID = "user_3Ik0NIiJSvyv2gwwdVISFrQWSSd"
+
+# Secrets (set in Cloudflare Pages → Settings → Environment variables,
+# encrypt as secret — do NOT commit real values here):
+#   WORKER_API_KEY — shared secret for /api/worker/* (local apply_worker.py)

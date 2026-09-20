@@ -5,7 +5,11 @@ it. This is a planning doc, not a build log — update it as decisions get made 
 reversed, before code exists to document instead (see `UI_CONTEXT.md` for that once
 this actually gets built).
 
-Last updated: 2026-09-17 (all open questions resolved — email access, EOD timing).
+Last updated: 2026-09-20 (shared profile schema draft linked).
+
+**Shared profile contract (site ↔ DB ↔ worker):**  
+`job-automation-ai/context/SHARED_PROFILE_SCHEMA.md`  
+Example: `job-automation-ai/context/shared-profile.example.json`
 
 ## The flow (as specified by the user)
 

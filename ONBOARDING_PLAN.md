@@ -5,7 +5,7 @@ it. This is a planning doc, not a build log — update it as decisions get made 
 reversed, before code exists to document instead (see `UI_CONTEXT.md` for that once
 this actually gets built).
 
-Last updated: 2026-09-20 (My Info expanded to match the shared profile schema).
+Last updated: 2026-09-20 (R2 resume storage wired up — code done, bucket not yet created).
 
 **Shared profile contract (site ↔ DB ↔ worker):**  
 `job-automation-ai/context/SHARED_PROFILE_SCHEMA.md`  
@@ -95,13 +95,27 @@ not a someday nice-to-have.
 **Update, 2026-09-20:** My Info now includes a PDF file input plus a full
 "Work Experience Points" section (repeatable roles with dates and
 bullets), matching the canonical contract in
-`~/job-automation-ai/context/SHARED_PROFILE_SCHEMA.md`. The resume PDF
-input currently only records the filename/upload timestamp as metadata —
-the file bytes still aren't persisted anywhere, since R2 remains
-unprovisioned. Once R2 is wired, the plan is: add an upload endpoint,
-store the object, and replace the metadata stub with a real
-`assets.resume_url`. See `UI_CONTEXT.md` → My Info → Resume for the
-current field-by-field detail.
+`~/job-automation-ai/context/SHARED_PROFILE_SCHEMA.md`. See
+`UI_CONTEXT.md` → My Info → Resume for the current field-by-field detail.
+
+**Update, 2026-09-20 (same day, later): R2 wiring — code done, bucket not
+yet created.** `functions/api/dashboard/resume.js` now handles real PDF
+upload/download/delete against Cloudflare R2 (`[[r2_buckets]]` binding
+`RESUMES` added to `wrangler.toml`), and `assets.resume_url` is populated
+for real after a successful upload instead of always being `null`. Full
+detail — bucket layout, why an authenticated download endpoint was chosen
+over public R2, PDF validation, and the exact `wrangler r2 bucket create`
+/ dashboard steps to actually provision the bucket — lives in
+`UI_CONTEXT.md` → "Resume storage (R2)", to avoid keeping two copies of
+the same explanation in sync.
+
+Remaining before this is fully live: someone with Cloudflare account
+access needs to run `wrangler r2 bucket create applyd-resumes` (or create
+it via the dashboard) — the code was written and tested without ever
+having a real bucket to upload into, since this environment has no
+Cloudflare/wrangler credentials. Also still open: the Python worker
+doesn't read `assets.resume_url` yet (out of scope for this round — see
+`UI_CONTEXT.md` "Deferred / not built yet").
 
 ## Checking the dedicated email (decided)
 

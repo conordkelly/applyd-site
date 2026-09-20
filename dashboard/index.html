@@ -882,7 +882,10 @@ table.list td.date-cell {
             <div class="field full">
               <label for="f-resume_file">Resume PDF<span class="required-mark">*</span></label>
               <input type="file" id="f-resume_file" accept="application/pdf" />
+              <p class="field-hint">Selecting a new file replaces the one on record.</p>
               <p class="resume-current" id="resume-current-file"></p>
+              <p class="resume-current" id="resume-upload-status" style="display:none;"></p>
+              <button type="button" class="remove-btn" id="resume-remove-btn" style="display:none; margin-top:4px;">Remove resume</button>
             </div>
             <div class="field full"><label for="f-resume_text">Resume text (optional)</label><textarea id="f-resume_text" placeholder="Paste your resume here..."></textarea></div>
           </div>
@@ -1017,7 +1020,7 @@ table.list td.date-cell {
     'salary_expectation', 'salary_currency', 'salary_min', 'salary_max',
     'salary_display', 'salary_typed_band',
     'sms_consent', 'how_heard', 'pronouns',
-    'resume_text', 'resume_upload_filename', 'resume_uploaded_at',
+    'resume_text',
     'gender', 'race_ethnicity', 'veteran_status', 'disability_status'
   ];
 
@@ -1072,7 +1075,7 @@ table.list td.date-cell {
     renderExperienceRoles();
 
     resumeFileMeta = profile.resume_upload_filename
-      ? { name: profile.resume_upload_filename, uploadedAt: profile.resume_uploaded_at }
+      ? { name: profile.resume_upload_filename, uploadedAt: profile.resume_uploaded_at, url: profile.resume_url || null }
       : null;
     renderResumeCurrentFile();
 
@@ -1138,18 +1141,86 @@ table.list td.date-cell {
 
   function renderResumeCurrentFile() {
     var el = document.getElementById('resume-current-file');
+    var removeBtn = document.getElementById('resume-remove-btn');
     el.textContent = resumeFileMeta ? 'Current file on record: ' + resumeFileMeta.name : 'No resume on file yet.';
+    removeBtn.style.display = resumeFileMeta ? 'inline-block' : 'none';
   }
 
-  document.getElementById('f-resume_file').addEventListener('change', function (e) {
+  async function saveProfileToServer() {
+    return apiFetch('/api/dashboard/profile', {
+      method: 'POST',
+      body: JSON.stringify({ profile: collectProfileForm() })
+    });
+  }
+
+  function setResumeStatus(text) {
+    var statusEl = document.getElementById('resume-upload-status');
+    statusEl.textContent = text;
+    statusEl.style.display = text ? 'block' : 'none';
+  }
+
+  document.getElementById('f-resume_file').addEventListener('change', async function (e) {
     var file = e.target.files && e.target.files[0];
+    var input = e.target;
     if (!file) return;
-    // TODO: no object storage wired up yet (Cloudflare R2 isn't provisioned) — this
-    // records the filename so the form/save path is real, but the PDF bytes
-    // themselves aren't persisted server-side until R2 is wired. See
-    // UI_CONTEXT.md / ONBOARDING_PLAN.md.
-    resumeFileMeta = { name: file.name, uploadedAt: new Date().toISOString() };
+
+    input.disabled = true;
+    setResumeStatus('Uploading...');
+    try {
+      var form = new FormData();
+      form.append('file', file, file.name);
+      var token = await getToken();
+      var res = await fetch('/api/dashboard/resume', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: form
+      });
+      var payload = await res.json();
+      if (!res.ok) throw new Error(payload.error || 'Upload failed');
+
+      resumeFileMeta = {
+        name: payload.resume_upload_filename,
+        uploadedAt: new Date().toISOString(),
+        url: payload.resume_url
+      };
+      renderResumeCurrentFile();
+
+      try {
+        await saveProfileToServer();
+        setResumeStatus('Uploaded and saved.');
+      } catch (saveErr) {
+        setResumeStatus('Uploaded — click "Save info" below to finish saving.');
+      }
+    } catch (err) {
+      setResumeStatus(err.message || 'Upload failed — try again.');
+    } finally {
+      input.disabled = false;
+      input.value = '';
+    }
+  });
+
+  document.getElementById('resume-remove-btn').addEventListener('click', async function () {
+    var btn = this;
+    btn.disabled = true;
+    setResumeStatus('Removing...');
+    try {
+      var token = await getToken();
+      await fetch('/api/dashboard/resume', {
+        method: 'DELETE',
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+    } catch (e) {
+      // best-effort — still clear it from the profile below
+    }
+    resumeFileMeta = null;
     renderResumeCurrentFile();
+    try {
+      await saveProfileToServer();
+      setResumeStatus('Removed.');
+    } catch (saveErr) {
+      setResumeStatus('Removed from storage — click "Save info" below to finish saving.');
+    }
+    btn.disabled = false;
   });
 
   function emptyRole() {
@@ -1346,7 +1417,7 @@ table.list td.date-cell {
       },
       assets: {
         resume_text: flat.resume_text || null,
-        resume_url: null,
+        resume_url: flat.resume_url || null,
         resume_upload_filename: flat.resume_upload_filename || null
       },
       experience: (roles || []).map(function (role) {
@@ -1380,6 +1451,11 @@ table.list td.date-cell {
     if (resumeFileMeta) {
       out.resume_upload_filename = resumeFileMeta.name;
       out.resume_uploaded_at = resumeFileMeta.uploadedAt;
+      out.resume_url = resumeFileMeta.url || null;
+    } else {
+      out.resume_upload_filename = null;
+      out.resume_uploaded_at = null;
+      out.resume_url = null;
     }
 
     out.experience_roles = experienceRoles;
@@ -1414,10 +1490,7 @@ table.list td.date-cell {
     btn.disabled = true;
     btn.textContent = 'Saving...';
     try {
-      await apiFetch('/api/dashboard/profile', {
-        method: 'POST',
-        body: JSON.stringify({ profile: collectProfileForm() })
-      });
+      await saveProfileToServer();
       note.textContent = 'Saved.';
       note.className = 'submit-note ok';
       note.style.display = 'block';

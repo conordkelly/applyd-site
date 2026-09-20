@@ -270,13 +270,20 @@ desktop (`.field-grid`, collapses to one column under 520px):
 7. **Preferences** (new section) — SMS/text consent (default No), how did
    you hear about us (default LinkedIn), pronouns.
 8. **Resume** — real PDF file input (`f-resume_file`) plus the original
-   plain-text box, now labeled optional. **The PDF bytes are not actually
-   stored yet** — Cloudflare R2 isn't provisioned (no `[[r2_buckets]]` in
-   `wrangler.toml`). On file select, the client only captures
-   `resume_upload_filename` / `resume_uploaded_at` as metadata and shows
-   "Current file on record: `<name>`". Wiring real storage means adding an
-   R2 bucket binding, an upload endpoint, and swapping the metadata stub
-   for `assets.resume_url`. Tracked in ONBOARDING_PLAN.md.
+   plain-text box, now labeled optional. Selecting a file uploads it
+   **immediately** (not on "Save info") to `POST /api/dashboard/resume`,
+   which stores it in R2 (see "Resume storage (R2)" below). On success the
+   client sets `resume_upload_filename` / `resume_uploaded_at` /
+   `resume_url` and auto-saves the profile blob right away, so a resume
+   left on the page mid-edit doesn't get orphaned if the tab closes before
+   "Save info" is clicked. Shows "Current file on record: `<name>`" plus a
+   **Remove resume** button (`resume-remove-btn`, only visible when a
+   resume is on file) that calls `DELETE /api/dashboard/resume` and clears
+   those three fields. A status line (`#resume-upload-status`) shows
+   "Uploading...", "Uploaded and saved.", or the server's error message.
+   Selecting a new file always replaces whatever was on file — there's no
+   separate "Replace" control, the file input's `change` handler doubles
+   as both first upload and replace.
 9. **Voluntary Disclosures** (EEO) — gender, race/ethnicity, veteran
    status, disability status. All default to "Decline to self-identify."
 
@@ -336,7 +343,90 @@ available at all).
 | `dashboard/jobs.js` | POST | Validates links (`new URL()`), inserts as `status='processing'` |
 | `dashboard/profile.js` | GET | Returns `{ profile: {...} }` — parsed JSON blob for the signed-in user, `{}` if none saved yet |
 | `dashboard/profile.js` | POST | Upserts the whole `profile` object as one JSON blob |
+| `dashboard/resume.js` | POST | Multipart upload (`file` field) → validates PDF, stores in R2, returns `{ resume_url, resume_upload_filename, key }` |
+| `dashboard/resume.js` | GET | Streams the signed-in user's own resume PDF back (used for eventual worker/ATS-attach fetches, not linked from the UI today) |
+| `dashboard/resume.js` | DELETE | Deletes the signed-in user's resume object(s) from R2 |
 | `dashboard/admin.js` | GET | 403 unless `userId === env.ADMIN_USER_ID`; otherwise every user + their jobs |
+
+## Resume storage (R2)
+
+`functions/api/dashboard/resume.js` handles PDF storage, separate from the
+`profiles` JSON blob (D1 isn't a good place for binary file bytes). One
+resume per user: every upload lists and deletes whatever's under that
+user's own prefix before writing the new object, so there's never more
+than one file to go stale.
+
+**Bucket layout:** `resumes/{clerkUserId}/{timestamp}-{sanitizedName}.pdf`.
+Every route (`GET`/`POST`/`DELETE`) derives the prefix from
+`context.data.userId` (set by `_middleware.js` from the verified Clerk
+JWT) — **no route ever accepts a client-supplied key**, so there's no way
+to read, replace, or delete another user's file by guessing or passing a
+different key. This is also why cross-user access control needed no new
+D1 columns: the R2 key's own path *is* the access boundary.
+
+**Access model — authenticated download, not public R2:** chose an
+authenticated `GET /api/dashboard/resume` (streams the object through the
+existing Clerk-session check) over a public R2 custom domain or `r2.dev`
+public bucket. Resumes carry full name, address, phone — real PII — so
+"unguessable URL" isn't an acceptable substitute for actual access
+control, and a public bucket has no way to enforce "only this user" at
+all. The cost is that `assets.resume_url` is the **same relative path for
+every user** (`/api/dashboard/resume`) rather than a unique per-file URL —
+whoever calls it (the browser today, a future worker) must present their
+own auth and gets back *their own* resume, not a specific file by URL.
+
+**Future worker access (designed for, not built here):** the worker will
+need to fetch a specific *user's* resume without a Clerk browser session.
+`_middleware.js` currently hard-requires a Clerk JWT for everything under
+`/api/dashboard/*`, so a worker call would fail before reaching
+`resume.js`. The plan: either (a) add a second accepted auth scheme to
+`_middleware.js` — a `WORKER_API_KEY` env var checked via a header like
+`X-Worker-Key`, which sets `context.data.userId` from an explicit
+`?userId=` param instead of a JWT `sub` claim when that header is present,
+or (b) stand up a separate `/api/worker/resume` route outside this
+middleware with its own key check. Not implemented — no Python worker
+changes were in scope for this task.
+
+**Validation on upload:** PDF only, checked three ways — filename ends in
+`.pdf`, `Content-Type` is `application/pdf` if the browser sent one, and
+the first 5 bytes of the file are the `%PDF-` magic number (catches a
+renamed non-PDF even if the first two checks are spoofed). Max 10MB,
+rejected before the buffer is even read into R2 if the browser-reported
+size is over that. None of this is logged.
+
+**Display filename:** `buildDisplayFilename()` in `resume.js` looks up
+the user's already-saved profile row and, if `first_name`/`last_name` (or
+`canonical.identity`) are present, names the file `FirstLast_Resume.pdf`
+— the ATS-facing name is deliberately not whatever the user's local file
+happened to be called. Falls back to a sanitized version of the original
+filename if no name is on file yet (e.g. resume uploaded before Personal
+section is filled in).
+
+**Setting up the actual bucket** (not done as part of writing this code —
+needs to run once, with Cloudflare account access):
+
+```bash
+# 1. Create the bucket (from applyd-site/, needs `wrangler login` once first)
+wrangler r2 bucket create applyd-resumes
+```
+
+Or via the dashboard: Cloudflare dashboard → R2 → Create bucket → name it
+`applyd-resumes` → Create (no public access, no custom domain needed —
+this project uses the authenticated-download model above, not public R2).
+
+The `[[r2_buckets]]` binding is already in `wrangler.toml` (binding
+`RESUMES`, bucket `applyd-resumes`), and this project's D1/KV bindings
+already work through git-push deploys without a manual dashboard binding
+step — Cloudflare Pages reads bindings from `wrangler.toml` on build. If
+the binding doesn't show up automatically after the bucket exists and a
+deploy runs, add it manually: Cloudflare dashboard → Pages → applyd-site
+→ Settings → Functions → R2 bucket bindings → Add binding → variable name
+`RESUMES`, bucket `applyd-resumes` (set for both Production and Preview).
+
+**Until the bucket exists**, `env.RESUMES` is `undefined` and every route
+in `resume.js` returns `503 { error: "Resume storage isn't set up yet" }`
+instead of throwing — the upload UI surfaces that message inline rather
+than silently failing.
 
 ## D1 schema (`schema.sql`)
 
@@ -374,6 +464,10 @@ migration needed — D1 just stores whatever JSON blob the client sends.
 ## Config (`wrangler.toml`)
 
 ```toml
+[[r2_buckets]]
+binding = "RESUMES"
+bucket_name = "applyd-resumes"
+
 [vars]
 CLERK_ISSUER = "https://solid-mallard-7796.clerk.accounts.dev"
 ADMIN_USER_ID = "user_3Ik0NIiJSvyv2gwwdVISFrQWSSd"
@@ -392,9 +486,14 @@ Admin nav item). If these two ever drift, the fix is usually a typo
 - No connection to the real Google Sheet or `~/.applyd` worker. Worker
   currently polls one hardcoded tab; would need per-user tab support
   before this dashboard's job submissions mean anything to it.
-- Resume PDF upload UI exists (`f-resume_file`) but only captures filename
-  metadata — the actual bytes aren't stored (needs R2 or similar; see My
-  Info section above).
+- Resume PDF upload is wired to R2 (`functions/api/dashboard/resume.js`,
+  see "Resume storage (R2)" above) — code is in and the bucket binding is
+  in `wrangler.toml`, but **the R2 bucket itself still needs to be
+  created** (`wrangler r2 bucket create applyd-resumes` or via dashboard)
+  before uploads actually work in production; until then the endpoint
+  returns a clean 503 instead of crashing. The Python worker also doesn't
+  consume `assets.resume_url` yet — that's a separate, not-yet-started
+  piece of work.
 - "My Info" field set covers the `SHARED_PROFILE_SCHEMA.md` contract as of
   2026-09-20 — expect it to keep growing as real application forms surface
   fields it doesn't cover yet.

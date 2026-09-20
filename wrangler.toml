@@ -11,6 +11,15 @@ binding = "DB"
 database_name = "applyd-jobs"
 database_id = "ff5d04bd-3619-47ea-b392-c6b7b039c6ad"
 
+# Resume PDFs. Bucket must exist in the Cloudflare account and be created
+# before this binding does anything — see UI_CONTEXT.md "Resume storage
+# (R2)" for the exact create/bind steps. Until then env.RESUMES is
+# undefined and functions/api/dashboard/resume.js returns a 503 instead of
+# crashing.
+[[r2_buckets]]
+binding = "RESUMES"
+bucket_name = "applyd-resumes"
+
 [vars]
 CLERK_ISSUER = "https://solid-mallard-7796.clerk.accounts.dev"
 ADMIN_USER_ID = "user_3Ik0NIiJSvyv2gwwdVISFrQWSSd"

@@ -227,27 +227,57 @@ sheet yet"). Real-worker connection is deferred, tracked as a later phase.
 
 An editable application-profile form — **not** account settings. Its
 purpose: capture everything a job application typically asks for once, so
-the worker can auto-fill applications from it later. Field shape is
-deliberately modeled on `~/.applyd/profile.json` (the real worker's actual
-config file) so the two line up when the dashboard eventually feeds the
-worker.
+the worker can auto-fill applications from it later. Expanded 2026-09-20
+to match the canonical contract in
+`~/job-automation-ai/context/SHARED_PROFILE_SCHEMA.md` (the shape the
+worker actually needs), rather than the earlier ad hoc field set modeled
+loosely on `~/.applyd/profile.json`.
 
 Sections (`.field-group`), each a fieldset-style block, two-column grid on
 desktop (`.field-grid`, collapses to one column under 520px):
 
-1. **Personal** — full legal name, preferred name, phone, country, street
-   address, city, state/province, postal code, LinkedIn URL, GitHub URL,
-   portfolio/website URL.
-2. **Work Authorization** — authorized to work? (yes/no), require
-   sponsorship? (yes/no), status (free text).
-3. **Experience** — current title, years of experience, education level
-   (dropdown), target roles (comma-separated text).
-4. **Compensation** — desired salary, currency, minimum acceptable,
-   maximum range.
-5. **Resume** — plain-text paste box (`textarea`). No file upload yet —
-   would need object storage (R2) that isn't wired up; text is also what
-   the real worker actually consumes today.
-6. **Voluntary Disclosures** (EEO) — gender, race/ethnicity, veteran
+1. **Personal** — first name, last name, full legal name (auto-fills from
+   first + last on save if left blank), preferred name, phone, phone
+   country (free text, e.g. "Canada (+1)"), country, street address, city,
+   state/province code, state/province full name (auto-fills from the code
+   for common CA/US provinces and states via `PROVINCE_FULL_NAMES`,
+   otherwise typed by hand), postal code, LinkedIn/GitHub/portfolio URLs.
+2. **Work Authorization** — authorized to work? require sponsorship?
+   require *future* sponsorship? (new), status (free text).
+3. **Location Preferences** (new section) — preferred job location (the
+   "where you want roles" geo string, distinct from home address), willing
+   to work onsite/hybrid locally?, willing to relocate?, currently reside
+   in Canada? (auto-fills Yes/No from the Country field on blur if empty).
+4. **Experience** — current title, current company (new), years of
+   experience, education level, school/university name (new, required by
+   the worker), degree name (new), graduation year (new), target roles.
+5. **Work Experience Points** (new section, directly under Experience) —
+   dynamic repeatable role cards (`+ Add role` / `Remove role`), each with
+   company, title, start/end month pickers or an "I currently work here"
+   checkbox that disables the end date, and a repeatable bullet list
+   (`+ Add bullet` / per-bullet `Remove`). Persisted as
+   `profile.experience_roles`, an array of
+   `{ company, role, start, end, present, bullets: [''] }` — the same
+   shape `experience_bank.json` uses, so it can eventually merge with that
+   local worker file. Rendered/managed entirely in vanilla JS
+   (`renderExperienceRoles()`, `renderRoleCard()`, `renderBulletRow()`) —
+   no framework, consistent with the rest of the dashboard.
+6. **Compensation** — desired salary, currency, minimum acceptable,
+   maximum range, plus a live read-only preview line ("Shown on
+   applications as: 90K-120K CAD") built by `buildSalaryDisplay()` /
+   `buildSalaryTypedBand()` and saved as `salary_display` /
+   `salary_typed_band`.
+7. **Preferences** (new section) — SMS/text consent (default No), how did
+   you hear about us (default LinkedIn), pronouns.
+8. **Resume** — real PDF file input (`f-resume_file`) plus the original
+   plain-text box, now labeled optional. **The PDF bytes are not actually
+   stored yet** — Cloudflare R2 isn't provisioned (no `[[r2_buckets]]` in
+   `wrangler.toml`). On file select, the client only captures
+   `resume_upload_filename` / `resume_uploaded_at` as metadata and shows
+   "Current file on record: `<name>`". Wiring real storage means adding an
+   R2 bucket binding, an upload endpoint, and swapping the metadata stub
+   for `assets.resume_url`. Tracked in ONBOARDING_PLAN.md.
+9. **Voluntary Disclosures** (EEO) — gender, race/ethnicity, veteran
    status, disability status. All default to "Decline to self-identify."
 
 **Explicitly left out:** an ATS-account `password` field that exists in
@@ -263,16 +293,24 @@ this covers *account* settings, separate from the *application profile*
 data below it.
 
 Saved as one JSON blob per user via `GET`/`POST /api/dashboard/profile`
-(see Backend below). Field list lives in JS as `PROFILE_FIELDS` — the
-generic `fillProfileForm()` / `collectProfileForm()` functions loop over
-that array, so adding a field is: add the `<input>` (id `f-<key>`) +
-add `<key>` to `PROFILE_FIELDS`.
+(see Backend below). Flat fields still live in JS as `PROFILE_FIELDS` —
+the generic `fillProfileForm()` / `collectProfileForm()` functions loop
+over that array, so adding a simple field is: add the `<input>` (id
+`f-<key>`) + add `<key>` to `PROFILE_FIELDS`. On save, `collectProfileForm()`
+also calls `buildCanonicalProfile()`, which maps the flat fields (plus
+`experience_roles`) into the **nested canonical shape** from
+`SHARED_PROFILE_SCHEMA.md` and attaches it as `profile.canonical` — so the
+saved blob carries both the flat form keys (back-compat / easy re-fill)
+and the nested object the worker/product side actually wants. Yes/No
+selects all use capitalized `"Yes"`/`"No"` values directly now (not
+lowercase) — `normalizeYesNo()` still coerces old lowercase data on load
+for safety.
 
 **Known gap, called out by the user (2026-09-02):** this is "a very good
 start" but will need real expansion to cover the actual range of things
-job applications ask (this is a first pass, not the final field set).
-Expect more sections/fields over time — keep this doc in sync when that
-happens.
+job applications ask. The 2026-09-20 expansion above addresses that first
+round; expect more sections/fields over time — keep this doc in sync when
+that happens.
 
 ### Admin (`#admin-section`)
 
@@ -327,8 +365,11 @@ CREATE TABLE IF NOT EXISTS profiles (
 );
 ```
 
-`profiles.data` holds the whole "My Info" form as one JSON object, keyed
-by the same field names as `PROFILE_FIELDS` in the dashboard JS.
+`profiles.data` holds the whole "My Info" form as one JSON object: flat
+keys matching `PROFILE_FIELDS` in the dashboard JS, plus `experience_roles`
+(array) and `canonical` (the nested object matching
+`~/job-automation-ai/context/SHARED_PROFILE_SCHEMA.md`). No schema
+migration needed — D1 just stores whatever JSON blob the client sends.
 
 ## Config (`wrangler.toml`)
 
@@ -351,9 +392,12 @@ Admin nav item). If these two ever drift, the fix is usually a typo
 - No connection to the real Google Sheet or `~/.applyd` worker. Worker
   currently polls one hardcoded tab; would need per-user tab support
   before this dashboard's job submissions mean anything to it.
-- No resume file upload (needs R2 or similar).
-- "My Info" field set is a first pass — expect it to grow as real
-  application forms surface fields it doesn't cover yet.
+- Resume PDF upload UI exists (`f-resume_file`) but only captures filename
+  metadata — the actual bytes aren't stored (needs R2 or similar; see My
+  Info section above).
+- "My Info" field set covers the `SHARED_PROFILE_SCHEMA.md` contract as of
+  2026-09-20 — expect it to keep growing as real application forms surface
+  fields it doesn't cover yet.
 - Known reliability gap in the real worker (not a dashboard issue, noted
   for whenever the connection happens): `~/.applyd/apply_worker.py` can
   write "Submitted" to the sheet even on some error paths

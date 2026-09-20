@@ -5,7 +5,7 @@ it. This is a planning doc, not a build log — update it as decisions get made 
 reversed, before code exists to document instead (see `UI_CONTEXT.md` for that once
 this actually gets built).
 
-Last updated: 2026-09-20 (shared profile schema draft linked).
+Last updated: 2026-09-20 (My Info expanded to match the shared profile schema).
 
 **Shared profile contract (site ↔ DB ↔ worker):**  
 `job-automation-ai/context/SHARED_PROFILE_SCHEMA.md`  
@@ -91,6 +91,17 @@ Build implication: a real PDF upload needs object storage — **Cloudflare R2
 isn't set up yet** (this was already a known gap, see `UI_CONTEXT.md`
 "Deferred / not built yet"). This is now a hard requirement for onboarding,
 not a someday nice-to-have.
+
+**Update, 2026-09-20:** My Info now includes a PDF file input plus a full
+"Work Experience Points" section (repeatable roles with dates and
+bullets), matching the canonical contract in
+`~/job-automation-ai/context/SHARED_PROFILE_SCHEMA.md`. The resume PDF
+input currently only records the filename/upload timestamp as metadata —
+the file bytes still aren't persisted anywhere, since R2 remains
+unprovisioned. Once R2 is wired, the plan is: add an upload endpoint,
+store the object, and replace the metadata stub with a real
+`assets.resume_url`. See `UI_CONTEXT.md` → My Info → Resume for the
+current field-by-field detail.
 
 ## Checking the dedicated email (decided)
 

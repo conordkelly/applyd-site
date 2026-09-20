@@ -552,6 +552,98 @@ table.list td.date-cell {
   line-height: 1.55;
 }
 
+.required-mark { color: var(--accent); margin-left: 3px; }
+
+.field-hint {
+  font-size: 11.5px;
+  color: var(--text-3);
+  margin-top: -2px;
+}
+
+.salary-preview {
+  grid-column: 1 / -1;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin-top: 2px;
+}
+
+.salary-preview strong { color: var(--text); }
+
+.resume-current {
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin-top: 6px;
+}
+
+.role-card {
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  padding: 18px 18px 20px;
+  margin-top: 16px;
+}
+
+.role-card:first-child { margin-top: 16px; }
+
+.role-card-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.role-card-head .role-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-2);
+}
+
+.remove-btn {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11.5px;
+  color: var(--text-2);
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.remove-btn:hover { color: var(--accent); }
+
+.role-present-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 6px;
+}
+
+.bullets-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  margin: 16px 0 8px;
+}
+
+.bullet-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.bullet-row input {
+  flex: 1;
+}
+
+.add-bullet-btn { margin-top: 2px; }
+
 #profile-save-btn { margin-top: 4px; }
 
 @media (max-width: 520px) {
@@ -652,14 +744,26 @@ table.list td.date-cell {
         <div class="field-group">
           <h3>Personal</h3>
           <div class="field-grid">
-            <div class="field"><label for="f-full_name">Full legal name</label><input type="text" id="f-full_name" placeholder="Jane Doe" /></div>
+            <div class="field"><label for="f-first_name">First name<span class="required-mark">*</span></label><input type="text" id="f-first_name" placeholder="Jane" /></div>
+            <div class="field"><label for="f-last_name">Last name<span class="required-mark">*</span></label><input type="text" id="f-last_name" placeholder="Doe" /></div>
+            <div class="field full">
+              <label for="f-full_name">Full legal name</label>
+              <input type="text" id="f-full_name" placeholder="Jane Doe" />
+              <p class="field-hint">Auto-filled from first + last name if left blank.</p>
+            </div>
             <div class="field"><label for="f-preferred_name">Preferred name</label><input type="text" id="f-preferred_name" placeholder="Jane" /></div>
-            <div class="field"><label for="f-phone">Phone</label><input type="tel" id="f-phone" placeholder="555-123-4567" /></div>
-            <div class="field"><label for="f-country">Country</label><input type="text" id="f-country" placeholder="Canada" /></div>
-            <div class="field full"><label for="f-address">Street address</label><input type="text" id="f-address" placeholder="31 Darby Rd" /></div>
-            <div class="field"><label for="f-city">City</label><input type="text" id="f-city" placeholder="Guelph" /></div>
-            <div class="field"><label for="f-state_province">State / province</label><input type="text" id="f-state_province" placeholder="ON" /></div>
-            <div class="field"><label for="f-postal_code">Postal / ZIP code</label><input type="text" id="f-postal_code" placeholder="N1K 1R4" /></div>
+            <div class="field"><label for="f-phone">Phone<span class="required-mark">*</span></label><input type="tel" id="f-phone" placeholder="555-123-4567" /></div>
+            <div class="field"><label for="f-phone_country_display">Phone country</label><input type="text" id="f-phone_country_display" placeholder="Canada (+1)" /></div>
+            <div class="field"><label for="f-country">Country<span class="required-mark">*</span></label><input type="text" id="f-country" placeholder="Canada" /></div>
+            <div class="field full"><label for="f-address">Street address<span class="required-mark">*</span></label><input type="text" id="f-address" placeholder="31 Darby Rd" /></div>
+            <div class="field"><label for="f-city">City<span class="required-mark">*</span></label><input type="text" id="f-city" placeholder="Guelph" /></div>
+            <div class="field"><label for="f-state_province">State / province (code)</label><input type="text" id="f-state_province" placeholder="ON" /></div>
+            <div class="field">
+              <label for="f-province_full">State / province (full)<span class="required-mark">*</span></label>
+              <input type="text" id="f-province_full" placeholder="Ontario" />
+              <p class="field-hint">Auto-fills from the code above for common CA/US provinces and states.</p>
+            </div>
+            <div class="field"><label for="f-postal_code">Postal / ZIP code<span class="required-mark">*</span></label><input type="text" id="f-postal_code" placeholder="N1K 1R4" /></div>
             <div class="field"><label for="f-linkedin_url">LinkedIn URL</label><input type="url" id="f-linkedin_url" placeholder="https://linkedin.com/in/..." /></div>
             <div class="field"><label for="f-github_url">GitHub URL</label><input type="url" id="f-github_url" placeholder="https://github.com/..." /></div>
             <div class="field full"><label for="f-portfolio_url">Portfolio / website URL</label><input type="url" id="f-portfolio_url" placeholder="https://..." /></div>
@@ -670,14 +774,38 @@ table.list td.date-cell {
           <h3>Work Authorization</h3>
           <div class="field-grid">
             <div class="field">
-              <label for="f-legally_authorized">Authorized to work in your country?</label>
-              <select id="f-legally_authorized"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+              <label for="f-legally_authorized">Authorized to work in your country?<span class="required-mark">*</span></label>
+              <select id="f-legally_authorized"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </div>
             <div class="field">
-              <label for="f-require_sponsorship">Require visa sponsorship?</label>
-              <select id="f-require_sponsorship"><option value="">—</option><option value="yes">Yes</option><option value="no">No</option></select>
+              <label for="f-require_sponsorship">Require visa sponsorship?<span class="required-mark">*</span></label>
+              <select id="f-require_sponsorship"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+            </div>
+            <div class="field">
+              <label for="f-require_future_sponsorship">Require future sponsorship?</label>
+              <select id="f-require_future_sponsorship"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </div>
             <div class="field full"><label for="f-work_permit_type">Status</label><input type="text" id="f-work_permit_type" placeholder="Citizen, Permanent Resident, Visa holder..." /></div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h3>Location Preferences</h3>
+          <p class="field-group-note">Home address is where you live. Preferred job location is where you want roles, often different.</p>
+          <div class="field-grid">
+            <div class="field full"><label for="f-preferred_job_location">Preferred job location<span class="required-mark">*</span></label><input type="text" id="f-preferred_job_location" placeholder="Toronto, Ontario, Canada" /></div>
+            <div class="field">
+              <label for="f-willing_onsite_local">Willing to work onsite/hybrid locally?</label>
+              <select id="f-willing_onsite_local"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+            </div>
+            <div class="field">
+              <label for="f-willing_relocate">Willing to relocate?</label>
+              <select id="f-willing_relocate"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+            </div>
+            <div class="field">
+              <label for="f-currently_reside_canada">Currently reside in Canada?</label>
+              <select id="f-currently_reside_canada"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+            </div>
           </div>
         </div>
 
@@ -685,6 +813,7 @@ table.list td.date-cell {
           <h3>Experience</h3>
           <div class="field-grid">
             <div class="field"><label for="f-current_title">Current title</label><input type="text" id="f-current_title" placeholder="Product Manager" /></div>
+            <div class="field"><label for="f-current_company">Current company</label><input type="text" id="f-current_company" placeholder="Acme Corp" /></div>
             <div class="field"><label for="f-years_experience">Years of experience</label><input type="number" id="f-years_experience" min="0" placeholder="5" /></div>
             <div class="field">
               <label for="f-education_level">Highest education level</label>
@@ -698,14 +827,24 @@ table.list td.date-cell {
                 <option>Other</option>
               </select>
             </div>
+            <div class="field"><label for="f-school">School / university name<span class="required-mark">*</span></label><input type="text" id="f-school" placeholder="University of Guelph" /></div>
+            <div class="field"><label for="f-degree_name">Degree name</label><input type="text" id="f-degree_name" placeholder="B.Comm, Marketing Management" /></div>
+            <div class="field"><label for="f-graduation_year">Graduation year</label><input type="number" id="f-graduation_year" min="1950" max="2100" placeholder="2019" /></div>
             <div class="field"><label for="f-target_roles">Target roles</label><input type="text" id="f-target_roles" placeholder="Product Manager, Senior PM" /></div>
           </div>
+        </div>
+
+        <div class="field-group" id="experience-roles-group">
+          <h3>Work Experience Points</h3>
+          <p class="field-group-note">ApplyD uses this when completing your applications. Add each role you've held, with dates and bullet points the same way you'd list them on a resume.</p>
+          <div id="experience-roles-list"></div>
+          <button type="button" class="add-row-btn" id="add-role-btn" style="margin-top:16px;">+ Add role</button>
         </div>
 
         <div class="field-group">
           <h3>Compensation</h3>
           <div class="field-grid">
-            <div class="field"><label for="f-salary_expectation">Desired salary</label><input type="number" id="f-salary_expectation" placeholder="100000" /></div>
+            <div class="field"><label for="f-salary_expectation">Desired salary<span class="required-mark">*</span></label><input type="number" id="f-salary_expectation" placeholder="100000" /></div>
             <div class="field">
               <label for="f-salary_currency">Currency</label>
               <select id="f-salary_currency">
@@ -715,14 +854,37 @@ table.list td.date-cell {
             </div>
             <div class="field"><label for="f-salary_min">Minimum acceptable</label><input type="number" id="f-salary_min" placeholder="90000" /></div>
             <div class="field"><label for="f-salary_max">Maximum range</label><input type="number" id="f-salary_max" placeholder="120000" /></div>
+            <p class="salary-preview" id="salary-preview"></p>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h3>Preferences</h3>
+          <div class="field-grid">
+            <div class="field">
+              <label for="f-sms_consent">OK to text you updates?</label>
+              <select id="f-sms_consent"><option value="No">No</option><option value="Yes">Yes</option></select>
+            </div>
+            <div class="field">
+              <label for="f-how_heard">How did you hear about us?</label>
+              <select id="f-how_heard">
+                <option>LinkedIn</option><option>Referral</option><option>Google Search</option><option>Job Board</option><option>Other</option>
+              </select>
+            </div>
+            <div class="field"><label for="f-pronouns">Pronouns</label><input type="text" id="f-pronouns" placeholder="She/her, He/him, Prefer not to say..." /></div>
           </div>
         </div>
 
         <div class="field-group">
           <h3>Resume</h3>
-          <p class="field-group-note">Paste your resume as plain text — this is what gets used to fill and tailor applications.</p>
+          <p class="field-group-note">Upload the PDF ApplyD attaches to applications. Resume text is optional and just helps tailor answers.</p>
           <div class="field-grid">
-            <div class="field full"><label for="f-resume_text">Resume text</label><textarea id="f-resume_text" placeholder="Paste your resume here..."></textarea></div>
+            <div class="field full">
+              <label for="f-resume_file">Resume PDF<span class="required-mark">*</span></label>
+              <input type="file" id="f-resume_file" accept="application/pdf" />
+              <p class="resume-current" id="resume-current-file"></p>
+            </div>
+            <div class="field full"><label for="f-resume_text">Resume text (optional)</label><textarea id="f-resume_text" placeholder="Paste your resume here..."></textarea></div>
           </div>
         </div>
 
@@ -845,31 +1007,383 @@ table.list td.date-cell {
   adminViewLink.addEventListener('click', showAdminView);
 
   var PROFILE_FIELDS = [
-    'full_name', 'preferred_name', 'phone', 'country', 'address', 'city',
-    'state_province', 'postal_code', 'linkedin_url', 'github_url', 'portfolio_url',
-    'legally_authorized', 'require_sponsorship', 'work_permit_type',
-    'current_title', 'years_experience', 'education_level', 'target_roles',
+    'first_name', 'last_name', 'full_name', 'preferred_name', 'phone', 'phone_country_display',
+    'country', 'address', 'city', 'state_province', 'province_full', 'postal_code',
+    'linkedin_url', 'github_url', 'portfolio_url',
+    'legally_authorized', 'require_sponsorship', 'require_future_sponsorship', 'work_permit_type',
+    'preferred_job_location', 'willing_onsite_local', 'willing_relocate', 'currently_reside_canada',
+    'current_title', 'current_company', 'years_experience', 'education_level',
+    'school', 'degree_name', 'graduation_year', 'target_roles',
     'salary_expectation', 'salary_currency', 'salary_min', 'salary_max',
-    'resume_text',
+    'salary_display', 'salary_typed_band',
+    'sms_consent', 'how_heard', 'pronouns',
+    'resume_text', 'resume_upload_filename', 'resume_uploaded_at',
     'gender', 'race_ethnicity', 'veteran_status', 'disability_status'
   ];
 
+  var YES_NO_FIELDS = [
+    'legally_authorized', 'require_sponsorship', 'require_future_sponsorship',
+    'willing_onsite_local', 'willing_relocate', 'currently_reside_canada', 'sms_consent'
+  ];
+
+  // Common CA provinces + US states, code -> full name. Covers the pilot user base;
+  // anything outside this list just needs the full name typed in by hand.
+  var PROVINCE_FULL_NAMES = {
+    AB: 'Alberta', BC: 'British Columbia', MB: 'Manitoba', NB: 'New Brunswick',
+    NL: 'Newfoundland and Labrador', NS: 'Nova Scotia', NT: 'Northwest Territories',
+    NU: 'Nunavut', ON: 'Ontario', PE: 'Prince Edward Island', QC: 'Quebec',
+    SK: 'Saskatchewan', YT: 'Yukon',
+    AL: 'Alabama', AK: 'Alaska', AZ: 'Arizona', AR: 'Arkansas', CA: 'California',
+    CO: 'Colorado', CT: 'Connecticut', DE: 'Delaware', FL: 'Florida', GA: 'Georgia',
+    HI: 'Hawaii', ID: 'Idaho', IL: 'Illinois', IN: 'Indiana', IA: 'Iowa',
+    KS: 'Kansas', KY: 'Kentucky', LA: 'Louisiana', ME: 'Maine', MD: 'Maryland',
+    MA: 'Massachusetts', MI: 'Michigan', MN: 'Minnesota', MS: 'Mississippi',
+    MO: 'Missouri', MT: 'Montana', NE: 'Nebraska', NV: 'Nevada', NH: 'New Hampshire',
+    NJ: 'New Jersey', NM: 'New Mexico', NY: 'New York', NC: 'North Carolina',
+    ND: 'North Dakota', OH: 'Ohio', OK: 'Oklahoma', OR: 'Oregon', PA: 'Pennsylvania',
+    RI: 'Rhode Island', SC: 'South Carolina', SD: 'South Dakota', TN: 'Tennessee',
+    TX: 'Texas', UT: 'Utah', VT: 'Vermont', VA: 'Virginia', WA: 'Washington',
+    WV: 'West Virginia', WI: 'Wisconsin', WY: 'Wyoming'
+  };
+
   var profileLoaded = false;
+  var experienceRoles = [];
+  var resumeFileMeta = null;
+
+  function normalizeYesNo(val) {
+    if (!val) return val;
+    var s = String(val).trim().toLowerCase();
+    if (s === 'yes') return 'Yes';
+    if (s === 'no') return 'No';
+    return val;
+  }
 
   function fillProfileForm(profile) {
     profile = profile || {};
     PROFILE_FIELDS.forEach(function (key) {
       var el = document.getElementById('f-' + key);
-      if (el && profile[key] !== undefined && profile[key] !== null) el.value = profile[key];
+      if (!el) return;
+      var val = profile[key];
+      if (val === undefined || val === null) return;
+      el.value = YES_NO_FIELDS.indexOf(key) !== -1 ? normalizeYesNo(val) : val;
     });
+
+    experienceRoles = Array.isArray(profile.experience_roles) ? profile.experience_roles : [];
+    renderExperienceRoles();
+
+    resumeFileMeta = profile.resume_upload_filename
+      ? { name: profile.resume_upload_filename, uploadedAt: profile.resume_uploaded_at }
+      : null;
+    renderResumeCurrentFile();
+
+    updateSalaryPreview();
+  }
+
+  function buildFullName(flat) {
+    if (flat.full_name) return flat.full_name;
+    var parts = [flat.first_name, flat.last_name].filter(Boolean);
+    return parts.join(' ');
+  }
+
+  function shortenThousands(n) {
+    n = parseInt(n, 10);
+    if (!n) return '';
+    return Math.round(n / 1000) + 'K';
+  }
+
+  function buildSalaryDisplay(min, max, currency) {
+    min = (min || '').toString().trim();
+    max = (max || '').toString().trim();
+    currency = (currency || '').toString().trim();
+    if (!min && !max) return '';
+    if (min && max) return shortenThousands(min) + '-' + shortenThousands(max) + (currency ? ' ' + currency : '');
+    return shortenThousands(min || max) + (currency ? ' ' + currency : '');
+  }
+
+  function buildSalaryTypedBand(min, max) {
+    function short(n) { n = parseInt(n, 10); return n ? Math.round(n / 1000) : ''; }
+    min = short(min);
+    max = short(max);
+    if (min && max) return min + ' - ' + max;
+    return '';
+  }
+
+  function updateSalaryPreview() {
+    var min = document.getElementById('f-salary_min').value;
+    var max = document.getElementById('f-salary_max').value;
+    var currency = document.getElementById('f-salary_currency').value;
+    var display = buildSalaryDisplay(min, max, currency);
+    var preview = document.getElementById('salary-preview');
+    preview.textContent = display ? 'Shown on applications as: ' + display : '';
+  }
+
+  ['f-salary_min', 'f-salary_max', 'f-salary_currency'].forEach(function (id) {
+    document.getElementById(id).addEventListener('input', updateSalaryPreview);
+  });
+
+  document.getElementById('f-state_province').addEventListener('blur', function () {
+    var provinceFullEl = document.getElementById('f-province_full');
+    if (provinceFullEl.value) return;
+    var full = PROVINCE_FULL_NAMES[this.value.trim().toUpperCase()];
+    if (full) provinceFullEl.value = full;
+  });
+
+  document.getElementById('f-country').addEventListener('blur', function () {
+    var resideEl = document.getElementById('f-currently_reside_canada');
+    if (resideEl.value) return;
+    var country = this.value.trim().toLowerCase();
+    if (!country) return;
+    resideEl.value = country === 'canada' ? 'Yes' : 'No';
+  });
+
+  function renderResumeCurrentFile() {
+    var el = document.getElementById('resume-current-file');
+    el.textContent = resumeFileMeta ? 'Current file on record: ' + resumeFileMeta.name : 'No resume on file yet.';
+  }
+
+  document.getElementById('f-resume_file').addEventListener('change', function (e) {
+    var file = e.target.files && e.target.files[0];
+    if (!file) return;
+    // TODO: no object storage wired up yet (Cloudflare R2 isn't provisioned) — this
+    // records the filename so the form/save path is real, but the PDF bytes
+    // themselves aren't persisted server-side until R2 is wired. See
+    // UI_CONTEXT.md / ONBOARDING_PLAN.md.
+    resumeFileMeta = { name: file.name, uploadedAt: new Date().toISOString() };
+    renderResumeCurrentFile();
+  });
+
+  function emptyRole() {
+    return { company: '', role: '', start: '', end: '', present: false, bullets: [''] };
+  }
+
+  function renderExperienceRoles() {
+    var container = document.getElementById('experience-roles-list');
+    container.innerHTML = '';
+    experienceRoles.forEach(function (role, i) {
+      container.appendChild(renderRoleCard(role, i));
+    });
+  }
+
+  function renderRoleCard(role, i) {
+    var card = document.createElement('div');
+    card.className = 'role-card';
+    card.dataset.index = i;
+
+    var head = document.createElement('div');
+    head.className = 'role-card-head';
+    head.innerHTML = '<span class="role-label">Role ' + (i + 1) + '</span>';
+    var removeBtn = document.createElement('button');
+    removeBtn.type = 'button';
+    removeBtn.className = 'remove-btn';
+    removeBtn.textContent = 'Remove role';
+    removeBtn.addEventListener('click', function () {
+      experienceRoles.splice(i, 1);
+      renderExperienceRoles();
+    });
+    head.appendChild(removeBtn);
+    card.appendChild(head);
+
+    var grid = document.createElement('div');
+    grid.className = 'field-grid';
+
+    grid.appendChild(makeRoleInput('Company', role.company, function (v) { role.company = v; }));
+    grid.appendChild(makeRoleInput('Title / role', role.role, function (v) { role.role = v; }));
+    grid.appendChild(makeRoleInput('Start date', role.start, function (v) { role.start = v; }, 'month'));
+
+    var endField = makeRoleInput('End date', role.end, function (v) { role.end = v; }, 'month');
+    var endInput = endField.querySelector('input');
+    endInput.disabled = !!role.present;
+    grid.appendChild(endField);
+
+    card.appendChild(grid);
+
+    var presentRow = document.createElement('label');
+    presentRow.className = 'role-present-row';
+    var presentCheckbox = document.createElement('input');
+    presentCheckbox.type = 'checkbox';
+    presentCheckbox.checked = !!role.present;
+    presentCheckbox.addEventListener('change', function () {
+      role.present = presentCheckbox.checked;
+      endInput.disabled = role.present;
+      if (role.present) { role.end = ''; endInput.value = ''; }
+    });
+    presentRow.appendChild(presentCheckbox);
+    presentRow.appendChild(document.createTextNode('I currently work here'));
+    card.appendChild(presentRow);
+
+    var bulletsLabel = document.createElement('div');
+    bulletsLabel.className = 'bullets-label';
+    bulletsLabel.textContent = 'Bullet points';
+    card.appendChild(bulletsLabel);
+
+    var bulletsWrap = document.createElement('div');
+    role.bullets.forEach(function (bullet, bi) {
+      bulletsWrap.appendChild(renderBulletRow(role, bi));
+    });
+    card.appendChild(bulletsWrap);
+
+    var addBulletBtn = document.createElement('button');
+    addBulletBtn.type = 'button';
+    addBulletBtn.className = 'add-row-btn add-bullet-btn';
+    addBulletBtn.textContent = '+ Add bullet';
+    addBulletBtn.addEventListener('click', function () {
+      role.bullets.push('');
+      renderExperienceRoles();
+    });
+    card.appendChild(addBulletBtn);
+
+    return card;
+  }
+
+  function renderBulletRow(role, bi) {
+    var row = document.createElement('div');
+    row.className = 'bullet-row';
+    var input = document.createElement('input');
+    input.type = 'text';
+    input.placeholder = 'Led a redesign that increased conversion 18%';
+    input.value = role.bullets[bi];
+    input.addEventListener('input', function () { role.bullets[bi] = input.value; });
+    row.appendChild(input);
+    if (role.bullets.length > 1) {
+      var removeBtn = document.createElement('button');
+      removeBtn.type = 'button';
+      removeBtn.className = 'remove-btn';
+      removeBtn.textContent = 'Remove';
+      removeBtn.addEventListener('click', function () {
+        role.bullets.splice(bi, 1);
+        renderExperienceRoles();
+      });
+      row.appendChild(removeBtn);
+    }
+    return row;
+  }
+
+  function makeRoleInput(labelText, value, onChange, type) {
+    var field = document.createElement('div');
+    field.className = 'field';
+    var label = document.createElement('label');
+    label.textContent = labelText;
+    var input = document.createElement('input');
+    input.type = type || 'text';
+    input.value = value || '';
+    input.addEventListener('input', function () { onChange(input.value); });
+    field.appendChild(label);
+    field.appendChild(input);
+    return field;
+  }
+
+  document.getElementById('add-role-btn').addEventListener('click', function () {
+    experienceRoles.push(emptyRole());
+    renderExperienceRoles();
+  });
+
+  function rolePeriodString(role) {
+    var parts = [];
+    if (role.start) parts.push(role.start);
+    parts.push(role.present ? 'Present' : (role.end || ''));
+    return parts.filter(Boolean).join(' - ');
+  }
+
+  function buildCanonicalProfile(flat, roles) {
+    return {
+      profile_id: null,
+      user_id: null,
+      identity: {
+        first_name: flat.first_name || '',
+        last_name: flat.last_name || '',
+        full_name: flat.full_name || '',
+        preferred_name: flat.preferred_name || ''
+      },
+      contact: {
+        email: '',
+        apply_email: '',
+        phone: flat.phone || '',
+        phone_country_display: flat.phone_country_display || ''
+      },
+      presence: {
+        linkedin: flat.linkedin_url || '',
+        github: flat.github_url || '',
+        portfolio: flat.portfolio_url || ''
+      },
+      location_sponsorship: {
+        target_city_country: flat.preferred_job_location || '',
+        location_search_value: flat.preferred_job_location || '',
+        current_location: '',
+        requires_sponsorship: normalizeYesNo(flat.require_sponsorship) || '',
+        legally_eligible_canada: normalizeYesNo(flat.legally_authorized) || '',
+        requires_future_sponsorship: normalizeYesNo(flat.require_future_sponsorship) || '',
+        work_authorization_status: flat.work_permit_type || ''
+      },
+      residence_address: {
+        street: flat.address || '',
+        city: flat.city || '',
+        province_state: flat.state_province || '',
+        province_full: flat.province_full || '',
+        postal_code: flat.postal_code || '',
+        country: flat.country || ''
+      },
+      education: {
+        school: flat.school || '',
+        level: flat.education_level || ''
+      },
+      professional_background: {
+        current_company: flat.current_company || '',
+        current_title: flat.current_title || '',
+        years_experience: flat.years_experience || '',
+        general_salary_expectation: flat.salary_display || '',
+        salary_expectations_typed: flat.salary_typed_band || '',
+        salary_min: flat.salary_min || '',
+        salary_max: flat.salary_max || '',
+        salary_currency: flat.salary_currency || '',
+        target_roles: flat.target_roles || '',
+        degree_name: flat.degree_name || '',
+        graduation_year: flat.graduation_year || ''
+      },
+      application_answers: {
+        sms_consent: normalizeYesNo(flat.sms_consent) || 'No',
+        pronouns: flat.pronouns || '',
+        how_heard: flat.how_heard || ''
+      },
+      assets: {
+        resume_text: flat.resume_text || null,
+        resume_url: null,
+        resume_upload_filename: flat.resume_upload_filename || null
+      },
+      experience: (roles || []).map(function (role) {
+        return {
+          company: role.company || '',
+          role: role.role || '',
+          start: role.start || '',
+          end: role.present ? 'Present' : (role.end || ''),
+          present: !!role.present,
+          period: rolePeriodString(role),
+          bullets: (role.bullets || []).filter(Boolean).map(function (text) { return { text: text }; })
+        };
+      })
+    };
   }
 
   function collectProfileForm() {
     var out = {};
     PROFILE_FIELDS.forEach(function (key) {
       var el = document.getElementById('f-' + key);
-      if (el) out[key] = el.value;
+      if (!el) return;
+      out[key] = YES_NO_FIELDS.indexOf(key) !== -1 ? normalizeYesNo(el.value) : el.value;
     });
+
+    out.full_name = buildFullName(out);
+    document.getElementById('f-full_name').value = out.full_name;
+
+    out.salary_display = buildSalaryDisplay(out.salary_min, out.salary_max, out.salary_currency);
+    out.salary_typed_band = buildSalaryTypedBand(out.salary_min, out.salary_max);
+
+    if (resumeFileMeta) {
+      out.resume_upload_filename = resumeFileMeta.name;
+      out.resume_uploaded_at = resumeFileMeta.uploadedAt;
+    }
+
+    out.experience_roles = experienceRoles;
+    out.canonical = buildCanonicalProfile(out, experienceRoles);
     return out;
   }
 

@@ -644,6 +644,45 @@ table.list td.date-cell {
 
 .add-bullet-btn { margin-top: 2px; }
 
+.country-field { position: relative; }
+
+.country-dropdown-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  max-height: 240px;
+  overflow-y: auto;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  box-shadow: 0 8px 24px rgba(18,21,27,0.12);
+  z-index: 20;
+}
+
+.country-option {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  color: var(--text);
+  padding: 8px 11px;
+  cursor: pointer;
+}
+
+.country-option:hover, .country-option.highlighted {
+  background: var(--surface-2);
+}
+
+.country-option-divider {
+  border-top: 1px solid var(--hairline-strong);
+  margin: 4px 0;
+}
+
+.country-option-empty {
+  font-size: 12.5px;
+  color: var(--text-3);
+  padding: 10px 11px;
+}
+
 #profile-save-btn { margin-top: 4px; }
 
 @media (max-width: 520px) {
@@ -753,7 +792,13 @@ table.list td.date-cell {
             </div>
             <div class="field"><label for="f-preferred_name">Preferred name</label><input type="text" id="f-preferred_name" placeholder="Jane" /></div>
             <div class="field"><label for="f-phone">Phone<span class="required-mark">*</span></label><input type="tel" id="f-phone" inputmode="numeric" maxlength="12" placeholder="555-123-4567" /></div>
-            <div class="field"><label for="f-phone_country_display">Phone country</label><select id="f-phone_country_display"><option value="">—</option></select></div>
+            <div class="field">
+              <label for="f-phone_country_display">Phone country</label>
+              <div class="country-field" id="phone-country-field">
+                <input type="text" id="f-phone_country_display" autocomplete="off" placeholder="Search country..." />
+                <div class="country-dropdown-list" id="phone-country-list" style="display:none;"></div>
+              </div>
+            </div>
             <div class="field"><label for="f-country">Country<span class="required-mark">*</span></label><input type="text" id="f-country" placeholder="Canada" /></div>
             <div class="field full"><label for="f-address">Street address<span class="required-mark">*</span></label><input type="text" id="f-address" placeholder="31 Darby Rd" /></div>
             <div class="field"><label for="f-city">City<span class="required-mark">*</span></label><input type="text" id="f-city" placeholder="Guelph" /></div>
@@ -1108,22 +1153,127 @@ table.list td.date-cell {
     ['Yemen', '+967'], ['Zambia', '+260'], ['Zimbabwe', '+263']
   ];
 
-  (function populatePhoneCountryOptions() {
-    var select = document.getElementById('f-phone_country_display');
-    function addOption(name, code) {
-      var opt = document.createElement('option');
-      var label = name + ' (' + code + ')';
-      opt.value = label;
-      opt.textContent = label;
-      select.appendChild(opt);
+  var PHONE_COUNTRY_ALL = PHONE_COUNTRY_PINNED.concat(PHONE_COUNTRY_CODES);
+
+  function phoneCountryLabel(c) {
+    return c[0] + ' (' + c[1] + ')';
+  }
+
+  var phoneCountryHighlight = -1;
+
+  function phoneCountryMatches(query) {
+    var q = (query || '').trim().toLowerCase();
+    if (!q) return PHONE_COUNTRY_PINNED.concat([null], PHONE_COUNTRY_CODES);
+    return PHONE_COUNTRY_ALL.filter(function (c) {
+      return c[0].toLowerCase().indexOf(q) !== -1 || c[1].indexOf(q) !== -1;
+    });
+  }
+
+  function renderPhoneCountryList(query) {
+    var list = document.getElementById('phone-country-list');
+    var matches = phoneCountryMatches(query);
+    phoneCountryHighlight = -1;
+    list.innerHTML = '';
+
+    if (!matches.some(function (c) { return c !== null; })) {
+      var empty = document.createElement('div');
+      empty.className = 'country-option-empty';
+      empty.textContent = 'No matches';
+      list.appendChild(empty);
+      return;
     }
-    PHONE_COUNTRY_PINNED.forEach(function (c) { addOption(c[0], c[1]); });
-    var divider = document.createElement('option');
-    divider.disabled = true;
-    divider.textContent = '──────────';
-    select.appendChild(divider);
-    PHONE_COUNTRY_CODES.forEach(function (c) { addOption(c[0], c[1]); });
-  })();
+
+    matches.forEach(function (c) {
+      if (c === null) {
+        var divider = document.createElement('div');
+        divider.className = 'country-option-divider';
+        list.appendChild(divider);
+        return;
+      }
+      var label = phoneCountryLabel(c);
+      var opt = document.createElement('div');
+      opt.className = 'country-option';
+      opt.textContent = label;
+      opt.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        selectPhoneCountry(label);
+      });
+      list.appendChild(opt);
+    });
+  }
+
+  function phoneCountryOptionEls() {
+    return Array.prototype.slice.call(
+      document.getElementById('phone-country-list').querySelectorAll('.country-option')
+    );
+  }
+
+  function setPhoneCountryHighlight(index) {
+    var opts = phoneCountryOptionEls();
+    if (!opts.length) return;
+    if (index < 0) index = opts.length - 1;
+    if (index >= opts.length) index = 0;
+    opts.forEach(function (o) { o.classList.remove('highlighted'); });
+    opts[index].classList.add('highlighted');
+    opts[index].scrollIntoView({ block: 'nearest' });
+    phoneCountryHighlight = index;
+  }
+
+  function selectPhoneCountry(label) {
+    var input = document.getElementById('f-phone_country_display');
+    input.value = label;
+    closePhoneCountryList();
+  }
+
+  function openPhoneCountryList() {
+    // Always start from the full list on open, even if a value is already
+    // selected — filtering by the previous full "Name (+Code)" value would
+    // just show "No matches" against itself.
+    renderPhoneCountryList('');
+    document.getElementById('phone-country-list').style.display = 'block';
+  }
+
+  function closePhoneCountryList() {
+    document.getElementById('phone-country-list').style.display = 'none';
+  }
+
+  var phoneCountryInput = document.getElementById('f-phone_country_display');
+
+  phoneCountryInput.addEventListener('focus', function () {
+    openPhoneCountryList();
+    this.select();
+  });
+
+  phoneCountryInput.addEventListener('input', function () {
+    renderPhoneCountryList(this.value);
+    document.getElementById('phone-country-list').style.display = 'block';
+  });
+
+  phoneCountryInput.addEventListener('blur', function () {
+    setTimeout(closePhoneCountryList, 100);
+  });
+
+  phoneCountryInput.addEventListener('keydown', function (e) {
+    var isOpen = document.getElementById('phone-country-list').style.display !== 'none';
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!isOpen) { openPhoneCountryList(); return; }
+      setPhoneCountryHighlight(phoneCountryHighlight + 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) { openPhoneCountryList(); return; }
+      setPhoneCountryHighlight(phoneCountryHighlight - 1);
+    } else if (e.key === 'Enter') {
+      if (isOpen && phoneCountryHighlight >= 0) {
+        e.preventDefault();
+        var opts = phoneCountryOptionEls();
+        if (opts[phoneCountryHighlight]) opts[phoneCountryHighlight].dispatchEvent(new Event('mousedown'));
+      }
+    } else if (e.key === 'Escape') {
+      closePhoneCountryList();
+      this.blur();
+    }
+  });
 
   var profileLoaded = false;
   var experienceRoles = [];

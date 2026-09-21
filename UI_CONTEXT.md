@@ -384,10 +384,11 @@ own middleware — not the Clerk dashboard middleware. Auth is
 |---|---|
 | `GET /api/worker/profile?userId=` | `{ user, profile, canonical, resume }` |
 | `GET /api/worker/resume?userId=` | PDF stream from R2 for that user |
-| `GET /api/worker/jobs?status=processing` | Job queue rows (optional `userId`, `limit`) |
+| `GET /api/worker/jobs?status=processing` | Job queue rows (+ `user_email`; optional `userId`, `limit`) |
+| `PATCH /api/worker/jobs` | `{ id, status: "processing"|"completed" }` — Review/worker writeback |
 
-Python `apply_worker.py` does not call these yet — next step after the
-R2 bucket is live.
+Python `apply_worker.py` + ApplyD Review pull the queue; Review **Run**
+enqueues a local claim; the worker fills and PATCHes completed.
 
 **Validation on upload:** PDF only, checked three ways — filename ends in
 `.pdf`, `Content-Type` is `application/pdf` if the browser sent one, and

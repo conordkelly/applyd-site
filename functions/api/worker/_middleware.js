@@ -1,7 +1,7 @@
-# Worker API auth for /api/worker/*
-# Local apply_worker.py will call these with X-Worker-Key (not a Clerk browser session).
-# Set WORKER_API_KEY as a Cloudflare Pages secret (Production + Preview).
-# Until it is set, all /api/worker/* routes return 503.
+// Worker API auth for /api/worker/*
+// Local apply_worker.py will call these with X-Worker-Key (not a Clerk browser session).
+// Set WORKER_API_KEY as a Cloudflare Pages secret (Production + Preview).
+// Until it is set, all /api/worker/* routes return 503.
 
 function timingSafeEqual(a, b) {
   const aa = String(a || "");

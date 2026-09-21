@@ -236,22 +236,49 @@ loosely on `~/.applyd/profile.json`.
 Sections (`.field-group`), each a fieldset-style block, two-column grid on
 desktop (`.field-grid`, collapses to one column under 520px):
 
-1. **Personal** — first name, last name, full legal name (auto-fills from
-   first + last on save if left blank), preferred name, phone, phone
-   country (free text, e.g. "Canada (+1)"), country, street address, city,
-   state/province code, state/province full name (auto-fills from the code
-   for common CA/US provinces and states via `PROVINCE_FULL_NAMES`,
-   otherwise typed by hand), postal code, LinkedIn/GitHub/portfolio URLs.
-2. **Work Authorization** — authorized to work? require sponsorship?
+1. **Resume** — moved to the top of the form 2026-09-21 (was last), since
+   it's the field most users fill in first. Real PDF file input
+   (`f-resume_file`) only now — the plain-text paste box (`f-resume_text`)
+   was removed the same day; nothing reads it (`apply_worker.py` has no
+   reference to `resume_text` at all), so it was pure unused surface area.
+   Selecting a file uploads it **immediately** (not on "Save info") to
+   `POST /api/dashboard/resume`, which stores it in R2 (see "Resume
+   storage (R2)" below). On success the client sets
+   `resume_upload_filename` / `resume_uploaded_at` / `resume_url` and
+   auto-saves the profile blob right away, so a resume left on the page
+   mid-edit doesn't get orphaned if the tab closes before "Save info" is
+   clicked. Shows "Current file on record: `<name>`" plus a **Remove
+   resume** button (`resume-remove-btn`, only visible when a resume is on
+   file) that calls `DELETE /api/dashboard/resume` and clears those three
+   fields. A status line (`#resume-upload-status`) shows "Uploading...",
+   "Uploaded and saved.", or the server's error message. Selecting a new
+   file always replaces whatever was on file — there's no separate
+   "Replace" control, the file input's `change` handler doubles as both
+   first upload and replace. **Resume parsing/autofill (asked about
+   2026-09-21, not built):** sending the PDF to Claude's API to extract
+   fields and autofill the rest of the form is planned but deferred —
+   needs an `ANTHROPIC_API_KEY` secret added in Cloudflare first.
+2. **Personal** — first name, last name, full legal name (auto-fills from
+   first + last on save if left blank), preferred name, phone (digits-only,
+   auto-formats as `555-123-4567` via `formatPhoneNumber()`), phone country
+   (searchable combobox — `#phone-country-field`/`#phone-country-list`,
+   ~199 countries filtered by name or dial code via `phoneCountryMatches()`,
+   United States/Canada/United Kingdom pinned above a divider when the
+   query is empty, arrow keys + Enter to pick), country, street address,
+   city, state/province code, state/province full name (auto-fills from
+   the code for common CA/US provinces and states via
+   `PROVINCE_FULL_NAMES`, otherwise typed by hand), postal code,
+   LinkedIn/GitHub/portfolio URLs.
+3. **Work Authorization** — authorized to work? require sponsorship?
    require *future* sponsorship? (new), status (free text).
-3. **Location Preferences** (new section) — preferred job location (the
+4. **Location Preferences** (new section) — preferred job location (the
    "where you want roles" geo string, distinct from home address), willing
    to work onsite/hybrid locally?, willing to relocate?, currently reside
    in Canada? (auto-fills Yes/No from the Country field on blur if empty).
-4. **Experience** — current title, current company (new), years of
+5. **Experience** — current title, current company (new), years of
    experience, education level, school/university name (new, required by
    the worker), degree name (new), graduation year (new), target roles.
-5. **Work Experience Points** (new section, directly under Experience) —
+6. **Work Experience Points** (new section, directly under Experience) —
    dynamic repeatable role cards (`+ Add role` / `Remove role`), each with
    company, title, start/end month pickers or an "I currently work here"
    checkbox that disables the end date, and a repeatable bullet list
@@ -262,28 +289,13 @@ desktop (`.field-grid`, collapses to one column under 520px):
    local worker file. Rendered/managed entirely in vanilla JS
    (`renderExperienceRoles()`, `renderRoleCard()`, `renderBulletRow()`) —
    no framework, consistent with the rest of the dashboard.
-6. **Compensation** — desired salary, currency, minimum acceptable,
+7. **Compensation** — desired salary, currency, minimum acceptable,
    maximum range, plus a live read-only preview line ("Shown on
    applications as: 90K-120K CAD") built by `buildSalaryDisplay()` /
    `buildSalaryTypedBand()` and saved as `salary_display` /
    `salary_typed_band`.
-7. **Preferences** (new section) — SMS/text consent (default No), how did
+8. **Preferences** (new section) — SMS/text consent (default No), how did
    you hear about us (default LinkedIn), pronouns.
-8. **Resume** — real PDF file input (`f-resume_file`) plus the original
-   plain-text box, now labeled optional. Selecting a file uploads it
-   **immediately** (not on "Save info") to `POST /api/dashboard/resume`,
-   which stores it in R2 (see "Resume storage (R2)" below). On success the
-   client sets `resume_upload_filename` / `resume_uploaded_at` /
-   `resume_url` and auto-saves the profile blob right away, so a resume
-   left on the page mid-edit doesn't get orphaned if the tab closes before
-   "Save info" is clicked. Shows "Current file on record: `<name>`" plus a
-   **Remove resume** button (`resume-remove-btn`, only visible when a
-   resume is on file) that calls `DELETE /api/dashboard/resume` and clears
-   those three fields. A status line (`#resume-upload-status`) shows
-   "Uploading...", "Uploaded and saved.", or the server's error message.
-   Selecting a new file always replaces whatever was on file — there's no
-   separate "Replace" control, the file input's `change` handler doubles
-   as both first upload and replace.
 9. **Voluntary Disclosures** (EEO) — gender, race/ethnicity, veteran
    status, disability status. All default to "Decline to self-identify."
 

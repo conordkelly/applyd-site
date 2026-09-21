@@ -782,7 +782,7 @@ table.list td.date-cell {
       <form class="profile-form" id="profile-form">
         <div class="field-group">
           <h3>Resume</h3>
-          <p class="field-group-note">Upload the PDF ApplyD attaches to applications. Resume text is optional and just helps tailor answers.</p>
+          <p class="field-group-note">Upload the PDF ApplyD attaches to applications.</p>
           <div class="field-grid">
             <div class="field full">
               <label for="f-resume_file">Resume PDF<span class="required-mark">*</span></label>
@@ -792,7 +792,6 @@ table.list td.date-cell {
               <p class="resume-current" id="resume-upload-status" style="display:none;"></p>
               <button type="button" class="remove-btn" id="resume-remove-btn" style="display:none; margin-top:4px;">Remove resume</button>
             </div>
-            <div class="field full"><label for="f-resume_text">Resume text (optional)</label><textarea id="f-resume_text" placeholder="Paste your resume here..."></textarea></div>
           </div>
         </div>
 
@@ -1065,7 +1064,6 @@ table.list td.date-cell {
     'salary_expectation', 'salary_currency', 'salary_min', 'salary_max',
     'salary_display', 'salary_typed_band',
     'sms_consent', 'how_heard', 'pronouns',
-    'resume_text',
     'gender', 'race_ethnicity', 'veteran_status', 'disability_status'
   ];
 
@@ -1656,7 +1654,6 @@ table.list td.date-cell {
         how_heard: flat.how_heard || ''
       },
       assets: {
-        resume_text: flat.resume_text || null,
         resume_url: flat.resume_url || null,
         resume_upload_filename: flat.resume_upload_filename || null
       },

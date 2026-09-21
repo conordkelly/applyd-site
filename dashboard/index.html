@@ -542,6 +542,11 @@ table.list td.date-cell {
   outline-offset: -1px;
 }
 
+/* Firefox puts a red glow on an empty required field by default, even
+   before the user has touched it. The browser's own "please fill this
+   out" tooltip on a blocked submit is enough feedback without it. */
+.field input:invalid { box-shadow: none; }
+
 .field select { cursor: pointer; }
 
 .field textarea {
@@ -821,7 +826,7 @@ table.list td.date-cell {
             <div class="field">
               <label for="f-phone_country_display">Phone country<span class="required-mark">*</span></label>
               <div class="country-field" id="phone-country-field">
-                <input type="text" id="f-phone_country_display" autocomplete="off" placeholder="Search country..." />
+                <input type="text" id="f-phone_country_display" autocomplete="off" placeholder="Search country..." required />
                 <svg class="country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
                   <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>

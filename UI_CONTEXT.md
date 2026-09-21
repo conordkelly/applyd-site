@@ -264,11 +264,24 @@ desktop (`.field-grid`, collapses to one column under 520px):
    (searchable combobox — `#phone-country-field`/`#phone-country-list`,
    ~199 countries filtered by name or dial code via `phoneCountryMatches()`,
    United States/Canada/United Kingdom pinned above a divider when the
-   query is empty, arrow keys + Enter to pick), country, street address,
-   city, state/province code, state/province full name (auto-fills from
-   the code for common CA/US provinces and states via
-   `PROVINCE_FULL_NAMES`, otherwise typed by hand), postal code,
-   LinkedIn/GitHub/portfolio URLs.
+   query is empty, arrow keys + Enter to pick, `required`), country, street
+   address, city, state/province (one searchable combobox, reusing the
+   same `.country-field`/`.country-dropdown-list` CSS pattern as phone
+   country — `#province-field`/`#province-list`, `provinceMatches()`).
+   **2026-09-21: the separate "code" and "full name" fields were merged
+   into this single dropdown** — having both was redundant once the code
+   can just be parsed back out of whichever option gets picked. Every
+   option's label is `"Name (Code)"` (e.g. "Ontario (ON)"), built from
+   `PROVINCE_FULL_NAMES`, Ontario pinned above a divider. On save,
+   `collectProfileForm()` splits the picked label back into two flat keys
+   — `province_full` ("Ontario") and `state_province` ("ON") — via one
+   regex (`/^(.*?)\s*\(([A-Za-z]{2,3})\)\s*$/`), so both are still
+   available for ATS forms that specifically want the 2-letter code (very
+   common — Workday/Greenhouse state fields are usually a code `<select>`)
+   even though there's no `state_province` input anymore. On load,
+   `fillProfileForm()` re-combines those two saved keys back into the
+   single displayed "Name (Code)" string. Postal code, LinkedIn/GitHub/
+   portfolio URLs.
 3. **Work Authorization** — authorized to work? require sponsorship?
    require *future* sponsorship? (new), status (free text).
 4. **Location Preferences** (new section) — preferred job location (the

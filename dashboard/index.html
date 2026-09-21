@@ -836,11 +836,15 @@ table.list td.date-cell {
             <div class="field"><label for="f-country">Country<span class="required-mark">*</span></label><input type="text" id="f-country" placeholder="Canada" /></div>
             <div class="field full"><label for="f-address">Street address<span class="required-mark">*</span></label><input type="text" id="f-address" placeholder="31 Darby Rd" /></div>
             <div class="field"><label for="f-city">City<span class="required-mark">*</span></label><input type="text" id="f-city" placeholder="Guelph" /></div>
-            <div class="field"><label for="f-state_province">State / province (code)</label><input type="text" id="f-state_province" placeholder="ON" /></div>
             <div class="field">
-              <label for="f-province_full">State / province (full)<span class="required-mark">*</span></label>
-              <input type="text" id="f-province_full" placeholder="Ontario" />
-              <p class="field-hint">Auto-fills from the code above for common CA/US provinces and states.</p>
+              <label for="f-province_full">State / province<span class="required-mark">*</span></label>
+              <div class="country-field" id="province-field">
+                <input type="text" id="f-province_full" autocomplete="off" placeholder="Search state or province..." />
+                <svg class="country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                  <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="country-dropdown-list" id="province-list" style="display:none;"></div>
+              </div>
             </div>
             <div class="field"><label for="f-postal_code">Postal / ZIP code<span class="required-mark">*</span></label><input type="text" id="f-postal_code" placeholder="N1K 1R4" /></div>
             <div class="field"><label for="f-linkedin_url">LinkedIn URL</label><input type="url" id="f-linkedin_url" placeholder="https://linkedin.com/in/..." /></div>
@@ -1074,7 +1078,7 @@ table.list td.date-cell {
 
   var PROFILE_FIELDS = [
     'first_name', 'last_name', 'full_name', 'preferred_name', 'phone', 'phone_country_display',
-    'country', 'address', 'city', 'state_province', 'province_full', 'postal_code',
+    'country', 'address', 'city', 'province_full', 'postal_code',
     'linkedin_url', 'github_url', 'portfolio_url',
     'legally_authorized', 'require_sponsorship', 'require_future_sponsorship', 'work_permit_type',
     'preferred_job_location', 'willing_onsite_local', 'willing_relocate', 'currently_reside_canada',
@@ -1091,8 +1095,12 @@ table.list td.date-cell {
     'willing_onsite_local', 'willing_relocate', 'currently_reside_canada', 'sms_consent'
   ];
 
-  // Common CA provinces + US states, code -> full name. Covers the pilot user base;
-  // anything outside this list just needs the full name typed in by hand.
+  // Common CA provinces + US states, code -> full name. Backs the State/
+  // province search dropdown below (PROVINCE_PINNED/PROVINCE_REST) — the
+  // code is never shown as its own field, but every option's label carries
+  // it in parens ("Ontario (ON)") so it can still be split back out on
+  // save. Covers the pilot user base; a province/state outside this list
+  // has no dropdown match today.
   var PROVINCE_FULL_NAMES = {
     AB: 'Alberta', BC: 'British Columbia', MB: 'Manitoba', NB: 'New Brunswick',
     NL: 'Newfoundland and Labrador', NS: 'Nova Scotia', NT: 'Northwest Territories',
@@ -1317,6 +1325,11 @@ table.list td.date-cell {
     var phoneEl = document.getElementById('f-phone');
     if (phoneEl.value) phoneEl.value = formatPhoneNumber(phoneEl.value.replace(/\D/g, ''));
 
+    var provinceEl = document.getElementById('f-province_full');
+    if (provinceEl.value && profile.state_province) {
+      provinceEl.value = provinceEl.value + ' (' + profile.state_province + ')';
+    }
+
     experienceRoles = Array.isArray(profile.experience_roles) ? profile.experience_roles : [];
     renderExperienceRoles();
 
@@ -1381,11 +1394,126 @@ table.list td.date-cell {
     e.target.value = formatPhoneNumber(e.target.value.replace(/\D/g, ''));
   });
 
-  document.getElementById('f-state_province').addEventListener('blur', function () {
-    var provinceFullEl = document.getElementById('f-province_full');
-    if (provinceFullEl.value) return;
-    var full = PROVINCE_FULL_NAMES[this.value.trim().toUpperCase()];
-    if (full) provinceFullEl.value = full;
+  var PROVINCE_PINNED = [['Ontario', 'ON']];
+  var PROVINCE_REST = Object.keys(PROVINCE_FULL_NAMES)
+    .filter(function (code) { return code !== 'ON'; })
+    .map(function (code) { return [PROVINCE_FULL_NAMES[code], code]; })
+    .sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; });
+
+  function provinceLabel(c) {
+    return c[0] + ' (' + c[1] + ')';
+  }
+
+  var provinceHighlight = -1;
+
+  function provinceMatches(query) {
+    var q = (query || '').trim().toLowerCase();
+    if (!q) return PROVINCE_PINNED.concat([null], PROVINCE_REST);
+    return PROVINCE_PINNED.concat(PROVINCE_REST).filter(function (c) {
+      return c[0].toLowerCase().indexOf(q) !== -1 || c[1].toLowerCase().indexOf(q) !== -1;
+    });
+  }
+
+  function renderProvinceList(query) {
+    var list = document.getElementById('province-list');
+    var matches = provinceMatches(query);
+    provinceHighlight = -1;
+    list.innerHTML = '';
+
+    if (!matches.some(function (c) { return c !== null; })) {
+      var empty = document.createElement('div');
+      empty.className = 'country-option-empty';
+      empty.textContent = 'No matches';
+      list.appendChild(empty);
+      return;
+    }
+
+    matches.forEach(function (c) {
+      if (c === null) {
+        var divider = document.createElement('div');
+        divider.className = 'country-option-divider';
+        list.appendChild(divider);
+        return;
+      }
+      var label = provinceLabel(c);
+      var opt = document.createElement('div');
+      opt.className = 'country-option';
+      opt.textContent = label;
+      opt.addEventListener('mousedown', function (e) {
+        e.preventDefault();
+        selectProvince(label);
+      });
+      list.appendChild(opt);
+    });
+  }
+
+  function provinceOptionEls() {
+    return Array.prototype.slice.call(
+      document.getElementById('province-list').querySelectorAll('.country-option')
+    );
+  }
+
+  function setProvinceHighlight(index) {
+    var opts = provinceOptionEls();
+    if (!opts.length) return;
+    if (index < 0) index = opts.length - 1;
+    if (index >= opts.length) index = 0;
+    opts.forEach(function (o) { o.classList.remove('highlighted'); });
+    opts[index].classList.add('highlighted');
+    opts[index].scrollIntoView({ block: 'nearest' });
+    provinceHighlight = index;
+  }
+
+  function selectProvince(label) {
+    document.getElementById('f-province_full').value = label;
+    closeProvinceList();
+  }
+
+  function openProvinceList() {
+    renderProvinceList('');
+    document.getElementById('province-list').style.display = 'block';
+  }
+
+  function closeProvinceList() {
+    document.getElementById('province-list').style.display = 'none';
+  }
+
+  var provinceInput = document.getElementById('f-province_full');
+
+  provinceInput.addEventListener('focus', function () {
+    openProvinceList();
+    this.select();
+  });
+
+  provinceInput.addEventListener('input', function () {
+    renderProvinceList(this.value);
+    document.getElementById('province-list').style.display = 'block';
+  });
+
+  provinceInput.addEventListener('blur', function () {
+    setTimeout(closeProvinceList, 100);
+  });
+
+  provinceInput.addEventListener('keydown', function (e) {
+    var isOpen = document.getElementById('province-list').style.display !== 'none';
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (!isOpen) { openProvinceList(); return; }
+      setProvinceHighlight(provinceHighlight + 1);
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (!isOpen) { openProvinceList(); return; }
+      setProvinceHighlight(provinceHighlight - 1);
+    } else if (e.key === 'Enter') {
+      if (isOpen && provinceHighlight >= 0) {
+        e.preventDefault();
+        var opts = provinceOptionEls();
+        if (opts[provinceHighlight]) opts[provinceHighlight].dispatchEvent(new Event('mousedown'));
+      }
+    } else if (e.key === 'Escape') {
+      closeProvinceList();
+      this.blur();
+    }
   });
 
   document.getElementById('f-country').addEventListener('blur', function () {
@@ -1700,6 +1828,10 @@ table.list td.date-cell {
 
     out.full_name = buildFullName(out);
     document.getElementById('f-full_name').value = out.full_name;
+
+    var provinceMatch = /^(.*?)\s*\(([A-Za-z]{2,3})\)\s*$/.exec(out.province_full || '');
+    out.state_province = provinceMatch ? provinceMatch[2].toUpperCase() : '';
+    out.province_full = provinceMatch ? provinceMatch[1] : out.province_full;
 
     out.salary_display = buildSalaryDisplay(out.salary_min, out.salary_max, out.salary_currency);
     out.salary_typed_band = buildSalaryTypedBand(out.salary_min, out.salary_max);

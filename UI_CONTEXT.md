@@ -473,7 +473,7 @@ binding = "RESUMES"
 bucket_name = "applyd-resumes"
 
 [vars]
-CLERK_ISSUER = "https://solid-mallard-7796.clerk.accounts.dev"
+CLERK_ISSUER = "https://clerk.applydjobs.com"
 ADMIN_USER_ID = "user_3Ik0NIiJSvyv2gwwdVISFrQWSSd"
 ```
 

@@ -752,7 +752,7 @@ table.list td.date-cell {
               <p class="field-hint">Auto-filled from first + last name if left blank.</p>
             </div>
             <div class="field"><label for="f-preferred_name">Preferred name</label><input type="text" id="f-preferred_name" placeholder="Jane" /></div>
-            <div class="field"><label for="f-phone">Phone<span class="required-mark">*</span></label><input type="tel" id="f-phone" placeholder="555-123-4567" /></div>
+            <div class="field"><label for="f-phone">Phone<span class="required-mark">*</span></label><input type="tel" id="f-phone" inputmode="numeric" maxlength="12" placeholder="555-123-4567" /></div>
             <div class="field"><label for="f-phone_country_display">Phone country</label><input type="text" id="f-phone_country_display" placeholder="Canada (+1)" /></div>
             <div class="field"><label for="f-country">Country<span class="required-mark">*</span></label><input type="text" id="f-country" placeholder="Canada" /></div>
             <div class="field full"><label for="f-address">Street address<span class="required-mark">*</span></label><input type="text" id="f-address" placeholder="31 Darby Rd" /></div>
@@ -1071,6 +1071,9 @@ table.list td.date-cell {
       el.value = YES_NO_FIELDS.indexOf(key) !== -1 ? normalizeYesNo(val) : val;
     });
 
+    var phoneEl = document.getElementById('f-phone');
+    if (phoneEl.value) phoneEl.value = formatPhoneNumber(phoneEl.value.replace(/\D/g, ''));
+
     experienceRoles = Array.isArray(profile.experience_roles) ? profile.experience_roles : [];
     renderExperienceRoles();
 
@@ -1122,6 +1125,17 @@ table.list td.date-cell {
 
   ['f-salary_min', 'f-salary_max', 'f-salary_currency'].forEach(function (id) {
     document.getElementById(id).addEventListener('input', updateSalaryPreview);
+  });
+
+  function formatPhoneNumber(digits) {
+    digits = digits.slice(0, 10);
+    if (digits.length < 4) return digits;
+    if (digits.length < 7) return digits.slice(0, 3) + '-' + digits.slice(3);
+    return digits.slice(0, 3) + '-' + digits.slice(3, 6) + '-' + digits.slice(6);
+  }
+
+  document.getElementById('f-phone').addEventListener('input', function (e) {
+    e.target.value = formatPhoneNumber(e.target.value.replace(/\D/g, ''));
   });
 
   document.getElementById('f-state_province').addEventListener('blur', function () {

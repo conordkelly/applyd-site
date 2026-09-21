@@ -646,6 +646,17 @@ table.list td.date-cell {
 
 .country-field { position: relative; }
 
+.country-field input { padding-right: 32px; }
+
+.country-chevron {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-2);
+  pointer-events: none;
+}
+
 .country-dropdown-list {
   position: absolute;
   top: calc(100% + 4px);
@@ -808,9 +819,12 @@ table.list td.date-cell {
             <div class="field"><label for="f-preferred_name">Preferred name</label><input type="text" id="f-preferred_name" placeholder="Jane" /></div>
             <div class="field"><label for="f-phone">Phone<span class="required-mark">*</span></label><input type="tel" id="f-phone" inputmode="numeric" maxlength="12" placeholder="555-123-4567" /></div>
             <div class="field">
-              <label for="f-phone_country_display">Phone country</label>
+              <label for="f-phone_country_display">Phone country<span class="required-mark">*</span></label>
               <div class="country-field" id="phone-country-field">
                 <input type="text" id="f-phone_country_display" autocomplete="off" placeholder="Search country..." />
+                <svg class="country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                  <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
                 <div class="country-dropdown-list" id="phone-country-list" style="display:none;"></div>
               </div>
             </div>

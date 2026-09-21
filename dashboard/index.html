@@ -781,6 +781,22 @@ table.list td.date-cell {
 
       <form class="profile-form" id="profile-form">
         <div class="field-group">
+          <h3>Resume</h3>
+          <p class="field-group-note">Upload the PDF ApplyD attaches to applications. Resume text is optional and just helps tailor answers.</p>
+          <div class="field-grid">
+            <div class="field full">
+              <label for="f-resume_file">Resume PDF<span class="required-mark">*</span></label>
+              <input type="file" id="f-resume_file" accept="application/pdf" />
+              <p class="field-hint">Selecting a new file replaces the one on record.</p>
+              <p class="resume-current" id="resume-current-file"></p>
+              <p class="resume-current" id="resume-upload-status" style="display:none;"></p>
+              <button type="button" class="remove-btn" id="resume-remove-btn" style="display:none; margin-top:4px;">Remove resume</button>
+            </div>
+            <div class="field full"><label for="f-resume_text">Resume text (optional)</label><textarea id="f-resume_text" placeholder="Paste your resume here..."></textarea></div>
+          </div>
+        </div>
+
+        <div class="field-group">
           <h3>Personal</h3>
           <div class="field-grid">
             <div class="field"><label for="f-first_name">First name<span class="required-mark">*</span></label><input type="text" id="f-first_name" placeholder="Jane" /></div>
@@ -917,22 +933,6 @@ table.list td.date-cell {
               </select>
             </div>
             <div class="field"><label for="f-pronouns">Pronouns</label><input type="text" id="f-pronouns" placeholder="She/her, He/him, Prefer not to say..." /></div>
-          </div>
-        </div>
-
-        <div class="field-group">
-          <h3>Resume</h3>
-          <p class="field-group-note">Upload the PDF ApplyD attaches to applications. Resume text is optional and just helps tailor answers.</p>
-          <div class="field-grid">
-            <div class="field full">
-              <label for="f-resume_file">Resume PDF<span class="required-mark">*</span></label>
-              <input type="file" id="f-resume_file" accept="application/pdf" />
-              <p class="field-hint">Selecting a new file replaces the one on record.</p>
-              <p class="resume-current" id="resume-current-file"></p>
-              <p class="resume-current" id="resume-upload-status" style="display:none;"></p>
-              <button type="button" class="remove-btn" id="resume-remove-btn" style="display:none; margin-top:4px;">Remove resume</button>
-            </div>
-            <div class="field full"><label for="f-resume_text">Resume text (optional)</label><textarea id="f-resume_text" placeholder="Paste your resume here..."></textarea></div>
           </div>
         </div>
 

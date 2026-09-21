@@ -196,7 +196,7 @@ for all top nav items to look consistent. Active view gets `.nav-link.active`
 Admin's visibility check (`dashboard/index.html`, `window.addEventListener
 ('load', ...)`):
 ```js
-var ADMIN_USER_ID = 'user_3Ik0NIiJSvyv2gwwdVISFrQWSSd'; // must match ADMIN_USER_ID in wrangler.toml
+var ADMIN_USER_ID = 'user_3JeY8TVmctjpcU6GbaK4l888Ak9'; // must match ADMIN_USER_ID in wrangler.toml
 ```
 
 **History note:** a Clerk-native `customMenuItems` approach for putting
@@ -474,7 +474,7 @@ bucket_name = "applyd-resumes"
 
 [vars]
 CLERK_ISSUER = "https://clerk.applydjobs.com"
-ADMIN_USER_ID = "user_3Ik0NIiJSvyv2gwwdVISFrQWSSd"
+ADMIN_USER_ID = "user_3JeY8TVmctjpcU6GbaK4l888Ak9"
 ```
 
 `ADMIN_USER_ID` must match the constant hardcoded in

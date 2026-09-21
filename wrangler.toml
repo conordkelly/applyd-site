@@ -22,7 +22,7 @@ bucket_name = "applyd-resumes"
 
 [vars]
 CLERK_ISSUER = "https://clerk.applydjobs.com"
-ADMIN_USER_ID = "user_3Ik0NIiJSvyv2gwwdVISFrQWSSd"
+ADMIN_USER_ID = "user_3JeY8TVmctjpcU6GbaK4l888Ak9"
 
 # Secrets (set in Cloudflare Pages → Settings → Environment variables,
 # encrypt as secret — do NOT commit real values here):

@@ -25,6 +25,19 @@ export async function onRequestPost(context) {
       ? body.profile
       : {};
 
+  // Stamp Clerk identity onto the blob so the worker always has email /
+  // user_id even if the client left contact.email blank.
+  if (!profile.canonical || typeof profile.canonical !== "object") {
+    profile.canonical = {};
+  }
+  profile.canonical.user_id = data.userId;
+  if (!profile.canonical.contact || typeof profile.canonical.contact !== "object") {
+    profile.canonical.contact = {};
+  }
+  if (data.email) {
+    profile.canonical.contact.email = data.email;
+  }
+
   await env.DB.prepare(
     "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"
   )

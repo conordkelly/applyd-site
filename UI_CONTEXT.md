@@ -599,23 +599,21 @@ ADMIN_USER_ID = "user_3JeY8TVmctjpcU6GbaK4l888Ak9"
 Admin nav item). If these two ever drift, the fix is usually a typo
 (happened once already — capital `O` vs digit `0`).
 
+**Job submit completeness gate (2026-09-22).** Submit on Jobs is blocked
+until My Info has the required fields + resume PDF + at least one work
+experience role (company + title). Client: `profileCompletenessGaps()` /
+`updateJobSubmitGate()` in `dashboard/index.html`. Server: same rules in
+`functions/api/dashboard/_profile_completeness.js`, enforced on
+`POST /api/dashboard/jobs`. Profile save also stamps Clerk `user_id` +
+`contact.email` onto `canonical`.
+
 ## Deferred / not built yet
 
 - No `/agencies` page live. `agencies-landing-archive.html` has the old
   agency-focused homepage preserved for whenever there's a real reason to
   stand it up as its own route (see Positioning above).
-- No connection to the real Google Sheet or `~/.applyd` worker. Worker
-  currently polls one hardcoded tab; would need per-user tab support
-  before this dashboard's job submissions mean anything to it.
-- Resume PDF upload is wired to R2 (`functions/api/dashboard/resume.js`,
-  see "Resume storage (R2)" above) — code is in and the bucket binding is
-  in `wrangler.toml`, but **the R2 bucket itself still needs to be
-  created** (`wrangler r2 bucket create applyd-resumes` or via dashboard)
-  before uploads actually work in production; until then the endpoint
-  returns a clean 503 instead of crashing.
 - Worker HTTP API exists (`/api/worker/profile`, `/resume`, `/jobs`) behind
-  `WORKER_API_KEY`, but the Python worker does not call it yet, and the
-  secret must be set in Pages before those routes return anything but 503.
+  `WORKER_API_KEY`; confirm Pages secret + dry-run from the Python worker.
 - "My Info" field set covers the `SHARED_PROFILE_SCHEMA.md` contract as of
   2026-09-20 — expect it to keep growing as real application forms surface
   fields it doesn't cover yet.

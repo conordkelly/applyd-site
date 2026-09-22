@@ -1,3 +1,5 @@
+import { profileCompletenessGaps } from "./_profile_completeness.js";
+
 const USER_COMPLETE_DELAY_MINUTES = 10;
 
 export async function onRequestGet(context) {
@@ -76,6 +78,28 @@ export async function onRequestPost(context) {
 
   if (cleaned.length === 0) {
     return json({ error: "No valid links submitted" }, 400);
+  }
+
+  const profileRow = await env.DB.prepare(
+    "SELECT data FROM profiles WHERE user_id = ?"
+  )
+    .bind(data.userId)
+    .first();
+  let profile = {};
+  try {
+    profile = profileRow ? JSON.parse(profileRow.data) : {};
+  } catch {
+    profile = {};
+  }
+  const gaps = profileCompletenessGaps(profile);
+  if (gaps.length) {
+    return json(
+      {
+        error: "Complete My Info before submitting jobs",
+        gaps,
+      },
+      400
+    );
   }
 
   const stmt = env.DB.prepare(

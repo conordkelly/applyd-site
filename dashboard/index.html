@@ -1344,6 +1344,7 @@ table.list td.date-cell {
     renderResumeCurrentFile();
 
     updateSalaryPreview();
+    updateJobSubmitGate();
   }
 
   function buildFullName(flat) {
@@ -1498,6 +1499,7 @@ table.list td.date-cell {
       } catch (saveErr) {
         setResumeStatus('Uploaded — click "Save info" below to finish saving.');
       }
+      updateJobSubmitGate();
     } catch (err) {
       setResumeStatus(err.message || 'Upload failed — try again.');
     } finally {
@@ -1527,6 +1529,7 @@ table.list td.date-cell {
     } catch (saveErr) {
       setResumeStatus('Removed from storage — click "Save info" below to finish saving.');
     }
+    updateJobSubmitGate();
     btn.disabled = false;
   });
 
@@ -1540,6 +1543,7 @@ table.list td.date-cell {
     experienceRoles.forEach(function (role, i) {
       container.appendChild(renderRoleCard(role, i));
     });
+    updateJobSubmitGate();
   }
 
   function renderRoleCard(role, i) {
@@ -1712,10 +1716,28 @@ table.list td.date-cell {
     return parts.filter(Boolean).join(' - ');
   }
 
+  function clerkEmail() {
+    var user = window.Clerk && window.Clerk.user;
+    return (user && user.primaryEmailAddress && user.primaryEmailAddress.emailAddress) || '';
+  }
+
+  function clerkUserId() {
+    var user = window.Clerk && window.Clerk.user;
+    return (user && user.id) || null;
+  }
+
   function buildCanonicalProfile(flat, roles) {
+    var salaryDisplay = flat.salary_display || '';
+    if (!salaryDisplay && flat.salary_expectation) {
+      salaryDisplay = buildSalaryDisplay(
+        flat.salary_expectation,
+        flat.salary_expectation,
+        flat.salary_currency
+      );
+    }
     return {
       profile_id: null,
-      user_id: null,
+      user_id: clerkUserId(),
       identity: {
         first_name: flat.first_name || '',
         last_name: flat.last_name || '',
@@ -1723,7 +1745,7 @@ table.list td.date-cell {
         preferred_name: flat.preferred_name || ''
       },
       contact: {
-        email: '',
+        email: clerkEmail(),
         apply_email: '',
         phone: flat.phone || '',
         phone_country_display: flat.phone_country_display || ''
@@ -1752,13 +1774,15 @@ table.list td.date-cell {
       },
       education: {
         school: flat.school || '',
-        level: flat.education_level || ''
+        level: flat.education_level || '',
+        degree: flat.degree_name || '',
+        graduation_year: flat.graduation_year || ''
       },
       professional_background: {
         current_company: flat.current_company || '',
         current_title: flat.current_title || '',
         years_experience: flat.years_experience || '',
-        general_salary_expectation: flat.salary_display || '',
+        general_salary_expectation: salaryDisplay,
         salary_expectations_typed: flat.salary_typed_band || '',
         salary_min: flat.salary_min || '',
         salary_max: flat.salary_max || '',
@@ -1810,6 +1834,13 @@ table.list td.date-cell {
     out.province_full = provinceMatch ? provinceMatch[1] : out.province_full;
 
     out.salary_display = buildSalaryDisplay(out.salary_min, out.salary_max, out.salary_currency);
+    if (!out.salary_display && out.salary_expectation) {
+      out.salary_display = buildSalaryDisplay(
+        out.salary_expectation,
+        out.salary_expectation,
+        out.salary_currency
+      );
+    }
     out.salary_typed_band = buildSalaryTypedBand(out.salary_min, out.salary_max);
 
     if (resumeFileMeta) {
@@ -1827,19 +1858,84 @@ table.list td.date-cell {
     return out;
   }
 
+  // Mirrors functions/api/dashboard/_profile_completeness.js — keep in sync.
+  function profileCompletenessGaps(profile) {
+    profile = profile || {};
+    var gaps = [];
+    function need(label, value) {
+      if (!String(value == null ? '' : value).trim()) gaps.push(label);
+    }
+    need('First name', profile.first_name);
+    need('Last name', profile.last_name);
+    need('Phone', profile.phone);
+    need('Phone country', profile.phone_country_display);
+    need('Country', profile.country);
+    need('Street address', profile.address);
+    need('City', profile.city);
+    need('State / province', profile.province_full);
+    need('Postal / ZIP code', profile.postal_code);
+    need('Work authorization', profile.legally_authorized);
+    need('Visa sponsorship', profile.require_sponsorship);
+    need('Preferred job location', profile.preferred_job_location);
+    need('School / university', profile.school);
+    var hasSalary = !!(
+      String(profile.salary_display || '').trim() ||
+      String(profile.salary_expectation || '').trim() ||
+      String(profile.salary_min || '').trim() ||
+      String(profile.salary_max || '').trim()
+    );
+    if (!hasSalary) gaps.push('Desired salary');
+    if (!(resumeFileMeta && (resumeFileMeta.name || resumeFileMeta.url))) {
+      gaps.push('Resume PDF');
+    }
+    var roles = profile.experience_roles || experienceRoles || [];
+    var hasRole = Array.isArray(roles) && roles.some(function (role) {
+      return String(role.company || '').trim() && String(role.role || '').trim();
+    });
+    if (!hasRole) gaps.push('At least one work experience role (company + title)');
+    return gaps;
+  }
+
+  function updateJobSubmitGate() {
+    var btn = document.getElementById('submit-btn');
+    var note = document.getElementById('submit-note');
+    if (!btn || !note) return;
+    var gaps = profileCompletenessGaps(collectProfileForm());
+    if (!gaps.length) {
+      btn.disabled = false;
+      btn.title = '';
+      if (note.dataset.gate === '1') {
+        note.style.display = 'none';
+        note.textContent = '';
+        delete note.dataset.gate;
+      }
+      return;
+    }
+    btn.disabled = true;
+    btn.title = 'Complete My Info first';
+    note.textContent = 'Complete My Info before submitting jobs: ' + gaps.join(', ') + '.';
+    note.className = 'submit-note err';
+    note.style.display = 'block';
+    note.dataset.gate = '1';
+  }
+
   async function loadInfo() {
     var user = window.Clerk && window.Clerk.user;
     if (user) {
       document.getElementById('info-email').textContent =
         user.primaryEmailAddress ? user.primaryEmailAddress.emailAddress : '—';
     }
-    if (profileLoaded) return;
+    if (profileLoaded) {
+      updateJobSubmitGate();
+      return;
+    }
     try {
       var data = await apiFetch('/api/dashboard/profile');
       fillProfileForm(data.profile);
       profileLoaded = true;
     } catch (e) {
       console.error(e);
+      updateJobSubmitGate();
     }
   }
 
@@ -1858,6 +1954,7 @@ table.list td.date-cell {
       note.textContent = 'Saved.';
       note.className = 'submit-note ok';
       note.style.display = 'block';
+      updateJobSubmitGate();
     } catch (err) {
       note.textContent = 'Something went wrong — try again in a moment.';
       note.className = 'submit-note err';
@@ -1866,6 +1963,13 @@ table.list td.date-cell {
       btn.disabled = false;
       btn.textContent = 'Save info';
     }
+  });
+
+  document.getElementById('profile-form').addEventListener('input', function () {
+    updateJobSubmitGate();
+  });
+  document.getElementById('profile-form').addEventListener('change', function () {
+    updateJobSubmitGate();
   });
 
   var ADMIN_USER_ID = 'user_3JeY8TVmctjpcU6GbaK4l888Ak9';
@@ -1882,8 +1986,14 @@ table.list td.date-cell {
       'Content-Type': 'application/json'
     });
     var res = await fetch(path, options);
-    if (!res.ok) throw new Error('Request failed');
-    return res.json();
+    var payload = null;
+    try { payload = await res.json(); } catch (e) { payload = null; }
+    if (!res.ok) {
+      var err = new Error((payload && payload.error) || 'Request failed');
+      if (payload && payload.gaps) err.gaps = payload.gaps;
+      throw err;
+    }
+    return payload;
   }
 
   function escapeHtml(s) {
@@ -1957,10 +2067,17 @@ table.list td.date-cell {
     var note = document.getElementById('submit-note');
     var btn = document.getElementById('submit-btn');
 
+    var gaps = profileCompletenessGaps(collectProfileForm());
+    if (gaps.length) {
+      updateJobSubmitGate();
+      return;
+    }
+
     if (!links.length) {
       note.textContent = 'Paste at least one link first.';
       note.className = 'submit-note err';
       note.style.display = 'block';
+      delete note.dataset.gate;
       return;
     }
 
@@ -1975,15 +2092,24 @@ table.list td.date-cell {
       note.textContent = 'Submitted ' + res.submitted + ' role(s) — moved to Jobs Processing.';
       note.className = 'submit-note ok';
       note.style.display = 'block';
+      delete note.dataset.gate;
       gridBody.innerHTML = '';
       for (var i = 0; i < ROW_MIN; i++) addRow();
     } catch (e) {
-      note.textContent = 'Something went wrong — try again in a moment.';
+      var msg = (e && e.message) ? e.message : '';
+      if (e && e.gaps && e.gaps.length) {
+        msg = 'Complete My Info before submitting jobs: ' + e.gaps.join(', ') + '.';
+      } else if (!msg || msg === 'Request failed') {
+        msg = 'Something went wrong — try again in a moment.';
+      }
+      note.textContent = msg;
       note.className = 'submit-note err';
       note.style.display = 'block';
+      delete note.dataset.gate;
     } finally {
       btn.disabled = false;
       btn.textContent = 'Submit';
+      updateJobSubmitGate();
     }
   });
 
@@ -2002,6 +2128,7 @@ table.list td.date-cell {
         document.getElementById('admin-view-link').style.display = 'inline-block';
       }
       loadJobs();
+      loadInfo();
     } else {
       document.getElementById('app-view').style.display = 'none';
       document.getElementById('signed-out-view').style.display = 'block';

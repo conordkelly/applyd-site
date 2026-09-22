@@ -261,8 +261,11 @@ desktop (`.field-grid`, collapses to one column under 520px):
 2. **Personal** — first name, last name, full legal name (auto-fills from
    first + last on save if left blank), preferred name, phone (digits-only,
    auto-formats as `555-123-4567` via `formatPhoneNumber()`), phone country,
-   country, street address, city, state/province, postal code,
-   LinkedIn/GitHub/portfolio URLs.
+   country, street address, city, state/province, postal code
+   (`formatPostalCode()` — auto-uppercases and spaces Canadian codes as
+   typed, e.g. "n1k1r4" → "N1K 1R4"; auto-dashes US ZIP+4, e.g.
+   "123456789" → "12345-6789"; branches on whether the cleaned input starts
+   with a letter or a digit), LinkedIn/GitHub/portfolio URLs.
 
    **Three searchable combobox fields** (phone country, country,
    state/province) share one implementation: `createSearchableCombobox()`.
@@ -272,9 +275,18 @@ desktop (`.field-grid`, collapses to one column under 520px):
    typing filters, arrow keys + Enter navigate/pick, clicking an option
    selects it, opening always shows the full list (never filters against
    whatever's already selected, which would just show "No matches" against
-   itself). Added 2026-09-22 as a shared helper once there were three
-   near-identical copies of the same widget; before that, phone country and
-   state/province each had their own ~120-line duplicate.
+   itself). `.country-field input` needs an explicit `width: 100%` — the
+   input is nested one level inside the flex-stretched `.country-field`
+   wrapper, not a direct flex child of `.field` like every plain input on
+   this form, so it doesn't inherit the stretch and reverts to the
+   browser's intrinsic input width. Without that rule the chevron (absolute
+   `right: 12px` of `.country-field`) visibly floats away from the input's
+   real right edge — this shipped broken for one release before getting
+   caught and fixed the same day (2026-09-22).
+
+   Added 2026-09-22 as a shared helper once there were three near-identical
+   copies of the same widget; before that, phone country and state/province
+   each had their own ~120-line duplicate.
    - **Phone country** — `#phone-country-field`/`#phone-country-list`,
      labels `"Name (+Code)"` from `PHONE_COUNTRY_PINNED` (United States,
      Canada, United Kingdom) + `PHONE_COUNTRY_CODES` (~196 more,
@@ -291,7 +303,12 @@ desktop (`.field-grid`, collapses to one column under 520px):
      this one field on 2026-09-21** — having both was redundant once the
      code can be parsed back out of whichever option gets picked. Labels
      are `"Name (Code)"` (e.g. "Ontario (ON)") built from
-     `PROVINCE_FULL_NAMES`, Ontario pinned above a divider. On save,
+     `PROVINCE_FULL_NAMES`. **2026-09-22: all 13 Canadian provinces/
+     territories pin above the divider (Ontario first, rest alphabetical),
+     not just Ontario** — most users are Canadian, so the whole country
+     leads, then the 50 US states fill the alphabetical rest
+     (`CANADA_PROVINCE_CODES` is the explicit list used to split the two
+     groups out of `PROVINCE_FULL_NAMES`). On save,
      `collectProfileForm()` splits the picked label back into two flat keys
      — `province_full` ("Ontario") and `state_province` ("ON") — via one
      regex (`/^(.*?)\s*\(([A-Za-z]{2,3})\)\s*$/`), so both are still

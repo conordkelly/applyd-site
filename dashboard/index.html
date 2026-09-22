@@ -651,7 +651,7 @@ table.list td.date-cell {
 
 .country-field { position: relative; }
 
-.country-field input { padding-right: 32px; }
+.country-field input { width: 100%; padding-right: 32px; }
 
 .country-chevron {
   position: absolute;
@@ -1348,6 +1348,9 @@ table.list td.date-cell {
     var phoneEl = document.getElementById('f-phone');
     if (phoneEl.value) phoneEl.value = formatPhoneNumber(phoneEl.value.replace(/\D/g, ''));
 
+    var postalEl = document.getElementById('f-postal_code');
+    if (postalEl.value) postalEl.value = formatPostalCode(postalEl.value);
+
     var provinceEl = document.getElementById('f-province_full');
     if (provinceEl.value && profile.state_province) {
       provinceEl.value = provinceEl.value + ' (' + profile.state_province + ')';
@@ -1417,9 +1420,33 @@ table.list td.date-cell {
     e.target.value = formatPhoneNumber(e.target.value.replace(/\D/g, ''));
   });
 
-  var PROVINCE_PINNED = [['Ontario', 'ON']];
+  // Handles both formats this form actually sees: Canadian "A1A 1A1"
+  // (letter-led) and US "12345" / "12345-6789" (digit-led).
+  function formatPostalCode(raw) {
+    var cleaned = raw.toUpperCase().replace(/[^A-Z0-9]/g, '');
+    if (/^[A-Z]/.test(cleaned)) {
+      cleaned = cleaned.slice(0, 6);
+      return cleaned.length > 3 ? cleaned.slice(0, 3) + ' ' + cleaned.slice(3) : cleaned;
+    }
+    var digits = cleaned.replace(/[^0-9]/g, '').slice(0, 9);
+    return digits.length > 5 ? digits.slice(0, 5) + '-' + digits.slice(5) : digits;
+  }
+
+  document.getElementById('f-postal_code').addEventListener('input', function (e) {
+    e.target.value = formatPostalCode(e.target.value);
+  });
+
+  // All of Canada pinned above the divider, Ontario first, since most
+  // users are Canadian — US states make up the alphabetical rest.
+  var CANADA_PROVINCE_CODES = ['AB', 'BC', 'MB', 'NB', 'NL', 'NS', 'NT', 'NU', 'ON', 'PE', 'QC', 'SK', 'YT'];
+  var PROVINCE_PINNED = [['Ontario', 'ON']].concat(
+    CANADA_PROVINCE_CODES
+      .filter(function (code) { return code !== 'ON'; })
+      .map(function (code) { return [PROVINCE_FULL_NAMES[code], code]; })
+      .sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; })
+  );
   var PROVINCE_REST = Object.keys(PROVINCE_FULL_NAMES)
-    .filter(function (code) { return code !== 'ON'; })
+    .filter(function (code) { return CANADA_PROVINCE_CODES.indexOf(code) === -1; })
     .map(function (code) { return [PROVINCE_FULL_NAMES[code], code]; })
     .sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; });
 

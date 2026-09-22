@@ -640,21 +640,36 @@ HTML/JS, same design tokens as the rest of the dashboard, no wizard/modal.
   jumps to the relevant view (My Info, My Info scrolled to the resume
   field, or Jobs Submission) via the same nav functions the tabs already
   use — no new routing.
-- Persistence: `profile.onboarding = { welcomeDismissed, firstJobsSubmitted }`
+- Persistence: `profile.onboarding = { welcomeDismissed, firstJobsSubmitted, welcomeEmailSent }`
   is a new flat key in the same JSON blob everything else already saves to
   (`collectProfileForm()` attaches it, `fillProfileForm()` reads it back)
   — no new D1 table or column. Dismissing the banner and a first successful
   job submission each trigger an immediate background save
   (`saveProfileToServer()`, same helper the resume upload/remove flow
   already uses) so both survive a reload without waiting for "Save info."
-- Auto-hide: the banner (and mini-status) disappear once all three steps
-  are done, or once the user dismisses it — whichever comes first. No
-  re-open affordance if dismissed early; the checklist is a helper, not
-  the only way to find these steps.
+- Auto-hide: the banner disappears once all three steps are done, or once
+  the user dismisses it — whichever comes first. If dismissed early (setup
+  still incomplete), a "Show setup steps" control appears on Jobs Submission
+  and in My Info's mini-status so they can reopen it; clearing
+  `welcomeDismissed` and saving. When all three steps are done, no reopen
+  link is shown.
 - Re-renders live on every My Info field edit (`input`/`change` listeners
   on `#profile-form`, alongside the existing `updateJobSubmitGate()` call),
   not just on save — the two indicators (submit-gate note and onboarding
   checklist) stay in sync with each other as you type.
+
+**Welcome email (Resend, 2026-09-22).** First dashboard load after sign-in
+fires a one-time welcome message via Resend. Shared helper
+`functions/api/_email.js` (`sendEmail`, `buildWelcomeEmail`); endpoint
+`POST /api/dashboard/welcome` is idempotent and stamps
+`profile.onboarding.welcomeEmailSent` (+ `welcomeEmailSentAt`) only on a
+successful send. Missing `RESEND_API_KEY` returns `{ skipped: true }` so
+local/dev doesn't crash. Dashboard calls it from `loadInfo()` after the
+profile loads (`maybeSendWelcomeEmail()`). Profile POST preserves an
+existing welcome stamp if a client save races with a successful send.
+Secrets/vars (see `wrangler.toml` comments): `RESEND_API_KEY` (secret),
+optional `EMAIL_FROM` (default `Applyd <info@applydjobs.com>` — must be a
+verified Resend sender/domain).
 
 ## Deferred / not built yet
 
@@ -670,3 +685,4 @@ HTML/JS, same design tokens as the rest of the dashboard, no wizard/modal.
   for whenever the connection happens): `~/.applyd/apply_worker.py` can
   write "Submitted" to the sheet even on some error paths
   (`browser_closed_on_error`), not only on genuine success.
+- Stripe / billing not wired yet.

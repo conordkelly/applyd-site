@@ -337,6 +337,11 @@ body {
   cursor: pointer;
 }
 
+.onboarding-reopen-wrap {
+  margin: 8px 0 0;
+  font-size: 12.5px;
+}
+
 @media (max-width: 520px) {
   .onboarding-banner { padding: 18px 40px 18px 18px; }
   .onboarding-step { flex-wrap: wrap; }
@@ -909,6 +914,9 @@ table.list td.date-cell {
         <div class="panel-head">
           <h2>Jobs Submission</h2>
           <p>Paste a link to each job posting you want to apply to. Add rows as you need, then submit — they'll move to Jobs Processing.</p>
+          <p class="onboarding-reopen-wrap" id="onboarding-reopen-wrap" style="display:none;">
+            <button type="button" class="inline-link-btn" id="onboarding-reopen">Show setup steps</button>
+          </p>
         </div>
         <div class="grid-wrap">
           <table class="grid">
@@ -1431,7 +1439,11 @@ table.list td.date-cell {
   var profileLoaded = false;
   var experienceRoles = [];
   var resumeFileMeta = null;
-  var onboardingState = { welcomeDismissed: false, firstJobsSubmitted: false };
+  var onboardingState = {
+    welcomeDismissed: false,
+    firstJobsSubmitted: false,
+    welcomeEmailSent: false
+  };
 
   function normalizeYesNo(val) {
     if (!val) return val;
@@ -1474,8 +1486,12 @@ table.list td.date-cell {
     renderResumeCurrentFile();
 
     onboardingState = (profile.onboarding && typeof profile.onboarding === 'object')
-      ? { welcomeDismissed: !!profile.onboarding.welcomeDismissed, firstJobsSubmitted: !!profile.onboarding.firstJobsSubmitted }
-      : { welcomeDismissed: false, firstJobsSubmitted: false };
+      ? {
+          welcomeDismissed: !!profile.onboarding.welcomeDismissed,
+          firstJobsSubmitted: !!profile.onboarding.firstJobsSubmitted,
+          welcomeEmailSent: !!profile.onboarding.welcomeEmailSent
+        }
+      : { welcomeDismissed: false, firstJobsSubmitted: false, welcomeEmailSent: false };
 
     updateSalaryPreview();
     updateJobSubmitGate();
@@ -1633,12 +1649,15 @@ table.list td.date-cell {
   function renderOnboardingChecklist() {
     var banner = document.getElementById('onboarding-banner');
     var miniStatus = document.getElementById('onboarding-mini-status');
+    var reopenWrap = document.getElementById('onboarding-reopen-wrap');
     if (!banner || !miniStatus) return;
 
     var status = computeOnboardingStatus();
     var stepsDone = [status.infoComplete, status.resumeDone, status.jobsDone].filter(Boolean).length;
+    var showBanner = !onboardingState.welcomeDismissed && !status.allDone;
+    var showReopen = onboardingState.welcomeDismissed && !status.allDone;
 
-    if (onboardingState.welcomeDismissed || status.allDone) {
+    if (!showBanner) {
       banner.style.display = 'none';
       document.getElementById('onboarding-checklist').innerHTML = '';
     } else {
@@ -1673,12 +1692,34 @@ table.list td.date-cell {
       });
     }
 
+    if (reopenWrap) {
+      reopenWrap.style.display = showReopen ? 'block' : 'none';
+    }
+
     if (status.allDone) {
       miniStatus.style.display = 'none';
+      miniStatus.textContent = '';
+    } else if (showReopen) {
+      miniStatus.innerHTML = '';
+      miniStatus.appendChild(document.createTextNode(stepsDone + ' of 3 setup steps done. '));
+      var reopenMini = document.createElement('button');
+      reopenMini.type = 'button';
+      reopenMini.textContent = 'Show setup steps';
+      reopenMini.addEventListener('click', reopenOnboardingChecklist);
+      miniStatus.appendChild(reopenMini);
+      miniStatus.style.display = 'block';
     } else {
       miniStatus.textContent = stepsDone + ' of 3 setup steps done. See your Jobs page for the checklist.';
       miniStatus.style.display = 'block';
     }
+  }
+
+  function reopenOnboardingChecklist() {
+    onboardingState.welcomeDismissed = false;
+    renderOnboardingChecklist();
+    showJobsView();
+    switchTab('submission');
+    saveProfileToServer().catch(function () {});
   }
 
   document.getElementById('onboarding-dismiss').addEventListener('click', function () {
@@ -1686,6 +1727,8 @@ table.list td.date-cell {
     renderOnboardingChecklist();
     saveProfileToServer().catch(function () {});
   });
+
+  document.getElementById('onboarding-reopen').addEventListener('click', reopenOnboardingChecklist);
 
   function setResumeStatus(text) {
     var statusEl = document.getElementById('resume-upload-status');
@@ -2190,10 +2233,22 @@ table.list td.date-cell {
       var data = await apiFetch('/api/dashboard/profile');
       fillProfileForm(data.profile);
       profileLoaded = true;
+      maybeSendWelcomeEmail();
     } catch (e) {
       console.error(e);
       updateJobSubmitGate();
     }
+  }
+
+  function maybeSendWelcomeEmail() {
+    if (onboardingState.welcomeEmailSent) return;
+    apiFetch('/api/dashboard/welcome', { method: 'POST', body: '{}' })
+      .then(function (res) {
+        if (res && (res.sent || res.alreadySent)) {
+          onboardingState.welcomeEmailSent = true;
+        }
+      })
+      .catch(function () {});
   }
 
   document.getElementById('manage-account-btn').addEventListener('click', function () {

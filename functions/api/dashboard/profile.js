@@ -80,6 +80,29 @@ export async function onRequestPost(context) {
   }
   ensureAtsCredentials(profile.canonical);
 
+  // Preserve welcome-email stamp if a concurrent My Info save races the
+  // welcome endpoint (client may still have welcomeEmailSent: false).
+  let existingOnboarding = {};
+  if (existingRow && existingRow.data) {
+    try {
+      const existing = JSON.parse(existingRow.data);
+      if (existing && existing.onboarding && typeof existing.onboarding === "object") {
+        existingOnboarding = existing.onboarding;
+      }
+    } catch {
+      existingOnboarding = {};
+    }
+  }
+  if (!profile.onboarding || typeof profile.onboarding !== "object") {
+    profile.onboarding = {};
+  }
+  if (existingOnboarding.welcomeEmailSent && !profile.onboarding.welcomeEmailSent) {
+    profile.onboarding.welcomeEmailSent = true;
+    if (existingOnboarding.welcomeEmailSentAt) {
+      profile.onboarding.welcomeEmailSentAt = existingOnboarding.welcomeEmailSentAt;
+    }
+  }
+
   await env.DB.prepare(
     "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"
   )

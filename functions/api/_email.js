@@ -73,13 +73,11 @@ export function buildWelcomeEmail(opts) {
   const text = [
     hello,
     "",
-    "Welcome to Applyd. Three steps and you're set. Then you send links, we handle the forms:",
-    "",
-    "1. My Info - your answers, filled in once",
-    "2. Resume - the PDF we submit with each application",
-    "3. First job link - paste a posting to get going",
+    "Welcome to Applyd. To get started, add your resume and details under My Info, then send links to the jobs you want. We'll do the rest.",
     "",
     "A human reviews every application before it goes out.",
+    "",
+    "Email: You'll get an Applyd apply address for applications and logins. Mail to that address shows in your dashboard and is forwarded to your personal email so you can reply. Leave forwarding on so you don't miss interviews.",
     "",
     "Open your dashboard: https://www.applydjobs.com/dashboard/",
     "",
@@ -90,13 +88,9 @@ export function buildWelcomeEmail(opts) {
     "<p>" +
     escapeHtml(hello) +
     "</p>" +
-    "<p>Welcome to Applyd. Three steps and you're set. Then you send links, we handle the forms:</p>" +
-    "<ol>" +
-    "<li><strong>My Info</strong> - your answers, filled in once</li>" +
-    "<li><strong>Resume</strong> - the PDF we submit with each application</li>" +
-    "<li><strong>First job link</strong> - paste a posting to get going</li>" +
-    "</ol>" +
+    "<p>Welcome to Applyd. To get started, add your resume and details under My Info, then send links to the jobs you want. We'll do the rest.</p>" +
     "<p>A human reviews every application before it goes out.</p>" +
+    "<p><strong>Email:</strong> You'll get an Applyd apply address for applications and logins. Mail to that address shows in your dashboard and is forwarded to your personal email so you can reply. Leave forwarding on so you don't miss interviews.</p>" +
     '<p><a href="https://www.applydjobs.com/dashboard/">Open your dashboard</a></p>' +
     "<p>- Applyd</p>";
 

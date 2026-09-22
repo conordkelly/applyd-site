@@ -223,6 +223,126 @@ body {
   color: var(--text-2);
 }
 
+/* onboarding */
+
+.onboarding-banner {
+  position: relative;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+  padding: 20px 44px 20px 22px;
+  margin: 28px 0 0;
+  background: var(--surface);
+}
+
+.onboarding-dismiss {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  font-size: 18px;
+  line-height: 1;
+  color: var(--text-3);
+  background: none;
+  border: none;
+  cursor: pointer;
+}
+
+.onboarding-dismiss:hover { color: var(--text); }
+
+.onboarding-headline {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 16.5px;
+  margin: 0 0 4px;
+  color: var(--text);
+}
+
+.onboarding-subtext {
+  font-size: 13.5px;
+  color: var(--text-2);
+  margin: 0 0 16px;
+}
+
+.onboarding-checklist {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.onboarding-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+}
+
+.onboarding-step-icon {
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid var(--hairline-strong);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  color: var(--signal);
+}
+
+.onboarding-step.done .onboarding-step-icon {
+  border-color: var(--signal);
+  background: var(--signal);
+  color: var(--accent-ink);
+}
+
+.onboarding-step-label {
+  flex: 1;
+  font-size: 13.5px;
+  color: var(--text);
+}
+
+.onboarding-step.done .onboarding-step-label {
+  color: var(--text-3);
+}
+
+.onboarding-step-action {
+  flex-shrink: 0;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  color: var(--accent);
+  background: none;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+}
+
+.onboarding-mini-status {
+  font-size: 12.5px;
+  color: var(--text-2);
+  margin-top: 6px;
+}
+
+.onboarding-mini-status a,
+.onboarding-mini-status button {
+  font: inherit;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+@media (max-width: 520px) {
+  .onboarding-banner { padding: 18px 40px 18px 18px; }
+  .onboarding-step { flex-wrap: wrap; }
+  .onboarding-step-action { margin-left: 28px; }
+}
+
 /* tabs */
 
 .tabs {
@@ -772,6 +892,13 @@ table.list td.date-cell {
 
   <div id="app-view" style="display:none;">
     <div id="jobs-section">
+      <div class="onboarding-banner" id="onboarding-banner" style="display:none;">
+        <button type="button" class="onboarding-dismiss" id="onboarding-dismiss" aria-label="Dismiss">×</button>
+        <h3 class="onboarding-headline">Welcome to Applyd.</h3>
+        <p class="onboarding-subtext">Finish these steps and we'll start applying for you.</p>
+        <div class="onboarding-checklist" id="onboarding-checklist"></div>
+      </div>
+
       <nav class="tabs">
         <button class="tab-btn active" data-tab="submission">Submission</button>
         <button class="tab-btn" data-tab="processing">Processing</button>
@@ -819,6 +946,7 @@ table.list td.date-cell {
       <div class="panel-head">
         <h2>My Info</h2>
         <p>Answer these once and every application gets filled out the same way. Signed in as <span id="info-email">—</span> — <button class="inline-link-btn" id="manage-account-btn">manage account</button>.</p>
+        <p class="onboarding-mini-status" id="onboarding-mini-status" style="display:none;"></p>
       </div>
 
       <form class="profile-form" id="profile-form">
@@ -946,15 +1074,16 @@ table.list td.date-cell {
               </select>
             </div>
             <div class="field"><label for="f-school">School / university name<span class="required-mark">*</span></label><input type="text" id="f-school" placeholder="University of Toronto" /></div>
-            <div class="field"><label for="f-degree_name">Degree name</label><input type="text" id="f-degree_name" placeholder="B.Comm, Marketing Management" /></div>
-            <div class="field"><label for="f-graduation_year">Graduation year</label><input type="number" id="f-graduation_year" min="1950" max="2100" placeholder="2019" /></div>
+            <div class="field"><label for="f-degree_name">Degree name<span class="required-mark">*</span></label><input type="text" id="f-degree_name" placeholder="B.Comm, Marketing Management" /></div>
+            <div class="field"><label for="f-education_start_year">Start year<span class="required-mark">*</span></label><input type="number" id="f-education_start_year" min="1950" max="2100" placeholder="2015" /></div>
+            <div class="field"><label for="f-graduation_year">Graduation year<span class="required-mark">*</span></label><input type="number" id="f-graduation_year" min="1950" max="2100" placeholder="2019" /></div>
             <div class="field"><label for="f-target_roles">Target roles</label><input type="text" id="f-target_roles" placeholder="Product Manager, Senior PM" /></div>
           </div>
         </div>
 
         <div class="field-group" id="experience-roles-group">
           <h3>Work Experience Points</h3>
-          <p class="field-group-note">ApplyD uses this when completing your applications. Add each role you've held, with dates and bullet points the same way you'd list them on a resume.</p>
+          <p class="field-group-note">ApplyD uses this when completing your applications. Add each role you've held, with dates and bullet points the same way you'd list them on a resume. At least one role needs company, title, dates, and one bullet before you can submit jobs.</p>
           <div id="experience-roles-list"></div>
           <button type="button" class="add-row-btn" id="add-role-btn" style="margin-top:16px;">+ Add role</button>
         </div>
@@ -1070,7 +1199,7 @@ table.list td.date-cell {
     'legally_authorized', 'require_sponsorship', 'require_future_sponsorship', 'work_permit_type',
     'preferred_job_location', 'willing_onsite_local', 'willing_relocate', 'currently_reside_canada',
     'current_title', 'current_company', 'years_experience', 'education_level',
-    'school', 'degree_name', 'graduation_year', 'target_roles',
+    'school', 'degree_name', 'education_start_year', 'graduation_year', 'target_roles',
     'salary_expectation', 'salary_currency', 'salary_min', 'salary_max',
     'salary_display', 'salary_typed_band'
   ];
@@ -1302,6 +1431,7 @@ table.list td.date-cell {
   var profileLoaded = false;
   var experienceRoles = [];
   var resumeFileMeta = null;
+  var onboardingState = { welcomeDismissed: false, firstJobsSubmitted: false };
 
   function normalizeYesNo(val) {
     if (!val) return val;
@@ -1343,8 +1473,13 @@ table.list td.date-cell {
       : null;
     renderResumeCurrentFile();
 
+    onboardingState = (profile.onboarding && typeof profile.onboarding === 'object')
+      ? { welcomeDismissed: !!profile.onboarding.welcomeDismissed, firstJobsSubmitted: !!profile.onboarding.firstJobsSubmitted }
+      : { welcomeDismissed: false, firstJobsSubmitted: false };
+
     updateSalaryPreview();
     updateJobSubmitGate();
+    renderOnboardingChecklist();
   }
 
   function buildFullName(flat) {
@@ -1452,6 +1587,7 @@ table.list td.date-cell {
     var removeBtn = document.getElementById('resume-remove-btn');
     el.textContent = resumeFileMeta ? 'Current file on record: ' + resumeFileMeta.name : 'No resume on file yet.';
     removeBtn.style.display = resumeFileMeta ? 'inline-block' : 'none';
+    renderOnboardingChecklist();
   }
 
   async function saveProfileToServer() {
@@ -1460,6 +1596,96 @@ table.list td.date-cell {
       body: JSON.stringify({ profile: collectProfileForm() })
     });
   }
+
+  // First-run checklist. Reuses the same completeness check as the job-submit
+  // gate, just splitting "Resume PDF" out into its own step instead of
+  // lumping it in with the rest of My Info.
+  function computeOnboardingStatus() {
+    var gaps = profileCompletenessGaps(collectProfileForm());
+    var infoComplete = gaps.filter(function (g) { return g !== 'Resume PDF'; }).length === 0;
+    var resumeDone = !!resumeFileMeta;
+    var jobsDone = !!onboardingState.firstJobsSubmitted;
+    return {
+      infoComplete: infoComplete,
+      resumeDone: resumeDone,
+      jobsDone: jobsDone,
+      allDone: infoComplete && resumeDone && jobsDone
+    };
+  }
+
+  function goToMyInfo() {
+    document.getElementById('info-view-link').click();
+  }
+
+  function goToResume() {
+    document.getElementById('info-view-link').click();
+    setTimeout(function () {
+      var el = document.getElementById('f-resume_file');
+      if (el) el.scrollIntoView({ block: 'center' });
+    }, 50);
+  }
+
+  function goToJobsSubmission() {
+    showJobsView();
+    switchTab('submission');
+  }
+
+  function renderOnboardingChecklist() {
+    var banner = document.getElementById('onboarding-banner');
+    var miniStatus = document.getElementById('onboarding-mini-status');
+    if (!banner || !miniStatus) return;
+
+    var status = computeOnboardingStatus();
+    var stepsDone = [status.infoComplete, status.resumeDone, status.jobsDone].filter(Boolean).length;
+
+    if (onboardingState.welcomeDismissed || status.allDone) {
+      banner.style.display = 'none';
+      document.getElementById('onboarding-checklist').innerHTML = '';
+    } else {
+      banner.style.display = 'block';
+      var steps = [
+        { label: 'Complete My Info', done: status.infoComplete, action: goToMyInfo },
+        { label: 'Upload your resume', done: status.resumeDone, action: goToResume },
+        { label: 'Submit your first job link', done: status.jobsDone, action: goToJobsSubmission }
+      ];
+      var list = document.getElementById('onboarding-checklist');
+      list.innerHTML = '';
+      steps.forEach(function (step) {
+        var row = document.createElement('div');
+        row.className = 'onboarding-step' + (step.done ? ' done' : '');
+        var icon = document.createElement('span');
+        icon.className = 'onboarding-step-icon';
+        icon.textContent = step.done ? '✓' : '';
+        var label = document.createElement('span');
+        label.className = 'onboarding-step-label';
+        label.textContent = step.label;
+        row.appendChild(icon);
+        row.appendChild(label);
+        if (!step.done) {
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'onboarding-step-action';
+          btn.textContent = 'Go';
+          btn.addEventListener('click', step.action);
+          row.appendChild(btn);
+        }
+        list.appendChild(row);
+      });
+    }
+
+    if (status.allDone) {
+      miniStatus.style.display = 'none';
+    } else {
+      miniStatus.textContent = stepsDone + ' of 3 setup steps done. See your Jobs page for the checklist.';
+      miniStatus.style.display = 'block';
+    }
+  }
+
+  document.getElementById('onboarding-dismiss').addEventListener('click', function () {
+    onboardingState.welcomeDismissed = true;
+    renderOnboardingChecklist();
+    saveProfileToServer().catch(function () {});
+  });
 
   function setResumeStatus(text) {
     var statusEl = document.getElementById('resume-upload-status');
@@ -1568,11 +1794,11 @@ table.list td.date-cell {
     var grid = document.createElement('div');
     grid.className = 'field-grid';
 
-    grid.appendChild(makeRoleInput('Company', role.company, function (v) { role.company = v; }));
-    grid.appendChild(makeRoleInput('Title / role', role.role, function (v) { role.role = v; }));
-    grid.appendChild(makeRoleInput('Start date', role.start, function (v) { role.start = v; }, 'month'));
+    grid.appendChild(makeRoleInput('Company*', role.company, function (v) { role.company = v; updateJobSubmitGate(); }));
+    grid.appendChild(makeRoleInput('Title / role*', role.role, function (v) { role.role = v; updateJobSubmitGate(); }));
+    grid.appendChild(makeRoleInput('Start date*', role.start, function (v) { role.start = v; updateJobSubmitGate(); }, 'month'));
 
-    var endField = makeRoleInput('End date', role.end, function (v) { role.end = v; }, 'month');
+    var endField = makeRoleInput('End date*', role.end, function (v) { role.end = v; updateJobSubmitGate(); }, 'month');
     var endInput = endField.querySelector('input');
     endInput.disabled = !!role.present;
     grid.appendChild(endField);
@@ -1588,6 +1814,7 @@ table.list td.date-cell {
       role.present = presentCheckbox.checked;
       endInput.disabled = role.present;
       if (role.present) { role.end = ''; endInput.value = ''; }
+      updateJobSubmitGate();
     });
     presentRow.appendChild(presentCheckbox);
     presentRow.appendChild(document.createTextNode('I currently work here'));
@@ -1595,7 +1822,7 @@ table.list td.date-cell {
 
     var bulletsLabel = document.createElement('div');
     bulletsLabel.className = 'bullets-label';
-    bulletsLabel.textContent = 'Bullet points';
+    bulletsLabel.textContent = 'Bullet points*';
     card.appendChild(bulletsLabel);
 
     var bulletsWrap = document.createElement('div');
@@ -1648,7 +1875,10 @@ table.list td.date-cell {
     textarea.rows = 2;
     textarea.placeholder = 'Led a redesign that increased conversion 18%';
     textarea.value = role.bullets[bi];
-    textarea.addEventListener('input', function () { role.bullets[bi] = textarea.value; });
+    textarea.addEventListener('input', function () {
+      role.bullets[bi] = textarea.value;
+      updateJobSubmitGate();
+    });
     textarea.addEventListener('paste', function (e) {
       var clipboard = e.clipboardData || window.clipboardData;
       if (!clipboard) return;
@@ -1776,6 +2006,7 @@ table.list td.date-cell {
         school: flat.school || '',
         level: flat.education_level || '',
         degree: flat.degree_name || '',
+        start_year: flat.education_start_year || '',
         graduation_year: flat.graduation_year || ''
       },
       professional_background: {
@@ -1789,6 +2020,7 @@ table.list td.date-cell {
         salary_currency: flat.salary_currency || '',
         target_roles: flat.target_roles || '',
         degree_name: flat.degree_name || '',
+        education_start_year: flat.education_start_year || '',
         graduation_year: flat.graduation_year || ''
       },
       // No UI for these anymore (removed 2026-09-22) — they never
@@ -1854,6 +2086,7 @@ table.list td.date-cell {
     }
 
     out.experience_roles = experienceRoles;
+    out.onboarding = onboardingState;
     out.canonical = buildCanonicalProfile(out, experienceRoles);
     return out;
   }
@@ -1864,6 +2097,18 @@ table.list td.date-cell {
     var gaps = [];
     function need(label, value) {
       if (!String(value == null ? '' : value).trim()) gaps.push(label);
+    }
+    function roleHasUsableBullet(role) {
+      if (!role || !Array.isArray(role.bullets)) return false;
+      return role.bullets.some(function (b) {
+        if (b && typeof b === 'object') return !!String(b.text || '').trim();
+        return !!String(b == null ? '' : b).trim();
+      });
+    }
+    function roleHasDates(role) {
+      if (!role || !String(role.start || '').trim()) return false;
+      if (role.present) return true;
+      return !!String(role.end || '').trim();
     }
     need('First name', profile.first_name);
     need('Last name', profile.last_name);
@@ -1878,6 +2123,9 @@ table.list td.date-cell {
     need('Visa sponsorship', profile.require_sponsorship);
     need('Preferred job location', profile.preferred_job_location);
     need('School / university', profile.school);
+    need('Degree name', profile.degree_name);
+    need('Education start year', profile.education_start_year);
+    need('Graduation year', profile.graduation_year);
     var hasSalary = !!(
       String(profile.salary_display || '').trim() ||
       String(profile.salary_expectation || '').trim() ||
@@ -1890,9 +2138,18 @@ table.list td.date-cell {
     }
     var roles = profile.experience_roles || experienceRoles || [];
     var hasRole = Array.isArray(roles) && roles.some(function (role) {
-      return String(role.company || '').trim() && String(role.role || '').trim();
+      return (
+        String(role.company || '').trim() &&
+        String(role.role || '').trim() &&
+        roleHasDates(role) &&
+        roleHasUsableBullet(role)
+      );
     });
-    if (!hasRole) gaps.push('At least one work experience role (company + title)');
+    if (!hasRole) {
+      gaps.push(
+        'At least one work experience role (company, title, dates, and a bullet)'
+      );
+    }
     return gaps;
   }
 
@@ -1955,6 +2212,7 @@ table.list td.date-cell {
       note.className = 'submit-note ok';
       note.style.display = 'block';
       updateJobSubmitGate();
+      renderOnboardingChecklist();
     } catch (err) {
       note.textContent = 'Something went wrong — try again in a moment.';
       note.className = 'submit-note err';
@@ -1967,9 +2225,11 @@ table.list td.date-cell {
 
   document.getElementById('profile-form').addEventListener('input', function () {
     updateJobSubmitGate();
+    renderOnboardingChecklist();
   });
   document.getElementById('profile-form').addEventListener('change', function () {
     updateJobSubmitGate();
+    renderOnboardingChecklist();
   });
 
   var ADMIN_USER_ID = 'user_3JeY8TVmctjpcU6GbaK4l888Ak9';
@@ -2095,6 +2355,12 @@ table.list td.date-cell {
       delete note.dataset.gate;
       gridBody.innerHTML = '';
       for (var i = 0; i < ROW_MIN; i++) addRow();
+
+      if (!onboardingState.firstJobsSubmitted) {
+        onboardingState.firstJobsSubmitted = true;
+        renderOnboardingChecklist();
+        saveProfileToServer().catch(function () {});
+      }
     } catch (e) {
       var msg = (e && e.message) ? e.message : '';
       if (e && e.gaps && e.gaps.length) {

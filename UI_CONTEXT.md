@@ -605,7 +605,56 @@ experience role (company + title). Client: `profileCompletenessGaps()` /
 `updateJobSubmitGate()` in `dashboard/index.html`. Server: same rules in
 `functions/api/dashboard/_profile_completeness.js`, enforced on
 `POST /api/dashboard/jobs`. Profile save also stamps Clerk `user_id` +
-`contact.email` onto `canonical`.
+`contact.email` onto `canonical`. **Tightened same day:** the gate now also
+requires a "Start year" field on Education (new `f-education_start_year`
+input, alongside degree name and graduation year, all now required — keep
+the two `profileCompletenessGaps()` copies, client and server, in sync if
+this rule changes again), and a "usable" work experience role means
+company + title + start/end (or present) dates + at least one non-empty
+bullet, not just company + title.
+
+**ATS credentials (2026-09-22).** `functions/api/_ats_passwords.js`
+generates a stable per-user Workday-style credential pair
+(`canonical.ats_credentials.password` / `.password_backup`, min-12-char
+backup) the first time it's needed — on a My Info save
+(`functions/api/dashboard/profile.js`) or the worker's first profile fetch
+(`functions/api/worker/profile.js`), whichever happens first. Never
+rotates an existing value. Not surfaced anywhere in the dashboard UI by
+design (no password display/email — that's explicitly out of scope for
+onboarding, see below).
+
+**First-run onboarding (2026-09-22).** A welcome banner + 3-step checklist
+(Complete My Info, Upload resume, Submit first job link) shows in the Jobs
+view for any signed-in user who hasn't finished all three yet — vanilla
+HTML/JS, same design tokens as the rest of the dashboard, no wizard/modal.
+- Markup: `#onboarding-banner` (dismiss `×`, headline, subtext,
+  `#onboarding-checklist`), inserted at the top of `#jobs-section` above
+  the tab nav so it's visible regardless of which Jobs sub-tab is active.
+  A one-line `#onboarding-mini-status` ("X of 3 setup steps done...") also
+  shows in My Info's panel head as a lighter pointer back to the checklist.
+- State: `computeOnboardingStatus()` derives all three step statuses live
+  — "Complete My Info" reuses `profileCompletenessGaps()` with the
+  `"Resume PDF"` gap filtered out (so it's its own step instead of bundled
+  in), "Upload resume" is just `!!resumeFileMeta`, "Submit first job link"
+  is `onboardingState.firstJobsSubmitted`. Each checklist row's "Go" button
+  jumps to the relevant view (My Info, My Info scrolled to the resume
+  field, or Jobs Submission) via the same nav functions the tabs already
+  use — no new routing.
+- Persistence: `profile.onboarding = { welcomeDismissed, firstJobsSubmitted }`
+  is a new flat key in the same JSON blob everything else already saves to
+  (`collectProfileForm()` attaches it, `fillProfileForm()` reads it back)
+  — no new D1 table or column. Dismissing the banner and a first successful
+  job submission each trigger an immediate background save
+  (`saveProfileToServer()`, same helper the resume upload/remove flow
+  already uses) so both survive a reload without waiting for "Save info."
+- Auto-hide: the banner (and mini-status) disappear once all three steps
+  are done, or once the user dismisses it — whichever comes first. No
+  re-open affordance if dismissed early; the checklist is a helper, not
+  the only way to find these steps.
+- Re-renders live on every My Info field edit (`input`/`change` listeners
+  on `#profile-form`, alongside the existing `updateJobSubmitGate()` call),
+  not just on save — the two indicators (submit-gate note and onboarding
+  checklist) stay in sync with each other as you type.
 
 ## Deferred / not built yet
 

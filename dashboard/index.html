@@ -2219,6 +2219,27 @@ table.list td.date-cell {
     note.dataset.gate = '1';
   }
 
+  function clerkUserNames() {
+    var user = window.Clerk && window.Clerk.user;
+    return {
+      firstName: user && user.firstName ? String(user.firstName).trim() : '',
+      lastName: user && user.lastName ? String(user.lastName).trim() : ''
+    };
+  }
+
+  function maybePrefillNamesFromClerk() {
+    var names = clerkUserNames();
+    var firstEl = document.getElementById('f-first_name');
+    var lastEl = document.getElementById('f-last_name');
+    if (firstEl && !String(firstEl.value || '').trim() && names.firstName) {
+      firstEl.value = names.firstName;
+    }
+    if (lastEl && !String(lastEl.value || '').trim() && names.lastName) {
+      lastEl.value = names.lastName;
+    }
+    if (names.firstName || names.lastName) updateJobSubmitGate();
+  }
+
   async function loadInfo() {
     var user = window.Clerk && window.Clerk.user;
     if (user) {
@@ -2232,6 +2253,7 @@ table.list td.date-cell {
     try {
       var data = await apiFetch('/api/dashboard/profile');
       fillProfileForm(data.profile);
+      maybePrefillNamesFromClerk();
       profileLoaded = true;
       maybeSendWelcomeEmail();
     } catch (e) {
@@ -2242,7 +2264,14 @@ table.list td.date-cell {
 
   function maybeSendWelcomeEmail() {
     if (onboardingState.welcomeEmailSent) return;
-    apiFetch('/api/dashboard/welcome', { method: 'POST', body: '{}' })
+    var names = clerkUserNames();
+    apiFetch('/api/dashboard/welcome', {
+      method: 'POST',
+      body: JSON.stringify({
+        firstName: names.firstName,
+        lastName: names.lastName
+      })
+    })
       .then(function (res) {
         if (res && (res.sent || res.alreadySent)) {
           onboardingState.welcomeEmailSent = true;

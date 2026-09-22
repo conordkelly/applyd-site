@@ -12,13 +12,22 @@ function json(data, status) {
 }
 
 export async function onRequestPost(context) {
-  const { env, data } = context;
+  const { request, env, data } = context;
   const userId = data.userId;
   const email = String(data.email || "").trim();
 
   if (!email) {
     return json({ ok: true, skipped: true, reason: "no_email" });
   }
+
+  let body = {};
+  try {
+    body = await request.json();
+  } catch {
+    body = {};
+  }
+  const clerkFirst = String((body && body.firstName) || "").trim();
+  const clerkLast = String((body && body.lastName) || "").trim();
 
   const row = await env.DB.prepare(
     "SELECT data FROM profiles WHERE user_id = ?"
@@ -42,8 +51,30 @@ export async function onRequestPost(context) {
     return json({ ok: true, alreadySent: true });
   }
 
+  // Prefer Clerk signup names; fall back to My Info if already filled.
+  if (clerkFirst && !String(profile.first_name || "").trim()) {
+    profile.first_name = clerkFirst;
+  }
+  if (clerkLast && !String(profile.last_name || "").trim()) {
+    profile.last_name = clerkLast;
+  }
+  if (
+    profile.canonical &&
+    typeof profile.canonical === "object" &&
+    profile.canonical.identity &&
+    typeof profile.canonical.identity === "object"
+  ) {
+    if (clerkFirst && !String(profile.canonical.identity.first_name || "").trim()) {
+      profile.canonical.identity.first_name = clerkFirst;
+    }
+    if (clerkLast && !String(profile.canonical.identity.last_name || "").trim()) {
+      profile.canonical.identity.last_name = clerkLast;
+    }
+  }
+
   const firstName =
     (profile.first_name && String(profile.first_name).trim()) ||
+    clerkFirst ||
     (profile.canonical &&
       profile.canonical.identity &&
       profile.canonical.identity.first_name) ||
@@ -59,6 +90,14 @@ export async function onRequestPost(context) {
 
   if (result.skipped) {
     // Don't stamp welcomeEmailSent when we couldn't send (no API key yet).
+    // Still persist Clerk names if we just learned them.
+    if (clerkFirst || clerkLast) {
+      await env.DB.prepare(
+        "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"
+      )
+        .bind(userId, JSON.stringify(profile))
+        .run();
+    }
     return json({ ok: true, skipped: true, reason: result.reason || "skipped" });
   }
 

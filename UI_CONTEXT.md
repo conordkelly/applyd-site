@@ -671,6 +671,11 @@ Secrets/vars (see `wrangler.toml` comments): `RESEND_API_KEY` (secret),
 optional `EMAIL_FROM` (default `Applyd <info@applydjobs.com>` — must be a
 verified Resend sender/domain). Copy covers setup + apply-address /
 forwarding explainer. Full apply-inbox system plan: **`EMAIL_PLAN.md`**.
+Welcome personalization uses Clerk `user.firstName` / `lastName` (passed into
+`POST /api/dashboard/welcome` and stamped onto the profile if My Info names
+are still blank). **Requires** Clerk Dashboard → User & authentication →
+User model → First and last name enabled and required on sign-up (cannot be
+flipped from this repo).
 
 ## Deferred / not built yet
 

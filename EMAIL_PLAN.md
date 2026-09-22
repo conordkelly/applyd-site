@@ -169,6 +169,11 @@ The Applyd Team
 When `apply_email` exists at send time, prefer stating the real address
 instead of the generic `yourname@everydaymail.ca` example.
 
+Greeting uses Clerk signup first name when available (`Hi Jane,`). Enable
+**First and last name** (required) in Clerk Dashboard → User & authentication
+→ User model. App code stamps those names into the profile on welcome send
+and prefills My Info if empty.
+
 ---
 
 ## Data shape (intended)

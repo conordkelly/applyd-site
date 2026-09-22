@@ -1646,7 +1646,7 @@ table.list td.date-cell {
 
     var bulletsWrap = document.createElement('div');
     role.bullets.forEach(function (bullet, bi) {
-      bulletsWrap.appendChild(renderBulletRow(role, bi));
+      bulletsWrap.appendChild(renderBulletRow(role, bi, i));
     });
     card.appendChild(bulletsWrap);
 
@@ -1673,7 +1673,21 @@ table.list td.date-cell {
       .filter(Boolean);
   }
 
-  function renderBulletRow(role, bi) {
+  // After a bullet split/insert, put the cursor in the right new field
+  // instead of leaving focus wherever the re-render happened to land it.
+  function focusBulletAt(roleIndex, bulletIndex) {
+    var roleCards = document.querySelectorAll('.role-card');
+    var card = roleCards[roleIndex];
+    if (!card) return;
+    var textareas = card.querySelectorAll('.bullet-row textarea');
+    var target = textareas[bulletIndex];
+    if (!target) return;
+    target.focus();
+    var pos = target.value.length;
+    target.setSelectionRange(pos, pos);
+  }
+
+  function renderBulletRow(role, bi, roleIndex) {
     var row = document.createElement('div');
     row.className = 'bullet-row';
     var textarea = document.createElement('textarea');
@@ -1689,6 +1703,22 @@ table.list td.date-cell {
         e.preventDefault();
         Array.prototype.splice.apply(role.bullets, [bi, 1].concat(lines));
         renderExperienceRoles();
+        focusBulletAt(roleIndex, bi + lines.length - 1);
+      }
+    });
+    // Enter commits the current bullet and starts a new one, same as
+    // typing line items in a checklist/outline tool — otherwise Enter just
+    // inserts a line break inside the same textarea, which looks like
+    // "nothing happened" when someone types several bullets in a row.
+    // Shift+Enter still inserts a literal line break for the rare bullet
+    // that actually needs to wrap onto two lines.
+    textarea.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        role.bullets[bi] = textarea.value;
+        role.bullets.splice(bi + 1, 0, '');
+        renderExperienceRoles();
+        focusBulletAt(roleIndex, bi + 1);
       }
     });
     row.appendChild(textarea);

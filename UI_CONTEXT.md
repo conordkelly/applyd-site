@@ -353,6 +353,20 @@ desktop (`.field-grid`, collapses to one column under 520px):
    markers (•, -, *, etc.) so a source bullet doesn't end up double-
    bulleted. A normal single-line paste is untouched — splitting only
    kicks in when the pasted text actually contains multiple lines.
+
+   **Enter also starts a new bullet** (`focusBulletAt()` + a `keydown`
+   handler on each bullet's textarea), added 2026-09-22 after a user
+   report: typing several bullets in one box and pressing Enter between
+   them just inserted line breaks inside that one `<textarea>` — nothing
+   visibly happened, since there was no typed-entry equivalent of paste-
+   splitting yet. Enter now commits the current bullet and opens (and
+   focuses) a new one right after it, same as a checklist/outline tool;
+   Shift+Enter still inserts a literal line break for the rare bullet that
+   needs to wrap onto two lines. The same `focusBulletAt()` helper also
+   now focuses the last newly-created field after a paste-split, so typing
+   can continue immediately instead of landing wherever the re-render
+   happened to leave focus.
+
    Rendered/managed entirely in vanilla JS (`renderExperienceRoles()`,
    `renderRoleCard()`, `renderBulletRow()`) — no framework, consistent
    with the rest of the dashboard.

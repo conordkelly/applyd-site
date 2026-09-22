@@ -1363,7 +1363,10 @@ table.list td.date-cell {
       provinceEl.value = provinceEl.value + ' (' + profile.state_province + ')';
     }
 
-    experienceRoles = Array.isArray(profile.experience_roles) ? profile.experience_roles : [];
+    // undefined (never saved a profile before) gets one blank role to start
+    // from, same as a brand-new signup would see; an explicitly saved []
+    // (user removed every role and saved) is left alone.
+    experienceRoles = Array.isArray(profile.experience_roles) ? profile.experience_roles : [emptyRole()];
     renderExperienceRoles();
 
     resumeFileMeta = profile.resume_upload_filename

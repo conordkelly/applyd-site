@@ -69,32 +69,36 @@ export async function sendEmail(env, opts) {
 export function buildWelcomeEmail(opts) {
   const name = String((opts && opts.firstName) || "").trim();
   const hello = name ? "Hi " + name + "," : "Hi,";
-  const subject = "Welcome to Applyd";
+  const subject = "Apply less. Start here.";
   const text = [
     hello,
     "",
-    "You're signed in. Next:",
-    "1. Complete My Info",
-    "2. Upload your resume PDF",
-    "3. Submit your first job link",
+    "Welcome to Applyd. Three steps and you're set. Then you send links, we handle the forms:",
+    "",
+    "1. My Info - your answers, filled in once",
+    "2. Resume - the PDF we submit with each application",
+    "3. First job link - paste a posting to get going",
+    "",
+    "A human reviews every application before it goes out.",
     "",
     "Open your dashboard: https://www.applydjobs.com/dashboard/",
     "",
-    "— Applyd",
+    "- Applyd",
   ].join("\n");
 
   const html =
     "<p>" +
     escapeHtml(hello) +
     "</p>" +
-    "<p>You're signed in. Next:</p>" +
+    "<p>Welcome to Applyd. Three steps and you're set. Then you send links, we handle the forms:</p>" +
     "<ol>" +
-    "<li>Complete My Info</li>" +
-    "<li>Upload your resume PDF</li>" +
-    "<li>Submit your first job link</li>" +
+    "<li><strong>My Info</strong> - your answers, filled in once</li>" +
+    "<li><strong>Resume</strong> - the PDF we submit with each application</li>" +
+    "<li><strong>First job link</strong> - paste a posting to get going</li>" +
     "</ol>" +
+    "<p>A human reviews every application before it goes out.</p>" +
     '<p><a href="https://www.applydjobs.com/dashboard/">Open your dashboard</a></p>' +
-    "<p>— Applyd</p>";
+    "<p>- Applyd</p>";
 
   return { subject, text, html };
 }

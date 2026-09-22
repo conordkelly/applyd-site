@@ -5,11 +5,14 @@ it. This is a planning doc, not a build log — update it as decisions get made 
 reversed, before code exists to document instead (see `UI_CONTEXT.md` for that once
 this actually gets built).
 
-Last updated: 2026-09-20 (R2 resume storage wired up — code done, bucket not yet created).
+Last updated: 2026-09-22 (apply-email approach moved to `EMAIL_PLAN.md`).
 
 **Shared profile contract (site ↔ DB ↔ worker):**  
 `job-automation-ai/context/SHARED_PROFILE_SCHEMA.md`  
 Example: `job-automation-ai/context/shared-profile.example.json`
+
+**Per-user apply email (Cloudflare catch-all):** see **`EMAIL_PLAN.md`**.
+That doc supersedes the Google Workspace mailbox sections below.
 
 ## The flow (as specified by the user)
 
@@ -25,7 +28,8 @@ Example: `job-automation-ai/context/shared-profile.example.json`
 **Then a 24-48 hour manual/semi-manual provisioning window**, during which:
 - Backend user profile is created in the Applyd database (already happens today,
   via the Clerk-session-triggered upsert in `_middleware.js`)
-- A dedicated mailbox is created and attached to the user's profile
+- A dedicated **apply address** is assigned (see `EMAIL_PLAN.md` — Cloudflare
+  catch-all, not Workspace mailbox creation)
 - The user is notified their account is ready
 
 **Ongoing, once live:**
@@ -120,7 +124,10 @@ doesn't read `assets.resume_url` yet (out of scope for this round — see
 ## Checking the dedicated email (decided)
 
 Read-only viewer inside the Applyd dashboard — **not** real mailbox login
-credentials handed to the user. Reasons:
+credentials handed to the user. Full current plan (user inbox, admin-by-user,
+forward-to-personal, Cloudflare catch-all): **`EMAIL_PLAN.md`**.
+
+Reasons (unchanged):
 
 - It's the only option that actually guarantees "can check it but can't
   change details." Real credentials would let a user change the password or
@@ -148,12 +155,18 @@ noon as the original notes said — that was a typo/ambiguity, now resolved).
 ## Open questions — need answers before building
 
 All resolved for now. Next step is turning this plan into an actual build
-(onboarding wizard, Stripe one-time checkout, R2 for resume storage, the
-Workspace mailbox provisioning, the read-only email viewer tab).
+(onboarding wizard, Stripe one-time checkout). **Apply-email / inbox
+work is tracked in `EMAIL_PLAN.md`** (Cloudflare catch-all — not Workspace
+provisioning).
 
-## Decided: dedicated mailbox, not the user's real email
+## Decided: dedicated apply address, not the user's real email
 
-Two options were considered for the per-user mailbox the worker logs into:
+> **Superseded implementation (2026-09-22):** do not build Google Workspace
+> provisioning. Use Cloudflare Email Routing catch-all on `everydaymail.ca`
+> as specified in `EMAIL_PLAN.md`. The rationale below for *why* we need a
+> dedicated address (not personal Gmail) still holds.
+
+Two options were considered for the per-user address the worker uses:
 
 1. **OAuth into the user's real Gmail/Outlook** — rejected. Most job seekers
    already have old ATS accounts (Greenhouse/Workday/Lever) tied to their real
@@ -181,6 +194,9 @@ tiny volume but has a shelf life — the same detection systems increasingly cat
 logging in instead of a human), not just how the account was created.
 
 ### Chosen approach: Google Workspace, multiple domains
+
+> **Superseded 2026-09-22.** Workspace per-seat cost rejected. See
+> `EMAIL_PLAN.md` for Cloudflare catch-all. Historical notes kept below.
 
 - Buy generic, non-"applydjobs"-sounding domains (e.g. `mailhaven.com`-style —
   short, no reference to jobs/hiring/applications) and run them through Google

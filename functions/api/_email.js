@@ -73,26 +73,38 @@ export function buildWelcomeEmail(opts) {
   const text = [
     hello,
     "",
-    "Welcome to Applyd. To get started, add your resume and details under My Info, then send links to the jobs you want. We'll do the rest.",
+    "Welcome to Applyd. Complete these three steps, then start sending us job links and we'll take it from there:",
     "",
-    "A human reviews every application before it goes out.",
+    "1. Add your details under 'My Info'",
+    "2. Upload your resume",
+    "3. Submit your first job link",
     "",
-    "Email: You'll get an Applyd apply address for applications and logins. Mail to that address shows in your dashboard and is forwarded to your personal email so you can reply. Leave forwarding on so you don't miss interviews.",
+    "A real person reviews every application before it's submitted.",
     "",
-    "Open your dashboard: https://www.applydjobs.com/dashboard/",
+    "Your Applyd email: You'll get a dedicated email address (typically a generic address like yourname@everydaymail.ca) for job applications and account logins. Anything sent there shows up in your dashboard and forwards automatically to your personal email so you can reply. Keep forwarding on so you don't miss an interview request.",
     "",
-    "- Applyd",
+    "Get started: https://www.applydjobs.com/dashboard/",
+    "",
+    "Best,",
+    "",
+    "The Applyd Team",
   ].join("\n");
 
   const html =
     "<p>" +
     escapeHtml(hello) +
     "</p>" +
-    "<p>Welcome to Applyd. To get started, add your resume and details under My Info, then send links to the jobs you want. We'll do the rest.</p>" +
-    "<p>A human reviews every application before it goes out.</p>" +
-    "<p><strong>Email:</strong> You'll get an Applyd apply address for applications and logins. Mail to that address shows in your dashboard and is forwarded to your personal email so you can reply. Leave forwarding on so you don't miss interviews.</p>" +
-    '<p><a href="https://www.applydjobs.com/dashboard/">Open your dashboard</a></p>' +
-    "<p>- Applyd</p>";
+    "<p>Welcome to Applyd. Complete these three steps, then start sending us job links and we'll take it from there:</p>" +
+    "<ol>" +
+    "<li>Add your details under 'My Info'</li>" +
+    "<li>Upload your resume</li>" +
+    "<li>Submit your first job link</li>" +
+    "</ol>" +
+    "<p>A real person reviews every application before it's submitted.</p>" +
+    "<p><strong>Your Applyd email:</strong> You'll get a dedicated email address (typically a generic address like yourname@everydaymail.ca) for job applications and account logins. Anything sent there shows up in your dashboard and forwards automatically to your personal email so you can reply. Keep forwarding on so you don't miss an interview request.</p>" +
+    '<p><a href="https://www.applydjobs.com/dashboard/">Get started</a></p>' +
+    "<p>Best,</p>" +
+    "<p>The Applyd Team</p>";
 
   return { subject, text, html };
 }

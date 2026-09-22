@@ -669,7 +669,8 @@ profile loads (`maybeSendWelcomeEmail()`). Profile POST preserves an
 existing welcome stamp if a client save races with a successful send.
 Secrets/vars (see `wrangler.toml` comments): `RESEND_API_KEY` (secret),
 optional `EMAIL_FROM` (default `Applyd <info@applydjobs.com>` — must be a
-verified Resend sender/domain).
+verified Resend sender/domain). Copy covers setup + apply-address /
+forwarding explainer. Full apply-inbox system plan: **`EMAIL_PLAN.md`**.
 
 ## Deferred / not built yet
 
@@ -686,3 +687,5 @@ verified Resend sender/domain).
   write "Submitted" to the sheet even on some error paths
   (`browser_closed_on_error`), not only on genuine success.
 - Stripe / billing not wired yet.
+- Per-user apply inboxes (Cloudflare catch-all on `everydaymail.ca`, user
+  inbox, admin-by-user view, forward-to-personal) — see **`EMAIL_PLAN.md`**.

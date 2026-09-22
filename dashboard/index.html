@@ -645,13 +645,32 @@ table.list td.date-cell {
 
 .bullet-row {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 8px;
   margin-bottom: 8px;
 }
 
-.bullet-row input {
+.bullet-row textarea {
   flex: 1;
+  min-height: 64px;
+  resize: vertical;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 13.5px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  padding: 10px 11px;
+}
+
+.bullet-row textarea:focus {
+  outline: 2px solid var(--accent);
+  outline-offset: -1px;
+}
+
+.bullet-row .remove-btn {
+  margin-top: 10px;
 }
 
 .add-bullet-btn { margin-top: 2px; }
@@ -1644,15 +1663,35 @@ table.list td.date-cell {
     return card;
   }
 
+  // Splits a multi-line paste (e.g. copied straight out of a resume) into
+  // one bullet per line instead of dumping it all into a single field.
+  // Strips common leading bullet markers so "• Did the thing" doesn't end
+  // up double-bulleted (once by the source, once by this UI).
+  function splitPastedBullets(text) {
+    return text.split(/\r\n|\r|\n/)
+      .map(function (line) { return line.replace(/^\s*[•\-*•◦‣]+\s*/, '').trim(); })
+      .filter(Boolean);
+  }
+
   function renderBulletRow(role, bi) {
     var row = document.createElement('div');
     row.className = 'bullet-row';
-    var input = document.createElement('input');
-    input.type = 'text';
-    input.placeholder = 'Led a redesign that increased conversion 18%';
-    input.value = role.bullets[bi];
-    input.addEventListener('input', function () { role.bullets[bi] = input.value; });
-    row.appendChild(input);
+    var textarea = document.createElement('textarea');
+    textarea.rows = 2;
+    textarea.placeholder = 'Led a redesign that increased conversion 18%';
+    textarea.value = role.bullets[bi];
+    textarea.addEventListener('input', function () { role.bullets[bi] = textarea.value; });
+    textarea.addEventListener('paste', function (e) {
+      var clipboard = e.clipboardData || window.clipboardData;
+      if (!clipboard) return;
+      var lines = splitPastedBullets(clipboard.getData('text'));
+      if (lines.length > 1) {
+        e.preventDefault();
+        Array.prototype.splice.apply(role.bullets, [bi, 1].concat(lines));
+        renderExperienceRoles();
+      }
+    });
+    row.appendChild(textarea);
     if (role.bullets.length > 1) {
       var removeBtn = document.createElement('button');
       removeBtn.type = 'button';

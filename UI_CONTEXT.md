@@ -330,13 +330,32 @@ desktop (`.field-grid`, collapses to one column under 520px):
    dynamic repeatable role cards (`+ Add role` / `Remove role`), each with
    company, title, start/end month pickers or an "I currently work here"
    checkbox that disables the end date, and a repeatable bullet list
-   (`+ Add bullet` / per-bullet `Remove`). Persisted as
+   (`+ Add bullet` / per-bullet `Remove`). A brand-new profile
+   (`experience_roles` never saved) starts with one blank "Role 1" card
+   already showing rather than zero — an explicitly saved empty array
+   (user removed every role and saved) is left alone, since that's a
+   deliberate choice, not a first-time state. Persisted as
    `profile.experience_roles`, an array of
    `{ company, role, start, end, present, bullets: [''] }` — the same
-   shape `experience_bank.json` uses, so it can eventually merge with that
-   local worker file. Rendered/managed entirely in vanilla JS
-   (`renderExperienceRoles()`, `renderRoleCard()`, `renderBulletRow()`) —
-   no framework, consistent with the rest of the dashboard.
+   shape `experience_bank.json` uses. **Confirmed 2026-09-22 against the
+   real worker** (`~/.applyd/apply_worker.py`'s `load_experience_bank()`):
+   it already prefers this exact site-canonical shape over the local file
+   and reads `bullets[].text` from objects (or plain strings) to build the
+   `•`-joined description it actually types into applications — no format
+   changes needed on this end.
+
+   Bullets render as `<textarea>` (not `<input>`, changed 2026-09-22 to
+   look closer to a real ATS "describe this role" box — Workday-style,
+   ~2 rows tall, vertically resizable) with paste-splitting
+   (`splitPastedBullets()`): pasting multi-line text (e.g. straight out of
+   a resume) replaces the one bullet with one bullet per line instead of
+   dumping it all into a single field, and strips common leading bullet
+   markers (•, -, *, etc.) so a source bullet doesn't end up double-
+   bulleted. A normal single-line paste is untouched — splitting only
+   kicks in when the pasted text actually contains multiple lines.
+   Rendered/managed entirely in vanilla JS (`renderExperienceRoles()`,
+   `renderRoleCard()`, `renderBulletRow()`) — no framework, consistent
+   with the rest of the dashboard.
 7. **Compensation** — desired salary, currency, minimum acceptable,
    maximum range, plus a live read-only preview line ("Shown on
    applications as: 90K-120K CAD") built by `buildSalaryDisplay()` /

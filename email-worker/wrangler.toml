@@ -1,0 +1,26 @@
+# Separate Worker for Cloudflare Email Routing catch-all on everydaymail.ca.
+# Pages Functions cannot handle the email() event — this Worker shares the
+# same D1 database as applyd-site.
+#
+# Deploy (needs wrangler + Cloudflare auth):
+#   cd email-worker && npx wrangler deploy
+#
+# Then in Cloudflare Dashboard → everydaymail.ca → Email → Email Routing:
+#   1. Enable Email Routing (adds MX records)
+#   2. Routing rules → Catch-all → Send to a Worker → applyd-email-inbox
+#
+# Secrets (same Resend key as Pages):
+#   npx wrangler secret put RESEND_API_KEY
+
+name = "applyd-email-inbox"
+main = "src/index.js"
+compatibility_date = "2026-08-12"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "applyd-jobs"
+database_id = "ff5d04bd-3619-47ea-b392-c6b7b039c6ad"
+
+[vars]
+EMAIL_FROM = "Applyd <info@applydjobs.com>"
+APPLY_EMAIL_DOMAIN = "everydaymail.ca"

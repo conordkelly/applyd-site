@@ -677,6 +677,17 @@ are still blank). **Requires** Clerk Dashboard → User & authentication →
 User model → First and last name enabled and required on sign-up (cannot be
 flipped from this repo).
 
+**Apply email / Inbox (2026-09-22).** Each user is assigned
+`firstname.lastname@everydaymail.ca` on first profile/welcome load
+(`functions/api/_apply_email.js`). Dashboard **Inbox** nav lists stored
+messages (`GET /api/dashboard/mail`). My Info shows the address + forward
+toggle (default on; confirm warning when turning off). Admin → **Mail** tab
+lists users and their messages (`/api/dashboard/admin/mail`). Inbound
+receiving is a separate Worker (`email-worker/`, name `applyd-email-inbox`)
+bound as the Email Routing catch-all on `everydaymail.ca`; it stores to D1
+and re-sends copies via Resend. Fill worker gets `canonical.contact.email` =
+apply address (`functions/api/worker/profile.js`).
+
 ## Deferred / not built yet
 
 - No `/agencies` page live. `agencies-landing-archive.html` has the old
@@ -692,5 +703,4 @@ flipped from this repo).
   write "Submitted" to the sheet even on some error paths
   (`browser_closed_on_error`), not only on genuine success.
 - Stripe / billing not wired yet.
-- Per-user apply inboxes (Cloudflare catch-all on `everydaymail.ca`, user
-  inbox, admin-by-user view, forward-to-personal) — see **`EMAIL_PLAN.md`**.
+- Per-user apply inboxes: code landed (see **`EMAIL_PLAN.md`** / `email-worker/`). Finish Email Routing catch-all + deploy `applyd-email-inbox` Worker.

@@ -1,4 +1,5 @@
 import { ensureAtsCredentials } from "../_ats_passwords.js";
+import { ensureApplyEmail, syncCanonicalApplyEmail } from "../_apply_email.js";
 
 export async function onRequestGet(context) {
   const { env, data } = context;
@@ -9,7 +10,31 @@ export async function onRequestGet(context) {
     .bind(data.userId)
     .first();
 
-  return json({ profile: row ? JSON.parse(row.data) : {} });
+  let profile = {};
+  if (row && row.data) {
+    try {
+      profile = JSON.parse(row.data);
+    } catch {
+      profile = {};
+    }
+  }
+
+  const ensured = await ensureApplyEmail(env, {
+    userId: data.userId,
+    profile,
+    firstName: profile.first_name,
+    lastName: profile.last_name,
+  });
+  profile = ensured.profile;
+  if (ensured.created) {
+    await env.DB.prepare(
+      "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"
+    )
+      .bind(data.userId, JSON.stringify(profile))
+      .run();
+  }
+
+  return json({ profile });
 }
 
 export async function onRequestPost(context) {
@@ -27,8 +52,6 @@ export async function onRequestPost(context) {
       ? body.profile
       : {};
 
-  // Stamp Clerk identity onto the blob so the worker always has email /
-  // user_id even if the client left contact.email blank.
   if (!profile.canonical || typeof profile.canonical !== "object") {
     profile.canonical = {};
   }
@@ -36,32 +59,46 @@ export async function onRequestPost(context) {
   if (!profile.canonical.contact || typeof profile.canonical.contact !== "object") {
     profile.canonical.contact = {};
   }
-  if (data.email) {
-    profile.canonical.contact.email = data.email;
-  }
 
-  // Preserve existing ATS passwords across My Info saves (client canonical
-  // does not include them). Generate once if this user has none yet.
   const existingRow = await env.DB.prepare(
     "SELECT data FROM profiles WHERE user_id = ?"
   )
     .bind(data.userId)
     .first();
-  let existingCreds = {};
+  let existing = {};
   if (existingRow && existingRow.data) {
     try {
-      const existing = JSON.parse(existingRow.data);
-      const c =
-        existing &&
-        existing.canonical &&
-        typeof existing.canonical === "object"
-          ? existing.canonical.ats_credentials
-          : null;
-      if (c && typeof c === "object") existingCreds = c;
+      existing = JSON.parse(existingRow.data);
     } catch {
-      existingCreds = {};
+      existing = {};
     }
   }
+
+  // Preserve apply-email fields (client may omit them).
+  if (!String(profile.apply_email || "").trim() && existing.apply_email) {
+    profile.apply_email = existing.apply_email;
+  }
+  if (
+    profile.apply_email_forward_to_personal === undefined &&
+    existing.apply_email_forward_to_personal !== undefined
+  ) {
+    profile.apply_email_forward_to_personal =
+      existing.apply_email_forward_to_personal;
+  }
+  if (!profile.apply_email_assigned_at && existing.apply_email_assigned_at) {
+    profile.apply_email_assigned_at = existing.apply_email_assigned_at;
+  }
+
+  // Preserve existing ATS passwords across My Info saves.
+  let existingCreds = {};
+  const c =
+    existing &&
+    existing.canonical &&
+    typeof existing.canonical === "object"
+      ? existing.canonical.ats_credentials
+      : null;
+  if (c && typeof c === "object") existingCreds = c;
+
   if (
     !profile.canonical.ats_credentials ||
     typeof profile.canonical.ats_credentials !== "object"
@@ -80,18 +117,9 @@ export async function onRequestPost(context) {
   }
   ensureAtsCredentials(profile.canonical);
 
-  // Preserve welcome-email stamp if a concurrent My Info save races the
-  // welcome endpoint (client may still have welcomeEmailSent: false).
   let existingOnboarding = {};
-  if (existingRow && existingRow.data) {
-    try {
-      const existing = JSON.parse(existingRow.data);
-      if (existing && existing.onboarding && typeof existing.onboarding === "object") {
-        existingOnboarding = existing.onboarding;
-      }
-    } catch {
-      existingOnboarding = {};
-    }
+  if (existing.onboarding && typeof existing.onboarding === "object") {
+    existingOnboarding = existing.onboarding;
   }
   if (!profile.onboarding || typeof profile.onboarding !== "object") {
     profile.onboarding = {};
@@ -103,13 +131,26 @@ export async function onRequestPost(context) {
     }
   }
 
+  const ensured = await ensureApplyEmail(env, {
+    userId: data.userId,
+    profile,
+    firstName: profile.first_name,
+    lastName: profile.last_name,
+  });
+  Object.assign(profile, ensured.profile);
+  syncCanonicalApplyEmail(profile);
+  // Keep personal Clerk email discoverable without using it on forms.
+  if (data.email) {
+    profile.canonical.contact.personal_email = data.email;
+  }
+
   await env.DB.prepare(
     "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"
   )
     .bind(data.userId, JSON.stringify(profile))
     .run();
 
-  return json({ ok: true });
+  return json({ ok: true, applyEmail: profile.apply_email || null });
 }
 
 function json(data, status) {

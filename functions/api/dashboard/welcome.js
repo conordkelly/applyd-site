@@ -1,8 +1,5 @@
-// POST /api/dashboard/welcome
-// Sends the one-time welcome email if it hasn't been sent yet.
-// Idempotent: safe to call on every dashboard load.
-
 import { sendEmail, buildWelcomeEmail } from "../_email.js";
+import { ensureApplyEmail } from "../_apply_email.js";
 
 function json(data, status) {
   return new Response(JSON.stringify(data), {
@@ -72,6 +69,14 @@ export async function onRequestPost(context) {
     }
   }
 
+  const ensured = await ensureApplyEmail(env, {
+    userId,
+    profile,
+    firstName: profile.first_name || clerkFirst,
+    lastName: profile.last_name || clerkLast,
+  });
+  profile = ensured.profile;
+
   const firstName =
     (profile.first_name && String(profile.first_name).trim()) ||
     clerkFirst ||
@@ -80,7 +85,10 @@ export async function onRequestPost(context) {
       profile.canonical.identity.first_name) ||
     "";
 
-  const content = buildWelcomeEmail({ firstName });
+  const content = buildWelcomeEmail({
+    firstName,
+    applyEmail: profile.apply_email || "",
+  });
   const result = await sendEmail(env, {
     to: email,
     subject: content.subject,
@@ -89,15 +97,11 @@ export async function onRequestPost(context) {
   });
 
   if (result.skipped) {
-    // Don't stamp welcomeEmailSent when we couldn't send (no API key yet).
-    // Still persist Clerk names if we just learned them.
-    if (clerkFirst || clerkLast) {
-      await env.DB.prepare(
-        "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"
-      )
-        .bind(userId, JSON.stringify(profile))
-        .run();
-    }
+    await env.DB.prepare(
+      "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"
+    )
+      .bind(userId, JSON.stringify(profile))
+      .run();
     return json({ ok: true, skipped: true, reason: result.reason || "skipped" });
   }
 
@@ -117,5 +121,10 @@ export async function onRequestPost(context) {
     .bind(userId, JSON.stringify(profile))
     .run();
 
-  return json({ ok: true, sent: true, id: result.id || null });
+  return json({
+    ok: true,
+    sent: true,
+    id: result.id || null,
+    applyEmail: profile.apply_email || null,
+  });
 }

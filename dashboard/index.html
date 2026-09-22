@@ -562,6 +562,87 @@ table.list td.date-cell {
   text-align: center;
 }
 
+/* apply email + inbox */
+.apply-email-display {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 14px;
+  color: var(--text);
+  margin: 0;
+  word-break: break-all;
+}
+.checkbox-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+.checkbox-label input {
+  margin-top: 3px;
+}
+.inbox-msg-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+.inbox-msg-list li {
+  border-bottom: 1px solid var(--border);
+}
+.inbox-msg-btn {
+  width: 100%;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  padding: 14px 4px;
+  cursor: pointer;
+  font: inherit;
+  color: inherit;
+}
+.inbox-msg-btn:hover { background: rgba(0,0,0,0.03); }
+.inbox-msg-subject {
+  font-weight: 600;
+  font-size: 14px;
+  margin: 0 0 4px;
+}
+.inbox-msg-meta {
+  font-size: 12px;
+  color: var(--muted);
+}
+.inbox-detail {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+.inbox-detail-back {
+  margin-bottom: 12px;
+}
+.inbox-body {
+  white-space: pre-wrap;
+  font-size: 14px;
+  line-height: 1.5;
+  margin-top: 12px;
+}
+.admin-user-pick {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 18px;
+}
+.admin-user-pick button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.admin-user-pick button.active {
+  border-color: var(--text);
+  font-weight: 600;
+}
+
 /* admin */
 
 .user-group {
@@ -883,6 +964,7 @@ table.list td.date-cell {
         <a class="nav-link" href="/">Home</a>
         <button class="nav-link active" id="jobs-view-link">My Jobs</button>
         <button class="nav-link" id="info-view-link">My Info</button>
+        <button class="nav-link" id="inbox-view-link">Inbox</button>
         <button class="nav-link" id="admin-view-link" style="display:none;">Admin</button>
       </div>
     </div>
@@ -969,6 +1051,24 @@ table.list td.date-cell {
               <p class="resume-current" id="resume-current-file"></p>
               <p class="resume-current" id="resume-upload-status" style="display:none;"></p>
               <button type="button" class="remove-btn" id="resume-remove-btn" style="display:none; margin-top:4px;">Remove resume</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="field-group">
+          <h3>Apply email</h3>
+          <p class="field-group-note">Used on job applications and ATS logins. Mail here also shows in Inbox.</p>
+          <div class="field-grid">
+            <div class="field full">
+              <label>Your apply address</label>
+              <p class="apply-email-display" id="apply-email-display">Assigning…</p>
+            </div>
+            <div class="field full">
+              <label class="checkbox-label" for="f-forward_personal">
+                <input type="checkbox" id="f-forward_personal" checked />
+                Forward apply emails to my personal inbox
+              </label>
+              <p class="field-hint" id="forward-warning">Keep this on so you can reply to interview requests from your personal email.</p>
             </div>
           </div>
         </div>
@@ -1118,11 +1218,25 @@ table.list td.date-cell {
       </form>
     </div>
 
+    <div id="inbox-section" style="display:none;">
+      <div class="panel-head">
+        <h2>Inbox</h2>
+        <p>Mail sent to your Applyd apply address. Read-only here — reply from your personal email when a message is forwarded.</p>
+        <p class="apply-email-display" id="inbox-apply-email" style="margin-top:8px;"></p>
+      </div>
+      <div id="inbox-list"></div>
+      <div id="inbox-detail" class="inbox-detail" style="display:none;"></div>
+    </div>
+
     <div id="admin-section" style="display:none;">
       <div class="panel-head">
         <h2>Admin</h2>
-        <p>Every user's jobs, grouped by account.</p>
+        <p>Jobs and apply inboxes, grouped by user.</p>
       </div>
+      <nav class="tabs" id="admin-tabs">
+        <button type="button" class="tab-btn active" data-admin-tab="jobs">Jobs</button>
+        <button type="button" class="tab-btn" data-admin-tab="mail">Mail</button>
+      </nav>
       <div id="admin-content"></div>
     </div>
   </div>
@@ -1163,19 +1277,26 @@ table.list td.date-cell {
 
   var jobsViewLink = document.getElementById('jobs-view-link');
   var infoViewLink = document.getElementById('info-view-link');
+  var inboxViewLink = document.getElementById('inbox-view-link');
   var adminViewLink = document.getElementById('admin-view-link');
   var jobsSection = document.getElementById('jobs-section');
   var infoSection = document.getElementById('info-section');
+  var inboxSection = document.getElementById('inbox-section');
   var adminSection = document.getElementById('admin-section');
+  var adminMailTab = 'jobs';
+  var adminSelectedUserId = null;
 
   function setActiveView(link) {
-    [jobsViewLink, infoViewLink, adminViewLink].forEach(function (l) { l.classList.remove('active'); });
+    [jobsViewLink, infoViewLink, inboxViewLink, adminViewLink].forEach(function (l) {
+      if (l) l.classList.remove('active');
+    });
     link.classList.add('active');
   }
 
   function showJobsView() {
     jobsSection.style.display = 'block';
     infoSection.style.display = 'none';
+    inboxSection.style.display = 'none';
     adminSection.style.display = 'none';
     setActiveView(jobsViewLink);
   }
@@ -1183,14 +1304,25 @@ table.list td.date-cell {
   function showInfoView() {
     jobsSection.style.display = 'none';
     infoSection.style.display = 'block';
+    inboxSection.style.display = 'none';
     adminSection.style.display = 'none';
     setActiveView(infoViewLink);
     loadInfo();
   }
 
+  function showInboxView() {
+    jobsSection.style.display = 'none';
+    infoSection.style.display = 'none';
+    inboxSection.style.display = 'block';
+    adminSection.style.display = 'none';
+    setActiveView(inboxViewLink);
+    loadInbox();
+  }
+
   function showAdminView() {
     jobsSection.style.display = 'none';
     infoSection.style.display = 'none';
+    inboxSection.style.display = 'none';
     adminSection.style.display = 'block';
     setActiveView(adminViewLink);
     loadAdmin();
@@ -1198,6 +1330,7 @@ table.list td.date-cell {
 
   jobsViewLink.addEventListener('click', showJobsView);
   infoViewLink.addEventListener('click', showInfoView);
+  inboxViewLink.addEventListener('click', showInboxView);
   adminViewLink.addEventListener('click', showAdminView);
 
   var PROFILE_FIELDS = [
@@ -1444,6 +1577,10 @@ table.list td.date-cell {
     firstJobsSubmitted: false,
     welcomeEmailSent: false
   };
+  var applyEmailState = {
+    applyEmail: '',
+    forwardToPersonal: true
+  };
 
   function normalizeYesNo(val) {
     if (!val) return val;
@@ -1492,6 +1629,10 @@ table.list td.date-cell {
           welcomeEmailSent: !!profile.onboarding.welcomeEmailSent
         }
       : { welcomeDismissed: false, firstJobsSubmitted: false, welcomeEmailSent: false };
+
+    applyEmailState.applyEmail = profile.apply_email ? String(profile.apply_email) : '';
+    applyEmailState.forwardToPersonal = profile.apply_email_forward_to_personal !== false;
+    renderApplyEmailSettings();
 
     updateSalaryPreview();
     updateJobSubmitGate();
@@ -2018,8 +2159,9 @@ table.list td.date-cell {
         preferred_name: flat.preferred_name || ''
       },
       contact: {
-        email: clerkEmail(),
-        apply_email: '',
+        email: flat.apply_email || clerkEmail(),
+        apply_email: flat.apply_email || '',
+        personal_email: clerkEmail(),
         phone: flat.phone || '',
         phone_country_display: flat.phone_country_display || ''
       },
@@ -2130,6 +2272,8 @@ table.list td.date-cell {
 
     out.experience_roles = experienceRoles;
     out.onboarding = onboardingState;
+    out.apply_email = applyEmailState.applyEmail || '';
+    out.apply_email_forward_to_personal = applyEmailState.forwardToPersonal !== false;
     out.canonical = buildCanonicalProfile(out, experienceRoles);
     return out;
   }
@@ -2384,8 +2528,114 @@ table.list td.date-cell {
     return html;
   }
 
+  function renderApplyEmailSettings() {
+    var display = document.getElementById('apply-email-display');
+    var inboxDisplay = document.getElementById('inbox-apply-email');
+    var box = document.getElementById('f-forward_personal');
+    var addr = applyEmailState.applyEmail || '';
+    if (display) display.textContent = addr || 'Assigning…';
+    if (inboxDisplay) {
+      inboxDisplay.textContent = addr ? ('Address: ' + addr) : '';
+    }
+    if (box) box.checked = applyEmailState.forwardToPersonal !== false;
+  }
+
+  document.getElementById('f-forward_personal').addEventListener('change', function () {
+    var on = !!this.checked;
+    if (!on) {
+      var ok = window.confirm(
+        'Turn off forwarding? Interview and recruiter emails may only show in Applyd, and you will not be able to reply easily from your personal inbox.'
+      );
+      if (!ok) {
+        this.checked = true;
+        return;
+      }
+    }
+    applyEmailState.forwardToPersonal = on;
+    apiFetch('/api/dashboard/mail', {
+      method: 'PATCH',
+      body: JSON.stringify({ forwardToPersonal: on })
+    }).catch(function () {});
+    saveProfileToServer().catch(function () {});
+  });
+
+  async function loadInbox() {
+    var list = document.getElementById('inbox-list');
+    var detail = document.getElementById('inbox-detail');
+    detail.style.display = 'none';
+    detail.innerHTML = '';
+    list.innerHTML = '<div class="empty-state">Loading…</div>';
+    try {
+      var data = await apiFetch('/api/dashboard/mail');
+      if (data.applyEmail) {
+        applyEmailState.applyEmail = data.applyEmail;
+        applyEmailState.forwardToPersonal = data.forwardToPersonal !== false;
+        renderApplyEmailSettings();
+      }
+      var messages = data.messages || [];
+      if (!messages.length) {
+        list.innerHTML = '<div class="empty-state">No messages yet.</div>';
+        return;
+      }
+      var ul = document.createElement('ul');
+      ul.className = 'inbox-msg-list';
+      messages.forEach(function (m) {
+        var li = document.createElement('li');
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'inbox-msg-btn';
+        btn.innerHTML =
+          '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
+          '<p class="inbox-msg-meta">' + escapeHtml(m.from_address || '') +
+          ' · ' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 16)) + '</p>';
+        btn.addEventListener('click', function () { openInboxMessage(m.id); });
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+      list.innerHTML = '';
+      list.appendChild(ul);
+    } catch (e) {
+      list.innerHTML = '<div class="empty-state">Couldn\'t load inbox.</div>';
+      console.error(e);
+    }
+  }
+
+  async function openInboxMessage(id) {
+    var list = document.getElementById('inbox-list');
+    var detail = document.getElementById('inbox-detail');
+    try {
+      var data = await apiFetch('/api/dashboard/mail?id=' + encodeURIComponent(id));
+      var m = data.message;
+      list.style.display = 'none';
+      detail.style.display = 'block';
+      detail.innerHTML =
+        '<button type="button" class="inline-link-btn inbox-detail-back" id="inbox-back">← Back</button>' +
+        '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
+        '<p class="inbox-msg-meta">From: ' + escapeHtml(m.from_address || '') +
+        '<br>To: ' + escapeHtml(m.to_address || '') +
+        '<br>' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 19)) + '</p>' +
+        '<div class="inbox-body">' + escapeHtml(m.body_text || stripHtmlClient(m.body_html || '') || '') + '</div>';
+      document.getElementById('inbox-back').addEventListener('click', function () {
+        detail.style.display = 'none';
+        detail.innerHTML = '';
+        list.style.display = 'block';
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  function stripHtmlClient(html) {
+    var d = document.createElement('div');
+    d.innerHTML = html;
+    return (d.textContent || '').trim();
+  }
+
   async function loadAdmin() {
     var container = document.getElementById('admin-content');
+    if (adminMailTab === 'mail') {
+      return loadAdminMail(container);
+    }
     try {
       var data = await apiFetch('/api/dashboard/admin');
       if (!data.users.length) {
@@ -2404,6 +2654,112 @@ table.list td.date-cell {
       console.error(e);
     }
   }
+
+  async function loadAdminMail(container) {
+    container = container || document.getElementById('admin-content');
+    container.innerHTML = '<div class="empty-state">Loading…</div>';
+    try {
+      var data = await apiFetch('/api/dashboard/admin/mail');
+      var users = data.users || [];
+      if (!users.length) {
+        container.innerHTML = '<div class="empty-state">No users yet.</div>';
+        return;
+      }
+      if (!adminSelectedUserId || !users.some(function (u) { return u.id === adminSelectedUserId; })) {
+        adminSelectedUserId = users[0].id;
+      }
+      var pick = '<div class="admin-user-pick">' + users.map(function (u) {
+        var label = (u.applyEmail || u.email || u.id) +
+          (u.messageCount ? ' (' + u.messageCount + ')' : '');
+        return '<button type="button" data-uid="' + escapeHtml(u.id) + '"' +
+          (u.id === adminSelectedUserId ? ' class="active"' : '') + '>' +
+          escapeHtml(label) + '</button>';
+      }).join('') + '</div><div id="admin-mail-pane"></div>';
+      container.innerHTML = pick;
+      container.querySelectorAll('.admin-user-pick button').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          adminSelectedUserId = btn.getAttribute('data-uid');
+          loadAdminMail();
+        });
+      });
+      await renderAdminUserMail(adminSelectedUserId);
+    } catch (e) {
+      container.innerHTML = '<div class="empty-state">Couldn\'t load mail.</div>';
+      console.error(e);
+    }
+  }
+
+  async function renderAdminUserMail(userId) {
+    var pane = document.getElementById('admin-mail-pane');
+    if (!pane) return;
+    pane.innerHTML = '<div class="empty-state">Loading…</div>';
+    try {
+      var data = await apiFetch('/api/dashboard/admin/mail?userId=' + encodeURIComponent(userId));
+      var messages = data.messages || [];
+      var head = '<p class="apply-email-display">' +
+        escapeHtml((data.user && data.user.email) || userId) +
+        (data.applyEmail ? ' · ' + escapeHtml(data.applyEmail) : '') + '</p>';
+      if (!messages.length) {
+        pane.innerHTML = head + '<div class="empty-state">No messages for this user.</div>';
+        return;
+      }
+      var ul = document.createElement('ul');
+      ul.className = 'inbox-msg-list';
+      messages.forEach(function (m) {
+        var li = document.createElement('li');
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'inbox-msg-btn';
+        btn.innerHTML =
+          '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
+          '<p class="inbox-msg-meta">' + escapeHtml(m.from_address || '') +
+          ' · ' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 16)) + '</p>';
+        btn.addEventListener('click', function () {
+          openAdminMailMessage(userId, m.id, pane, head);
+        });
+        li.appendChild(btn);
+        ul.appendChild(li);
+      });
+      pane.innerHTML = head;
+      pane.appendChild(ul);
+    } catch (e) {
+      pane.innerHTML = '<div class="empty-state">Couldn\'t load.</div>';
+      console.error(e);
+    }
+  }
+
+  async function openAdminMailMessage(userId, id, pane, head) {
+    try {
+      var data = await apiFetch(
+        '/api/dashboard/admin/mail?userId=' + encodeURIComponent(userId) +
+        '&id=' + encodeURIComponent(id)
+      );
+      var m = data.message;
+      pane.innerHTML = head +
+        '<button type="button" class="inline-link-btn inbox-detail-back" id="admin-mail-back">← Back</button>' +
+        '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
+        '<p class="inbox-msg-meta">From: ' + escapeHtml(m.from_address || '') +
+        '<br>To: ' + escapeHtml(m.to_address || '') +
+        '<br>' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 19)) + '</p>' +
+        '<div class="inbox-body">' + escapeHtml(m.body_text || stripHtmlClient(m.body_html || '') || '') + '</div>';
+      document.getElementById('admin-mail-back').addEventListener('click', function () {
+        renderAdminUserMail(userId);
+      });
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  document.querySelectorAll('#admin-tabs .tab-btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      document.querySelectorAll('#admin-tabs .tab-btn').forEach(function (b) {
+        b.classList.remove('active');
+      });
+      btn.classList.add('active');
+      adminMailTab = btn.getAttribute('data-admin-tab') || 'jobs';
+      loadAdmin();
+    });
+  });
 
   document.getElementById('submit-btn').addEventListener('click', async function () {
     var inputs = gridBody.querySelectorAll('input[type="text"]');

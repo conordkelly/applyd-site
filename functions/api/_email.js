@@ -64,11 +64,23 @@ export async function sendEmail(env, opts) {
 
 /**
  * Thin welcome copy for first dashboard visit.
- * @param {{ firstName?: string }} opts
+ * @param {{ firstName?: string, applyEmail?: string }} opts
  */
 export function buildWelcomeEmail(opts) {
   const name = String((opts && opts.firstName) || "").trim();
   const hello = name ? "Hi " + name + "," : "Hi,";
+  const applyEmail = String((opts && opts.applyEmail) || "").trim();
+  const emailLine = applyEmail
+    ? "Your Applyd email: " +
+      applyEmail +
+      ". We use this for job applications and account logins. Anything sent there shows up in your dashboard and forwards automatically to your personal email so you can reply. Keep forwarding on so you don't miss an interview request."
+    : "Your Applyd email: You'll get a dedicated email address (typically a generic address like yourname@everydaymail.ca) for job applications and account logins. Anything sent there shows up in your dashboard and forwards automatically to your personal email so you can reply. Keep forwarding on so you don't miss an interview request.";
+  const emailHtml = applyEmail
+    ? "<p><strong>Your Applyd email:</strong> <code>" +
+      escapeHtml(applyEmail) +
+      "</code>. We use this for job applications and account logins. Anything sent there shows up in your dashboard and forwards automatically to your personal email so you can reply. Keep forwarding on so you don't miss an interview request.</p>"
+    : "<p><strong>Your Applyd email:</strong> You'll get a dedicated email address (typically a generic address like yourname@everydaymail.ca) for job applications and account logins. Anything sent there shows up in your dashboard and forwards automatically to your personal email so you can reply. Keep forwarding on so you don't miss an interview request.</p>";
+
   const subject = "Apply less. Start here.";
   const text = [
     hello,
@@ -81,7 +93,7 @@ export function buildWelcomeEmail(opts) {
     "",
     "A real person reviews every application before it's submitted.",
     "",
-    "Your Applyd email: You'll get a dedicated email address (typically a generic address like yourname@everydaymail.ca) for job applications and account logins. Anything sent there shows up in your dashboard and forwards automatically to your personal email so you can reply. Keep forwarding on so you don't miss an interview request.",
+    emailLine,
     "",
     "Get started: https://www.applydjobs.com/dashboard/",
     "",
@@ -101,7 +113,7 @@ export function buildWelcomeEmail(opts) {
     "<li>Submit your first job link</li>" +
     "</ol>" +
     "<p>A real person reviews every application before it's submitted.</p>" +
-    "<p><strong>Your Applyd email:</strong> You'll get a dedicated email address (typically a generic address like yourname@everydaymail.ca) for job applications and account logins. Anything sent there shows up in your dashboard and forwards automatically to your personal email so you can reply. Keep forwarding on so you don't miss an interview request.</p>" +
+    emailHtml +
     '<p><a href="https://www.applydjobs.com/dashboard/">Get started</a></p>' +
     "<p>Best,</p>" +
     "<p>The Applyd Team</p>";

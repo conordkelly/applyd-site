@@ -4,37 +4,24 @@ Living plan for transactional mail (Applyd → user) and per-user **apply
 addresses** (ATS / portal identity). Update this when decisions change.
 Once built, keep runtime detail in `UI_CONTEXT.md`.
 
-Last updated: 2026-09-22 (plan approved for Cloudflare catch-all build).
+Last updated: 2026-09-22 (apply-inbox build landed in repo; Email Routing wiring required).
 
-Related: `ONBOARDING_PLAN.md` (pricing / onboarding; mailbox section
-superseded by this doc), `UI_CONTEXT.md` (shipped welcome email).
-
----
+Related: `ONBOARDING_PLAN.md`, `UI_CONTEXT.md`, `email-worker/README.md`.
 
 ## Goals
 
-1. Each user has a unique **apply address** for job applications and ATS
-   logins so automation does not collide with accounts on their personal
-   Gmail/Outlook.
-2. Apply mail is **visible in Applyd** (user inbox + admin-by-user view).
-3. Apply mail is **auto-forwarded** to the user's personal email so they
-   can reply (interview invites, recruiter notes).
-4. Cost stays near-flat at scale (no Google Workspace per-seat pricing).
-
----
+1. Unique **apply address** per user for applications / ATS logins.
+2. Apply mail visible in Applyd (user Inbox + admin-by-user).
+3. Auto-forward to personal email (reply from personal).
+4. Near-flat cost (no Workspace per seat).
 
 ## Two email systems (do not mix)
 
 | Role | Address | System |
 |---|---|---|
-| Brand / transactional | `info@applydjobs.com` (Resend) | Welcome, account-ready, digests, etc. |
+| Brand / transactional | `info@applydjobs.com` (Resend) | Welcome, etc. |
 | Apply / ATS identity | `name@everydaymail.ca` | Cloudflare Email Routing catch-all |
 | Personal (Clerk) | User's real inbox | Account login + human replies |
-
-`applydjobs.com` stays brand mail only. Apply inboxes live on a
-normal-looking domain (`everydaymail.ca`).
-
----
 
 ## Status
 
@@ -43,29 +30,25 @@ normal-looking domain (`everydaymail.ca`).
 - Resend wired (`functions/api/_email.js`, `POST /api/dashboard/welcome`)
 - Welcome email on first dashboard load (idempotent `welcomeEmailSent`)
 - Pages secret `RESEND_API_KEY`; optional `EMAIL_FROM`
+- Domain **`everydaymail.ca`** purchased
+- Apply address assignment (`functions/api/_apply_email.js`)
+- Message storage + user Inbox + forward toggle
+- Admin Mail tab (by user)
+- Worker profile prefers `apply_email` for `canonical.contact.email`
+- Email Worker source: `email-worker/` (deploy separately)
 
-### You (before / during build)
+### You (finish wiring)
 
-- Buy **`everydaymail.ca`** on Cloudflare Registrar
-- Confirm Canadian presence rules for `.ca` if prompted
-
-### Build next (this plan)
-
-1. DNS / Email Routing / catch-all → Email Worker on `everydaymail.ca`
-2. Assign + persist `apply_email` (and related settings) on profile
-3. Store inbound messages; user read-only inbox in dashboard
-4. Auto-forward to personal email (default on; settings opt-out)
-5. Admin view: all apply mail, sorted/filtered by user (read-only)
-6. Worker uses `apply_email` on forms (not Clerk personal email)
-7. Welcome copy already explains apply address + forwarding; include
-   real address in welcome once assignment exists at send time
+1. Deploy Email Worker: see `email-worker/README.md`
+2. Enable Email Routing on `everydaymail.ca` → catch-all → Worker `applyd-email-inbox`
+3. Confirm Pages deploy picked up dashboard/API changes
 
 ### Out of scope (later)
 
 - Stripe / pay-gated provisioning
 - Reply / send **as** the apply address
 - Multi-domain rotation for fingerprint hygiene at large scale
-- EOD application summary digests (still desired; separate from this build)
+- EOD application summary digests
 
 ---
 
@@ -207,16 +190,16 @@ newer domains (never change an existing user's apply address).
 
 ## Build checklist
 
-- [ ] Domain purchased and on Cloudflare DNS
-- [ ] Email Routing + catch-all + Email Worker receiving
-- [ ] Address assignment + profile persistence
-- [ ] Message storage
-- [ ] User dashboard inbox (read-only)
-- [ ] Forward-to-personal default on + settings toggle + warning
-- [ ] Admin inbox by user (read-only)
-- [ ] Worker reads `apply_email` for form fill
-- [ ] Welcome email includes assigned address when available
-- [ ] `UI_CONTEXT.md` updated when shipped
+- [x] Domain purchased and on Cloudflare DNS
+- [ ] Email Routing + catch-all + Email Worker receiving (deploy + dashboard)
+- [x] Address assignment + profile persistence
+- [x] Message storage
+- [x] User dashboard inbox (read-only)
+- [x] Forward-to-personal default on + settings toggle + warning
+- [x] Admin inbox by user (read-only)
+- [x] Worker reads `apply_email` for form fill
+- [x] Welcome email includes assigned address when available
+- [x] `UI_CONTEXT.md` updated when shipped
 
 ---
 
@@ -232,3 +215,4 @@ newer domains (never change an existing user's apply address).
 | 2026-09-22 | Auto-forward to personal default ON; discouraged opt-out |
 | 2026-09-22 | Admin view by user; read-only v1 (no reply-as) |
 | 2026-09-22 | Resend welcome live; copy includes email explainer |
+| 2026-09-22 | Apply-inbox code shipped; Email Routing Worker deploy still required |

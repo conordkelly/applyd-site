@@ -49,9 +49,18 @@ export async function onRequestGet(context) {
       ? profile.canonical
       : {};
 
-  // Ensure worker always sees email somewhere useful
+  // Prefer apply address for form fills; keep Clerk email as personal.
   if (!canonical.contact) canonical.contact = {};
-  if (!canonical.contact.email && user.email) {
+  const applyEmail =
+    (canonical.contact.apply_email &&
+      String(canonical.contact.apply_email).trim()) ||
+    (profile.apply_email && String(profile.apply_email).trim()) ||
+    "";
+  if (applyEmail) {
+    canonical.contact.apply_email = applyEmail;
+    canonical.contact.email = applyEmail;
+    if (user.email) canonical.contact.personal_email = user.email;
+  } else if (!canonical.contact.email && user.email) {
     canonical.contact.email = user.email;
   }
   canonical.user_id = canonical.user_id || userId;

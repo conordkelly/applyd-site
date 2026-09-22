@@ -976,54 +976,6 @@ table.list td.date-cell {
           </div>
         </div>
 
-        <div class="field-group">
-          <h3>Preferences</h3>
-          <div class="field-grid">
-            <div class="field">
-              <label for="f-sms_consent">OK to text you updates?</label>
-              <select id="f-sms_consent"><option value="No">No</option><option value="Yes">Yes</option></select>
-            </div>
-            <div class="field">
-              <label for="f-how_heard">How did you hear about us?</label>
-              <select id="f-how_heard">
-                <option>LinkedIn</option><option>Referral</option><option>Google Search</option><option>Job Board</option><option>Other</option>
-              </select>
-            </div>
-            <div class="field"><label for="f-pronouns">Pronouns</label><input type="text" id="f-pronouns" placeholder="She/her, He/him, Prefer not to say..." /></div>
-          </div>
-        </div>
-
-        <div class="field-group">
-          <h3>Voluntary Disclosures</h3>
-          <p class="field-group-note">Optional — some applications include EEO questions like these. Leave as "Decline to self-identify" if you'd rather not say.</p>
-          <div class="field-grid">
-            <div class="field">
-              <label for="f-gender">Gender</label>
-              <select id="f-gender">
-                <option>Decline to self-identify</option><option>Man</option><option>Woman</option><option>Non-binary</option><option>Other</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="f-race_ethnicity">Race / ethnicity</label>
-              <select id="f-race_ethnicity">
-                <option>Decline to self-identify</option><option>Black</option><option>East Asian</option><option>Hispanic or Latino</option><option>Middle Eastern</option><option>Native American</option><option>South Asian</option><option>Southeast Asian</option><option>White</option><option>Two or more races</option><option>Other</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="f-veteran_status">Veteran status</label>
-              <select id="f-veteran_status">
-                <option>Decline to self-identify</option><option>I am a veteran</option><option>I am not a veteran</option>
-              </select>
-            </div>
-            <div class="field">
-              <label for="f-disability_status">Disability status</label>
-              <select id="f-disability_status">
-                <option>Decline to self-identify</option><option>Yes, I have a disability</option><option>No, I do not have a disability</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
         <button type="submit" class="submit-btn" id="profile-save-btn">Save info</button>
         <p class="submit-note" id="profile-save-note" style="display:none;"></p>
       </form>
@@ -1120,14 +1072,12 @@ table.list td.date-cell {
     'current_title', 'current_company', 'years_experience', 'education_level',
     'school', 'degree_name', 'graduation_year', 'target_roles',
     'salary_expectation', 'salary_currency', 'salary_min', 'salary_max',
-    'salary_display', 'salary_typed_band',
-    'sms_consent', 'how_heard', 'pronouns',
-    'gender', 'race_ethnicity', 'veteran_status', 'disability_status'
+    'salary_display', 'salary_typed_band'
   ];
 
   var YES_NO_FIELDS = [
     'legally_authorized', 'require_sponsorship', 'require_future_sponsorship',
-    'willing_onsite_local', 'willing_relocate', 'currently_reside_canada', 'sms_consent'
+    'willing_onsite_local', 'willing_relocate', 'currently_reside_canada'
   ];
 
   // Common CA provinces + US states, code -> full name. Backs the State/
@@ -1817,10 +1767,14 @@ table.list td.date-cell {
         degree_name: flat.degree_name || '',
         graduation_year: flat.graduation_year || ''
       },
+      // No UI for these anymore (removed 2026-09-22) — they never
+      // materially affected a hiring outcome, so every user gets the same
+      // safe default instead of being asked. See UI_CONTEXT.md "Preferences
+      // / Voluntary Disclosures — removed" for why each one is safe to fix.
       application_answers: {
-        sms_consent: normalizeYesNo(flat.sms_consent) || 'No',
-        pronouns: flat.pronouns || '',
-        how_heard: flat.how_heard || ''
+        sms_consent: 'No',
+        pronouns: '',
+        how_heard: 'LinkedIn'
       },
       assets: {
         resume_url: flat.resume_url || null,

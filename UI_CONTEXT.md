@@ -375,10 +375,34 @@ desktop (`.field-grid`, collapses to one column under 520px):
    applications as: 90K-120K CAD") built by `buildSalaryDisplay()` /
    `buildSalaryTypedBand()` and saved as `salary_display` /
    `salary_typed_band`.
-8. **Preferences** (new section) — SMS/text consent (default No), how did
-   you hear about us (default LinkedIn), pronouns.
-9. **Voluntary Disclosures** (EEO) — gender, race/ethnicity, veteran
-   status, disability status. All default to "Decline to self-identify."
+
+**Preferences / Voluntary Disclosures — removed 2026-09-22.** Both
+sections (SMS/text consent, how did you hear about us, pronouns; gender,
+race/ethnicity, veteran status, disability status) were added 2026-09-20
+and removed two days later — the call was that none of these
+"materially impact if you get a role or not," so asking every user to
+answer them was pure friction for no real benefit. Confirmed against the
+real worker before removing, and each one turned out to be effectively
+dead weight already:
+- `gender`/`race_ethnicity`/`veteran_status`/`disability_status` were
+  never wired to the worker at all — `apply_worker.py` has its own
+  extensive hardcoded logic that always answers ATS EEO questions with
+  "Decline to self-identify" / "Prefer Not to Disclose" directly on the
+  form, completely independent of profile data.
+- `how_heard` was a naming mismatch — the worker's equivalent field is
+  called `referral_source` and already hardcodes `"LinkedIn"` as its
+  default answer regardless of what the site ever sent.
+- `sms_consent` is the one field of the five actually read by the worker
+  (`profile_sms_consent()` → `application_answers.sms_consent`, defaulting
+  to `"No"` when absent) — but "No" is also its own built-in fallback, so
+  fixing it site-side changes nothing functionally.
+
+No UI fields remain for any of these. `buildCanonicalProfile()` now
+hardcodes `application_answers` directly — `sms_consent: 'No'`,
+`pronouns: ''`, `how_heard: 'LinkedIn'` — for every user, and
+`gender`/`race_ethnicity`/`veteran_status`/`disability_status` were
+dropped from `PROFILE_FIELDS` entirely (never in canonical to begin with,
+same as the earlier `resume_text` removal).
 
 **Explicitly left out:** an ATS-account `password` field that exists in
 the local `profile.json` (used by the real worker to create accounts on

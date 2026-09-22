@@ -1,6 +1,8 @@
 // GET /api/worker/profile?userId=<clerkUserId>
 // Returns the D1 profile blob + extracted canonical for the fill worker.
 
+import { ensureAtsCredentials } from "../_ats_passwords.js";
+
 function json(data, status) {
   return new Response(JSON.stringify(data), {
     status: status || 200,
@@ -42,18 +44,29 @@ export async function onRequestGet(context) {
     }
   }
 
-  const canonical =
+  let canonical =
     profile && typeof profile.canonical === "object" && profile.canonical
       ? profile.canonical
-      : null;
+      : {};
 
   // Ensure worker always sees email somewhere useful
-  if (canonical) {
-    if (!canonical.contact) canonical.contact = {};
-    if (!canonical.contact.email && user.email) {
-      canonical.contact.email = user.email;
-    }
-    canonical.user_id = canonical.user_id || userId;
+  if (!canonical.contact) canonical.contact = {};
+  if (!canonical.contact.email && user.email) {
+    canonical.contact.email = user.email;
+  }
+  canonical.user_id = canonical.user_id || userId;
+
+  // Mint stable ATS passwords if this profile never got them (older users).
+  const { created, canonical: withCreds } = ensureAtsCredentials(canonical);
+  canonical = withCreds;
+  profile.canonical = canonical;
+
+  if (created) {
+    await env.DB.prepare(
+      "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"
+    )
+      .bind(userId, JSON.stringify(profile))
+      .run();
   }
 
   return json({

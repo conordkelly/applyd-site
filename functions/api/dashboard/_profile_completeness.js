@@ -5,10 +5,31 @@ function filled(v) {
   return String(v == null ? "" : v).trim() !== "";
 }
 
+function roleHasUsableBullet(role) {
+  if (!role || !Array.isArray(role.bullets)) return false;
+  return role.bullets.some(function (b) {
+    if (b && typeof b === "object") return filled(b.text);
+    return filled(b);
+  });
+}
+
+function roleHasDates(role) {
+  if (!role) return false;
+  if (!filled(role.start)) return false;
+  // Current roles use present=true with no end date.
+  if (role.present) return true;
+  return filled(role.end);
+}
+
 function hasUsableExperience(roles) {
   if (!Array.isArray(roles) || !roles.length) return false;
   return roles.some(function (role) {
-    return filled(role && role.company) && filled(role && role.role);
+    return (
+      filled(role && role.company) &&
+      filled(role && role.role) &&
+      roleHasDates(role) &&
+      roleHasUsableBullet(role)
+    );
   });
 }
 
@@ -53,11 +74,16 @@ export function profileCompletenessGaps(profile) {
   need("Visa sponsorship", profile.require_sponsorship);
   need("Preferred job location", profile.preferred_job_location);
   need("School / university", profile.school);
+  need("Degree name", profile.degree_name);
+  need("Education start year", profile.education_start_year);
+  need("Graduation year", profile.graduation_year);
 
   if (!hasSalary(profile)) gaps.push("Desired salary");
   if (!hasResume(profile)) gaps.push("Resume PDF");
   if (!hasUsableExperience(profile.experience_roles)) {
-    gaps.push("At least one work experience role (company + title)");
+    gaps.push(
+      "At least one work experience role (company, title, dates, and a bullet)"
+    );
   }
 
   return gaps;

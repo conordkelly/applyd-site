@@ -1,3 +1,5 @@
+import { ensureAtsCredentials } from "../_ats_passwords.js";
+
 export async function onRequestGet(context) {
   const { env, data } = context;
 
@@ -37,6 +39,46 @@ export async function onRequestPost(context) {
   if (data.email) {
     profile.canonical.contact.email = data.email;
   }
+
+  // Preserve existing ATS passwords across My Info saves (client canonical
+  // does not include them). Generate once if this user has none yet.
+  const existingRow = await env.DB.prepare(
+    "SELECT data FROM profiles WHERE user_id = ?"
+  )
+    .bind(data.userId)
+    .first();
+  let existingCreds = {};
+  if (existingRow && existingRow.data) {
+    try {
+      const existing = JSON.parse(existingRow.data);
+      const c =
+        existing &&
+        existing.canonical &&
+        typeof existing.canonical === "object"
+          ? existing.canonical.ats_credentials
+          : null;
+      if (c && typeof c === "object") existingCreds = c;
+    } catch {
+      existingCreds = {};
+    }
+  }
+  if (
+    !profile.canonical.ats_credentials ||
+    typeof profile.canonical.ats_credentials !== "object"
+  ) {
+    profile.canonical.ats_credentials = {};
+  }
+  const next = profile.canonical.ats_credentials;
+  if (!String(next.password || "").trim() && existingCreds.password) {
+    next.password = existingCreds.password;
+  }
+  if (
+    !String(next.password_backup || "").trim() &&
+    existingCreds.password_backup
+  ) {
+    next.password_backup = existingCreds.password_backup;
+  }
+  ensureAtsCredentials(profile.canonical);
 
   await env.DB.prepare(
     "INSERT INTO profiles (user_id, data, updated_at) VALUES (?, ?, datetime('now')) ON CONFLICT(user_id) DO UPDATE SET data = excluded.data, updated_at = excluded.updated_at"

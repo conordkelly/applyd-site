@@ -260,28 +260,46 @@ desktop (`.field-grid`, collapses to one column under 520px):
    needs an `ANTHROPIC_API_KEY` secret added in Cloudflare first.
 2. **Personal** — first name, last name, full legal name (auto-fills from
    first + last on save if left blank), preferred name, phone (digits-only,
-   auto-formats as `555-123-4567` via `formatPhoneNumber()`), phone country
-   (searchable combobox — `#phone-country-field`/`#phone-country-list`,
-   ~199 countries filtered by name or dial code via `phoneCountryMatches()`,
-   United States/Canada/United Kingdom pinned above a divider when the
-   query is empty, arrow keys + Enter to pick, `required`), country, street
-   address, city, state/province (one searchable combobox, reusing the
-   same `.country-field`/`.country-dropdown-list` CSS pattern as phone
-   country — `#province-field`/`#province-list`, `provinceMatches()`).
-   **2026-09-21: the separate "code" and "full name" fields were merged
-   into this single dropdown** — having both was redundant once the code
-   can just be parsed back out of whichever option gets picked. Every
-   option's label is `"Name (Code)"` (e.g. "Ontario (ON)"), built from
-   `PROVINCE_FULL_NAMES`, Ontario pinned above a divider. On save,
-   `collectProfileForm()` splits the picked label back into two flat keys
-   — `province_full` ("Ontario") and `state_province` ("ON") — via one
-   regex (`/^(.*?)\s*\(([A-Za-z]{2,3})\)\s*$/`), so both are still
-   available for ATS forms that specifically want the 2-letter code (very
-   common — Workday/Greenhouse state fields are usually a code `<select>`)
-   even though there's no `state_province` input anymore. On load,
-   `fillProfileForm()` re-combines those two saved keys back into the
-   single displayed "Name (Code)" string. Postal code, LinkedIn/GitHub/
-   portfolio URLs.
+   auto-formats as `555-123-4567` via `formatPhoneNumber()`), phone country,
+   country, street address, city, state/province, postal code,
+   LinkedIn/GitHub/portfolio URLs.
+
+   **Three searchable combobox fields** (phone country, country,
+   state/province) share one implementation: `createSearchableCombobox()`.
+   Each field is a plain `<input>` wrapped in `.country-field` with a
+   `.country-chevron` SVG and a `.country-dropdown-list` panel
+   (`#phone-country-list` / `#country-name-list` / `#province-list`) —
+   typing filters, arrow keys + Enter navigate/pick, clicking an option
+   selects it, opening always shows the full list (never filters against
+   whatever's already selected, which would just show "No matches" against
+   itself). Added 2026-09-22 as a shared helper once there were three
+   near-identical copies of the same widget; before that, phone country and
+   state/province each had their own ~120-line duplicate.
+   - **Phone country** — `#phone-country-field`/`#phone-country-list`,
+     labels `"Name (+Code)"` from `PHONE_COUNTRY_PINNED` (United States,
+     Canada, United Kingdom) + `PHONE_COUNTRY_CODES` (~196 more,
+     alphabetical), `required`.
+   - **Country** — `#country-name-field`/`#country-name-list`, reuses the
+     exact same `PHONE_COUNTRY_PINNED`/`PHONE_COUNTRY_CODES` data as phone
+     country (no second country list to maintain) but labels just the name,
+     no dial code. The existing country → "currently reside in Canada?"
+     blur auto-fill (see Location Preferences below) still fires normally,
+     since selecting an option only sets `.value` — it doesn't touch the
+     field's own blur listener.
+   - **State / province** — `#province-field`/`#province-list`. **The
+     separate "code" and "full name" fields from earlier were merged into
+     this one field on 2026-09-21** — having both was redundant once the
+     code can be parsed back out of whichever option gets picked. Labels
+     are `"Name (Code)"` (e.g. "Ontario (ON)") built from
+     `PROVINCE_FULL_NAMES`, Ontario pinned above a divider. On save,
+     `collectProfileForm()` splits the picked label back into two flat keys
+     — `province_full` ("Ontario") and `state_province` ("ON") — via one
+     regex (`/^(.*?)\s*\(([A-Za-z]{2,3})\)\s*$/`), so both are still
+     available for ATS forms that specifically want the 2-letter code (very
+     common — Workday/Greenhouse state fields are usually a code
+     `<select>`) even though there's no `state_province` input anymore. On
+     load, `fillProfileForm()` re-combines those two saved keys back into
+     the single displayed "Name (Code)" string.
 3. **Work Authorization** — authorized to work? require sponsorship?
    require *future* sponsorship? (new), status (free text).
 4. **Location Preferences** (new section) — preferred job location (the

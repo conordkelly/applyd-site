@@ -833,7 +833,16 @@ table.list td.date-cell {
                 <div class="country-dropdown-list" id="phone-country-list" style="display:none;"></div>
               </div>
             </div>
-            <div class="field"><label for="f-country">Country<span class="required-mark">*</span></label><input type="text" id="f-country" placeholder="Canada" /></div>
+            <div class="field">
+              <label for="f-country">Country<span class="required-mark">*</span></label>
+              <div class="country-field" id="country-name-field">
+                <input type="text" id="f-country" autocomplete="off" placeholder="Search country..." />
+                <svg class="country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                  <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="country-dropdown-list" id="country-name-list" style="display:none;"></div>
+              </div>
+            </div>
             <div class="field full"><label for="f-address">Street address<span class="required-mark">*</span></label><input type="text" id="f-address" placeholder="31 Darby Rd" /></div>
             <div class="field"><label for="f-city">City<span class="required-mark">*</span></label><input type="text" id="f-city" placeholder="Guelph" /></div>
             <div class="field">
@@ -1178,126 +1187,140 @@ table.list td.date-cell {
     ['Yemen', '+967'], ['Zambia', '+260'], ['Zimbabwe', '+263']
   ];
 
-  var PHONE_COUNTRY_ALL = PHONE_COUNTRY_PINNED.concat(PHONE_COUNTRY_CODES);
+  // Shared by every "type to search, pick from a list" field on this form
+  // (phone country, country, state/province). One implementation instead
+  // of three near-identical copies now that there are three of them.
+  function createSearchableCombobox(opts) {
+    var highlight = -1;
 
-  function phoneCountryLabel(c) {
-    return c[0] + ' (' + c[1] + ')';
-  }
+    function label(item) { return opts.formatLabel(item); }
 
-  var phoneCountryHighlight = -1;
+    function defaultMatch(item, q) { return label(item).toLowerCase().indexOf(q) !== -1; }
+    var matchFn = opts.matchesQuery || defaultMatch;
 
-  function phoneCountryMatches(query) {
-    var q = (query || '').trim().toLowerCase();
-    if (!q) return PHONE_COUNTRY_PINNED.concat([null], PHONE_COUNTRY_CODES);
-    return PHONE_COUNTRY_ALL.filter(function (c) {
-      return c[0].toLowerCase().indexOf(q) !== -1 || c[1].indexOf(q) !== -1;
-    });
-  }
-
-  function renderPhoneCountryList(query) {
-    var list = document.getElementById('phone-country-list');
-    var matches = phoneCountryMatches(query);
-    phoneCountryHighlight = -1;
-    list.innerHTML = '';
-
-    if (!matches.some(function (c) { return c !== null; })) {
-      var empty = document.createElement('div');
-      empty.className = 'country-option-empty';
-      empty.textContent = 'No matches';
-      list.appendChild(empty);
-      return;
+    function matches(query) {
+      var q = (query || '').trim().toLowerCase();
+      if (!q) return opts.pinned.concat([null], opts.rest);
+      return opts.pinned.concat(opts.rest).filter(function (item) { return matchFn(item, q); });
     }
 
-    matches.forEach(function (c) {
-      if (c === null) {
-        var divider = document.createElement('div');
-        divider.className = 'country-option-divider';
-        list.appendChild(divider);
+    function render(query) {
+      var items = matches(query);
+      highlight = -1;
+      opts.list.innerHTML = '';
+
+      if (!items.some(function (c) { return c !== null; })) {
+        var empty = document.createElement('div');
+        empty.className = 'country-option-empty';
+        empty.textContent = 'No matches';
+        opts.list.appendChild(empty);
         return;
       }
-      var label = phoneCountryLabel(c);
-      var opt = document.createElement('div');
-      opt.className = 'country-option';
-      opt.textContent = label;
-      opt.addEventListener('mousedown', function (e) {
-        e.preventDefault();
-        selectPhoneCountry(label);
+
+      items.forEach(function (item) {
+        if (item === null) {
+          var divider = document.createElement('div');
+          divider.className = 'country-option-divider';
+          opts.list.appendChild(divider);
+          return;
+        }
+        var lbl = label(item);
+        var el = document.createElement('div');
+        el.className = 'country-option';
+        el.textContent = lbl;
+        el.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          select(lbl);
+        });
+        opts.list.appendChild(el);
       });
-      list.appendChild(opt);
+    }
+
+    function optionEls() {
+      return Array.prototype.slice.call(opts.list.querySelectorAll('.country-option'));
+    }
+
+    function setHighlight(index) {
+      var els = optionEls();
+      if (!els.length) return;
+      if (index < 0) index = els.length - 1;
+      if (index >= els.length) index = 0;
+      els.forEach(function (o) { o.classList.remove('highlighted'); });
+      els[index].classList.add('highlighted');
+      els[index].scrollIntoView({ block: 'nearest' });
+      highlight = index;
+    }
+
+    function select(lbl) {
+      opts.input.value = lbl;
+      close();
+    }
+
+    function open() {
+      // Always start from the full list, even if a value is already
+      // selected — filtering by a previous "Name (Code)" value would just
+      // show "No matches" against itself.
+      render('');
+      opts.list.style.display = 'block';
+    }
+
+    function close() {
+      opts.list.style.display = 'none';
+    }
+
+    opts.input.addEventListener('focus', function () {
+      open();
+      this.select();
+    });
+
+    opts.input.addEventListener('input', function () {
+      render(this.value);
+      opts.list.style.display = 'block';
+    });
+
+    opts.input.addEventListener('blur', function () {
+      setTimeout(close, 100);
+    });
+
+    opts.input.addEventListener('keydown', function (e) {
+      var isOpen = opts.list.style.display !== 'none';
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!isOpen) { open(); return; }
+        setHighlight(highlight + 1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!isOpen) { open(); return; }
+        setHighlight(highlight - 1);
+      } else if (e.key === 'Enter') {
+        if (isOpen && highlight >= 0) {
+          e.preventDefault();
+          var els = optionEls();
+          if (els[highlight]) els[highlight].dispatchEvent(new Event('mousedown'));
+        }
+      } else if (e.key === 'Escape') {
+        close();
+        this.blur();
+      }
     });
   }
 
-  function phoneCountryOptionEls() {
-    return Array.prototype.slice.call(
-      document.getElementById('phone-country-list').querySelectorAll('.country-option')
-    );
-  }
-
-  function setPhoneCountryHighlight(index) {
-    var opts = phoneCountryOptionEls();
-    if (!opts.length) return;
-    if (index < 0) index = opts.length - 1;
-    if (index >= opts.length) index = 0;
-    opts.forEach(function (o) { o.classList.remove('highlighted'); });
-    opts[index].classList.add('highlighted');
-    opts[index].scrollIntoView({ block: 'nearest' });
-    phoneCountryHighlight = index;
-  }
-
-  function selectPhoneCountry(label) {
-    var input = document.getElementById('f-phone_country_display');
-    input.value = label;
-    closePhoneCountryList();
-  }
-
-  function openPhoneCountryList() {
-    // Always start from the full list on open, even if a value is already
-    // selected — filtering by the previous full "Name (+Code)" value would
-    // just show "No matches" against itself.
-    renderPhoneCountryList('');
-    document.getElementById('phone-country-list').style.display = 'block';
-  }
-
-  function closePhoneCountryList() {
-    document.getElementById('phone-country-list').style.display = 'none';
-  }
-
-  var phoneCountryInput = document.getElementById('f-phone_country_display');
-
-  phoneCountryInput.addEventListener('focus', function () {
-    openPhoneCountryList();
-    this.select();
+  createSearchableCombobox({
+    input: document.getElementById('f-phone_country_display'),
+    list: document.getElementById('phone-country-list'),
+    pinned: PHONE_COUNTRY_PINNED,
+    rest: PHONE_COUNTRY_CODES,
+    formatLabel: function (c) { return c[0] + ' (' + c[1] + ')'; },
+    matchesQuery: function (c, q) { return c[0].toLowerCase().indexOf(q) !== -1 || c[1].indexOf(q) !== -1; }
   });
 
-  phoneCountryInput.addEventListener('input', function () {
-    renderPhoneCountryList(this.value);
-    document.getElementById('phone-country-list').style.display = 'block';
-  });
-
-  phoneCountryInput.addEventListener('blur', function () {
-    setTimeout(closePhoneCountryList, 100);
-  });
-
-  phoneCountryInput.addEventListener('keydown', function (e) {
-    var isOpen = document.getElementById('phone-country-list').style.display !== 'none';
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (!isOpen) { openPhoneCountryList(); return; }
-      setPhoneCountryHighlight(phoneCountryHighlight + 1);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (!isOpen) { openPhoneCountryList(); return; }
-      setPhoneCountryHighlight(phoneCountryHighlight - 1);
-    } else if (e.key === 'Enter') {
-      if (isOpen && phoneCountryHighlight >= 0) {
-        e.preventDefault();
-        var opts = phoneCountryOptionEls();
-        if (opts[phoneCountryHighlight]) opts[phoneCountryHighlight].dispatchEvent(new Event('mousedown'));
-      }
-    } else if (e.key === 'Escape') {
-      closePhoneCountryList();
-      this.blur();
-    }
+  createSearchableCombobox({
+    input: document.getElementById('f-country'),
+    list: document.getElementById('country-name-list'),
+    pinned: PHONE_COUNTRY_PINNED,
+    rest: PHONE_COUNTRY_CODES,
+    formatLabel: function (c) { return c[0]; },
+    matchesQuery: function (c, q) { return c[0].toLowerCase().indexOf(q) !== -1; }
   });
 
   var profileLoaded = false;
@@ -1400,120 +1423,13 @@ table.list td.date-cell {
     .map(function (code) { return [PROVINCE_FULL_NAMES[code], code]; })
     .sort(function (a, b) { return a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0; });
 
-  function provinceLabel(c) {
-    return c[0] + ' (' + c[1] + ')';
-  }
-
-  var provinceHighlight = -1;
-
-  function provinceMatches(query) {
-    var q = (query || '').trim().toLowerCase();
-    if (!q) return PROVINCE_PINNED.concat([null], PROVINCE_REST);
-    return PROVINCE_PINNED.concat(PROVINCE_REST).filter(function (c) {
-      return c[0].toLowerCase().indexOf(q) !== -1 || c[1].toLowerCase().indexOf(q) !== -1;
-    });
-  }
-
-  function renderProvinceList(query) {
-    var list = document.getElementById('province-list');
-    var matches = provinceMatches(query);
-    provinceHighlight = -1;
-    list.innerHTML = '';
-
-    if (!matches.some(function (c) { return c !== null; })) {
-      var empty = document.createElement('div');
-      empty.className = 'country-option-empty';
-      empty.textContent = 'No matches';
-      list.appendChild(empty);
-      return;
-    }
-
-    matches.forEach(function (c) {
-      if (c === null) {
-        var divider = document.createElement('div');
-        divider.className = 'country-option-divider';
-        list.appendChild(divider);
-        return;
-      }
-      var label = provinceLabel(c);
-      var opt = document.createElement('div');
-      opt.className = 'country-option';
-      opt.textContent = label;
-      opt.addEventListener('mousedown', function (e) {
-        e.preventDefault();
-        selectProvince(label);
-      });
-      list.appendChild(opt);
-    });
-  }
-
-  function provinceOptionEls() {
-    return Array.prototype.slice.call(
-      document.getElementById('province-list').querySelectorAll('.country-option')
-    );
-  }
-
-  function setProvinceHighlight(index) {
-    var opts = provinceOptionEls();
-    if (!opts.length) return;
-    if (index < 0) index = opts.length - 1;
-    if (index >= opts.length) index = 0;
-    opts.forEach(function (o) { o.classList.remove('highlighted'); });
-    opts[index].classList.add('highlighted');
-    opts[index].scrollIntoView({ block: 'nearest' });
-    provinceHighlight = index;
-  }
-
-  function selectProvince(label) {
-    document.getElementById('f-province_full').value = label;
-    closeProvinceList();
-  }
-
-  function openProvinceList() {
-    renderProvinceList('');
-    document.getElementById('province-list').style.display = 'block';
-  }
-
-  function closeProvinceList() {
-    document.getElementById('province-list').style.display = 'none';
-  }
-
-  var provinceInput = document.getElementById('f-province_full');
-
-  provinceInput.addEventListener('focus', function () {
-    openProvinceList();
-    this.select();
-  });
-
-  provinceInput.addEventListener('input', function () {
-    renderProvinceList(this.value);
-    document.getElementById('province-list').style.display = 'block';
-  });
-
-  provinceInput.addEventListener('blur', function () {
-    setTimeout(closeProvinceList, 100);
-  });
-
-  provinceInput.addEventListener('keydown', function (e) {
-    var isOpen = document.getElementById('province-list').style.display !== 'none';
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      if (!isOpen) { openProvinceList(); return; }
-      setProvinceHighlight(provinceHighlight + 1);
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      if (!isOpen) { openProvinceList(); return; }
-      setProvinceHighlight(provinceHighlight - 1);
-    } else if (e.key === 'Enter') {
-      if (isOpen && provinceHighlight >= 0) {
-        e.preventDefault();
-        var opts = provinceOptionEls();
-        if (opts[provinceHighlight]) opts[provinceHighlight].dispatchEvent(new Event('mousedown'));
-      }
-    } else if (e.key === 'Escape') {
-      closeProvinceList();
-      this.blur();
-    }
+  createSearchableCombobox({
+    input: document.getElementById('f-province_full'),
+    list: document.getElementById('province-list'),
+    pinned: PROVINCE_PINNED,
+    rest: PROVINCE_REST,
+    formatLabel: function (c) { return c[0] + ' (' + c[1] + ')'; },
+    matchesQuery: function (c, q) { return c[0].toLowerCase().indexOf(q) !== -1 || c[1].toLowerCase().indexOf(q) !== -1; }
   });
 
   document.getElementById('f-country').addEventListener('blur', function () {

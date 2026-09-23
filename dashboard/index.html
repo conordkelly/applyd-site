@@ -1039,7 +1039,7 @@ table.list td.date-cell {
         <p class="onboarding-mini-status" id="onboarding-mini-status" style="display:none;"></p>
       </div>
 
-      <form class="profile-form" id="profile-form">
+      <form class="profile-form" id="profile-form" novalidate>
         <div class="field-group">
           <h3>Resume</h3>
           <p class="field-group-note">Upload the PDF ApplyD attaches to applications.</p>
@@ -1088,7 +1088,7 @@ table.list td.date-cell {
             <div class="field">
               <label for="f-phone_country_display">Phone country<span class="required-mark">*</span></label>
               <div class="country-field" id="phone-country-field">
-                <input type="text" id="f-phone_country_display" autocomplete="off" placeholder="Search country..." required />
+                <input type="text" id="f-phone_country_display" autocomplete="off" placeholder="Search country..." />
                 <svg class="country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
                   <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -2435,7 +2435,11 @@ table.list td.date-cell {
     btn.disabled = true;
     btn.textContent = 'Saving...';
     try {
-      await saveProfileToServer();
+      var saved = await saveProfileToServer();
+      if (saved && saved.applyEmail) {
+        applyEmailState.applyEmail = saved.applyEmail;
+        renderApplyEmailSettings();
+      }
       note.textContent = 'Saved.';
       note.className = 'submit-note ok';
       note.style.display = 'block';

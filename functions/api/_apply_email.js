@@ -71,49 +71,14 @@ export function buildApplyEmailLocalBase(opts) {
   return id ? "user." + id : "user";
 }
 
-/**
- * Assign a unique apply address if the profile doesn't have one yet.
- * Mutates and returns profile. Also upserts apply_email_addresses.
- *
- * @param {object} env
- * @param {{ userId: string, profile: object, firstName?: string, lastName?: string }} opts
- */
-export async function ensureApplyEmail(env, opts) {
+function isFallbackApplyEmail(email, userId) {
+  const local = String(email || "").split("@")[0] || "";
+  return /^user\.[a-z0-9]+$/.test(local);
+}
+
+async function allocateApplyEmail(env, opts) {
   const userId = opts.userId;
-  let profile = opts.profile && typeof opts.profile === "object" ? opts.profile : {};
-  await ensureApplyEmailTables(env.DB);
-
-  const existing = String(profile.apply_email || "").trim().toLowerCase();
-  if (existing) {
-    await env.DB.prepare(
-      `INSERT INTO apply_email_addresses (email, user_id) VALUES (?, ?)
-       ON CONFLICT(email) DO UPDATE SET user_id = excluded.user_id`
-    )
-      .bind(existing, userId)
-      .run();
-    if (profile.apply_email_forward_to_personal === undefined) {
-      profile.apply_email_forward_to_personal = true;
-    }
-    syncCanonicalApplyEmail(profile);
-    return { profile, created: false, email: existing };
-  }
-
-  const byUser = await env.DB.prepare(
-    "SELECT email FROM apply_email_addresses WHERE user_id = ?"
-  )
-    .bind(userId)
-    .first();
-  if (byUser && byUser.email) {
-    profile.apply_email = byUser.email;
-    profile.apply_email_assigned_at =
-      profile.apply_email_assigned_at || new Date().toISOString();
-    if (profile.apply_email_forward_to_personal === undefined) {
-      profile.apply_email_forward_to_personal = true;
-    }
-    syncCanonicalApplyEmail(profile);
-    return { profile, created: false, email: byUser.email };
-  }
-
+  const profile = opts.profile || {};
   const base = buildApplyEmailLocalBase({
     firstName: opts.firstName || profile.first_name,
     lastName: opts.lastName || profile.last_name,
@@ -142,9 +107,75 @@ export async function ensureApplyEmail(env, opts) {
       break;
     }
   }
+  return email;
+}
+
+/**
+ * Assign a unique apply address if the profile doesn't have one yet.
+ * Mutates and returns profile. Also upserts apply_email_addresses.
+ * If the address is still the user.{id} fallback and first+last name now
+ * exist, upgrade once to firstname.lastname@domain.
+ *
+ * @param {object} env
+ * @param {{ userId: string, profile: object, firstName?: string, lastName?: string }} opts
+ */
+export async function ensureApplyEmail(env, opts) {
+  const userId = opts.userId;
+  let profile = opts.profile && typeof opts.profile === "object" ? opts.profile : {};
+  await ensureApplyEmailTables(env.DB);
+
+  const firstName = opts.firstName || profile.first_name;
+  const lastName = opts.lastName || profile.last_name;
+  const canUpgrade = !!(
+    normalizeEmailLocalPart(firstName) && normalizeEmailLocalPart(lastName)
+  );
+
+  let existing = String(profile.apply_email || "").trim().toLowerCase();
+  if (!existing) {
+    const byUser = await env.DB.prepare(
+      "SELECT email FROM apply_email_addresses WHERE user_id = ?"
+    )
+      .bind(userId)
+      .first();
+    if (byUser && byUser.email) existing = String(byUser.email).toLowerCase();
+  }
+
+  if (existing && !(canUpgrade && isFallbackApplyEmail(existing, userId))) {
+    await env.DB.prepare(
+      `INSERT INTO apply_email_addresses (email, user_id) VALUES (?, ?)
+       ON CONFLICT(email) DO UPDATE SET user_id = excluded.user_id`
+    )
+      .bind(existing, userId)
+      .run();
+    profile.apply_email = existing;
+    if (profile.apply_email_forward_to_personal === undefined) {
+      profile.apply_email_forward_to_personal = true;
+    }
+    if (!profile.apply_email_assigned_at) {
+      profile.apply_email_assigned_at = new Date().toISOString();
+    }
+    syncCanonicalApplyEmail(profile);
+    return { profile, created: false, email: existing };
+  }
+
+  const email = await allocateApplyEmail(env, {
+    userId,
+    profile,
+    firstName,
+    lastName,
+  });
+
+  if (existing && existing !== email) {
+    await env.DB.prepare(
+      "DELETE FROM apply_email_addresses WHERE user_id = ?"
+    )
+      .bind(userId)
+      .run();
+  }
 
   await env.DB.prepare(
-    "INSERT INTO apply_email_addresses (email, user_id) VALUES (?, ?)"
+    `INSERT INTO apply_email_addresses (email, user_id) VALUES (?, ?)
+     ON CONFLICT(email) DO UPDATE SET user_id = excluded.user_id`
   )
     .bind(email, userId)
     .run();
@@ -155,7 +186,7 @@ export async function ensureApplyEmail(env, opts) {
     profile.apply_email_forward_to_personal = true;
   }
   syncCanonicalApplyEmail(profile);
-  return { profile, created: true, email };
+  return { profile, created: existing !== email, email };
 }
 
 /**

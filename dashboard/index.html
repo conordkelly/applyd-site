@@ -840,6 +840,12 @@ table.list td.date-cell {
   margin-top: 6px;
 }
 
+.role-month-year {
+  display: grid;
+  grid-template-columns: 1.4fr 0.9fr;
+  gap: 8px;
+}
+
 .bullets-label {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
@@ -1980,11 +1986,17 @@ table.list td.date-cell {
 
     grid.appendChild(makeRoleInput('Company*', role.company, function (v) { role.company = v; updateJobSubmitGate(); }));
     grid.appendChild(makeRoleInput('Title / role*', role.role, function (v) { role.role = v; updateJobSubmitGate(); }));
-    grid.appendChild(makeRoleInput('Start date*', role.start, function (v) { role.start = v; updateJobSubmitGate(); }, 'month'));
+    grid.appendChild(makeRoleMonthYearField('Start date*', role.start, function (v) {
+      role.start = v;
+      updateJobSubmitGate();
+    }));
 
-    var endField = makeRoleInput('End date*', role.end, function (v) { role.end = v; updateJobSubmitGate(); }, 'month');
-    var endInput = endField.querySelector('input');
-    endInput.disabled = !!role.present;
+    var endField = makeRoleMonthYearField('End date*', role.end, function (v) {
+      role.end = v;
+      updateJobSubmitGate();
+    });
+    var endSelects = endField.querySelectorAll('select');
+    endSelects.forEach(function (sel) { sel.disabled = !!role.present; });
     grid.appendChild(endField);
 
     card.appendChild(grid);
@@ -1996,8 +2008,11 @@ table.list td.date-cell {
     presentCheckbox.checked = !!role.present;
     presentCheckbox.addEventListener('change', function () {
       role.present = presentCheckbox.checked;
-      endInput.disabled = role.present;
-      if (role.present) { role.end = ''; endInput.value = ''; }
+      endSelects.forEach(function (sel) {
+        sel.disabled = role.present;
+        if (role.present) sel.value = '';
+      });
+      if (role.present) role.end = '';
       updateJobSubmitGate();
     });
     presentRow.appendChild(presentCheckbox);
@@ -2115,6 +2130,92 @@ table.list td.date-cell {
     input.addEventListener('input', function () { onChange(input.value); });
     field.appendChild(label);
     field.appendChild(input);
+    return field;
+  }
+
+  var ROLE_MONTHS = [
+    ['01', 'January'], ['02', 'February'], ['03', 'March'], ['04', 'April'],
+    ['05', 'May'], ['06', 'June'], ['07', 'July'], ['08', 'August'],
+    ['09', 'September'], ['10', 'October'], ['11', 'November'], ['12', 'December']
+  ];
+
+  function parseRoleMonthYear(value) {
+    var raw = String(value || '').trim();
+    var iso = /^(\d{4})-(\d{1,2})/.exec(raw);
+    if (iso) {
+      return { year: iso[1], month: ('0' + iso[2]).slice(-2) };
+    }
+    var slash = /^(\d{1,2})\/(\d{4})$/.exec(raw);
+    if (slash) {
+      return { year: slash[2], month: ('0' + slash[1]).slice(-2) };
+    }
+    var named = /^(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{4})$/i.exec(raw);
+    if (named) {
+      var found = '';
+      ROLE_MONTHS.forEach(function (pair) {
+        if (pair[1].toLowerCase() === named[1].toLowerCase()) found = pair[0];
+      });
+      return { year: named[2], month: found };
+    }
+    return { year: '', month: '' };
+  }
+
+  function makeRoleMonthYearField(labelText, value, onChange) {
+    var parsed = parseRoleMonthYear(value);
+    var field = document.createElement('div');
+    field.className = 'field';
+    var label = document.createElement('label');
+    label.textContent = labelText;
+    var wrap = document.createElement('div');
+    wrap.className = 'role-month-year';
+
+    var monthSel = document.createElement('select');
+    var monthBlank = document.createElement('option');
+    monthBlank.value = '';
+    monthBlank.textContent = 'Month';
+    monthSel.appendChild(monthBlank);
+    ROLE_MONTHS.forEach(function (pair) {
+      var opt = document.createElement('option');
+      opt.value = pair[0];
+      opt.textContent = pair[1];
+      monthSel.appendChild(opt);
+    });
+    monthSel.value = parsed.month;
+
+    var yearSel = document.createElement('select');
+    var yearBlank = document.createElement('option');
+    yearBlank.value = '';
+    yearBlank.textContent = 'Year';
+    yearSel.appendChild(yearBlank);
+    var thisYear = new Date().getFullYear();
+    for (var y = thisYear + 1; y >= 1950; y--) {
+      var yopt = document.createElement('option');
+      yopt.value = String(y);
+      yopt.textContent = String(y);
+      yearSel.appendChild(yopt);
+    }
+    if (parsed.year && !yearSel.querySelector('option[value="' + parsed.year + '"]')) {
+      var extra = document.createElement('option');
+      extra.value = parsed.year;
+      extra.textContent = parsed.year;
+      yearSel.appendChild(extra);
+    }
+    yearSel.value = parsed.year;
+
+    function emit() {
+      if (monthSel.value && yearSel.value) {
+        onChange(yearSel.value + '-' + monthSel.value);
+      } else {
+        onChange('');
+      }
+    }
+    monthSel.addEventListener('change', emit);
+    yearSel.addEventListener('change', emit);
+
+    wrap.appendChild(monthSel);
+    wrap.appendChild(yearSel);
+    field.appendChild(label);
+    field.appendChild(wrap);
     return field;
   }
 

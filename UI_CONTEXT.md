@@ -328,7 +328,7 @@ desktop (`.field-grid`, collapses to one column under 520px):
    the worker), degree name (new), graduation year (new), target roles.
 6. **Work Experience Points** (new section, directly under Experience) —
    dynamic repeatable role cards (`+ Add role` / `Remove role`), each with
-   company, title, start/end month pickers or an "I currently work here"
+   company, title, Workday-style month + year dropdowns or an "I currently work here"
    checkbox that disables the end date, and a repeatable bullet list
    (`+ Add bullet` / per-bullet `Remove`). A brand-new profile
    (`experience_roles` never saved) starts with one blank "Role 1" card

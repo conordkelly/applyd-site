@@ -1995,8 +1995,7 @@ table.list td.date-cell {
       role.end = v;
       updateJobSubmitGate();
     });
-    var endSelects = endField.querySelectorAll('select');
-    endSelects.forEach(function (sel) { sel.disabled = !!role.present; });
+    if (role.present) endField.style.display = 'none';
     grid.appendChild(endField);
 
     card.appendChild(grid);
@@ -2008,11 +2007,13 @@ table.list td.date-cell {
     presentCheckbox.checked = !!role.present;
     presentCheckbox.addEventListener('change', function () {
       role.present = presentCheckbox.checked;
-      endSelects.forEach(function (sel) {
-        sel.disabled = role.present;
-        if (role.present) sel.value = '';
-      });
-      if (role.present) role.end = '';
+      if (role.present) {
+        role.end = '';
+        endField.style.display = 'none';
+        endField.querySelectorAll('select').forEach(function (sel) { sel.value = ''; });
+      } else {
+        endField.style.display = '';
+      }
       updateJobSubmitGate();
     });
     presentRow.appendChild(presentCheckbox);

@@ -223,15 +223,6 @@ body {
   color: var(--text-2);
 }
 
-#clerk-junk-note {
-  display: block;
-  margin: 8px 0 0;
-  text-align: center;
-  font-size: 13px;
-  line-height: 1.45;
-  color: #747686;
-}
-
 /* onboarding */
 
 .onboarding-banner {
@@ -3105,41 +3096,6 @@ table.list td.date-cell {
         }
       }
     };
-    function walkClerkNodes(node, visit) {
-      if (!node) return;
-      visit(node);
-      if (node.shadowRoot) walkClerkNodes(node.shadowRoot, visit);
-      var children = node.children || [];
-      for (var i = 0; i < children.length; i++) walkClerkNodes(children[i], visit);
-    }
-    function ownText(node) {
-      var own = '';
-      var kids = node.childNodes || [];
-      for (var i = 0; i < kids.length; i++) {
-        if (kids[i].nodeType === 3) own += kids[i].textContent;
-      }
-      return own.replace(/\s+/g, ' ').trim();
-    }
-    function syncJunkNoteOnVerifyScreen() {
-      var root = document.getElementById('sign-in');
-      if (!root) return;
-      var verifyHeading = null;
-      var existing = null;
-      walkClerkNodes(root, function (node) {
-        if (node.id === 'clerk-junk-note') existing = node;
-        if (ownText(node) === 'Verify your email') verifyHeading = node;
-      });
-      if (!verifyHeading) {
-        if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
-        return;
-      }
-      if (existing) return;
-      var note = document.createElement('p');
-      note.id = 'clerk-junk-note';
-      note.textContent = 'Please check your junk or spam folder if a verification code does not appear.';
-      var insertAfter = verifyHeading.nextElementSibling || verifyHeading;
-      insertAfter.insertAdjacentElement('afterend', note);
-    }
     await window.Clerk.load({
       localization: clerkLocalization,
       signInUrl: '/dashboard',
@@ -3165,11 +3121,6 @@ table.list td.date-cell {
         signInForceRedirectUrl: '/dashboard',
         signUpForceRedirectUrl: '/dashboard',
         localization: clerkLocalization
-      });
-      syncJunkNoteOnVerifyScreen();
-      new MutationObserver(syncJunkNoteOnVerifyScreen).observe(document.getElementById('sign-in'), {
-        childList: true,
-        subtree: true
       });
     }
   });

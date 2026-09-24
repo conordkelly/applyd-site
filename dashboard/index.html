@@ -614,8 +614,30 @@ table.list td.date-cell {
   padding-top: 16px;
   border-top: 1px solid var(--border);
 }
-.inbox-detail-back {
+.inbox-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  align-items: center;
   margin-bottom: 12px;
+}
+.inbox-detail-back {
+  margin-bottom: 0;
+}
+.inbox-reply-btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 12px;
+  border: 1px solid var(--text);
+  background: var(--text);
+  color: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.inbox-reply-note {
+  font-size: 12px;
+  color: var(--muted);
+  margin: 0 0 12px;
 }
 .inbox-body {
   white-space: pre-wrap;
@@ -1227,7 +1249,7 @@ table.list td.date-cell {
     <div id="inbox-section" style="display:none;">
       <div class="panel-head">
         <h2>Inbox</h2>
-        <p>Mail sent to your Applyd apply address. Read-only here — reply from your personal email when a message is forwarded.</p>
+        <p>Mail sent to your Applyd apply address. Open a message and click Reply to continue in your personal email, with the original quoted.</p>
         <p class="apply-email-display" id="inbox-apply-email" style="margin-top:8px;"></p>
       </div>
       <div id="inbox-list"></div>
@@ -2715,7 +2737,11 @@ table.list td.date-cell {
       list.style.display = 'none';
       detail.style.display = 'block';
       detail.innerHTML =
+        '<div class="inbox-detail-actions">' +
         '<button type="button" class="inline-link-btn inbox-detail-back" id="inbox-back">← Back</button>' +
+        '<button type="button" class="inbox-reply-btn" id="inbox-reply">Reply in your email</button>' +
+        '</div>' +
+        '<p class="inbox-reply-note" id="inbox-reply-note" hidden></p>' +
         '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
         '<p class="inbox-msg-meta">From: ' + escapeHtml(m.from_address || '') +
         '<br>To: ' + escapeHtml(m.to_address || '') +
@@ -2726,6 +2752,9 @@ table.list td.date-cell {
         detail.innerHTML = '';
         list.style.display = 'block';
       });
+      document.getElementById('inbox-reply').addEventListener('click', function () {
+        openInboxReply(m);
+      });
     } catch (e) {
       console.error(e);
     }
@@ -2735,6 +2764,66 @@ table.list td.date-cell {
     var d = document.createElement('div');
     d.innerHTML = html;
     return (d.textContent || '').trim();
+  }
+
+  function extractEmailAddress(fromHeader) {
+    var s = String(fromHeader || '').trim();
+    var angle = s.match(/<([^>]+)>/);
+    if (angle) return angle[1].trim();
+    if (s.indexOf('@') !== -1) return s.replace(/^mailto:/i, '').trim();
+    return '';
+  }
+
+  function replySubject(subject) {
+    var s = String(subject || '').trim();
+    if (!s) return 'Re: (no subject)';
+    if (/^re\s*:/i.test(s)) return s;
+    return 'Re: ' + s;
+  }
+
+  function quoteInboxMessage(m, maxChars) {
+    var when = String(m.received_at || '').replace('T', ' ').slice(0, 19);
+    var who = m.from_address || 'them';
+    var body = String(m.body_text || stripHtmlClient(m.body_html || '') || '').trim();
+    var cap = maxChars || 8000;
+    if (body.length > cap) body = body.slice(0, cap) + '\n[...]';
+    return '\n\nOn ' + (when || 'this date') + ', ' + who + ' wrote:\n\n' + body;
+  }
+
+  function showInboxReplyNote(text) {
+    var el = document.getElementById('inbox-reply-note');
+    if (!el) return;
+    el.hidden = false;
+    el.textContent = text;
+  }
+
+  function copyInboxReplyDraft(to, subject, body) {
+    var draft = 'To: ' + to + '\nSubject: ' + subject + '\n' + body;
+    if (!navigator.clipboard || !navigator.clipboard.writeText) return;
+    navigator.clipboard.writeText(draft).then(function () {
+      showInboxReplyNote('Opened your mail app. Full message copied if the quote was cut off.');
+    }).catch(function () {});
+  }
+
+  function openInboxReply(m) {
+    var to = extractEmailAddress(m.from_address);
+    if (!to) {
+      showInboxReplyNote('This message has no reply address.');
+      return;
+    }
+    var subject = replySubject(m.subject);
+    var body = quoteInboxMessage(m, 8000);
+    var url = 'mailto:' + encodeURIComponent(to) +
+      '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(body);
+    if (url.length > 1800) {
+      var shortBody = quoteInboxMessage(m, 900);
+      url = 'mailto:' + encodeURIComponent(to) +
+        '?subject=' + encodeURIComponent(subject) +
+        '&body=' + encodeURIComponent(shortBody);
+      copyInboxReplyDraft(to, subject, body);
+    }
+    window.location.href = url;
   }
 
   async function loadAdmin() {

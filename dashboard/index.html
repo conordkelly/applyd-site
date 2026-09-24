@@ -3073,14 +3073,30 @@ table.list td.date-cell {
       console.error('Clerk failed to load — check the publishable key / frontend API domain in dashboard/index.html');
       return;
     }
-    await window.Clerk.load({
-      localization: {
-        signIn: {
-          start: {
-            title: 'Sign in to Applyd'
+    var clerkLocalization = {
+      signIn: {
+        start: {
+          title: 'Sign in to Applyd'
+        },
+        emailCode: {
+          subtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.',
+          formSubtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.'
+        }
+      },
+      signUp: {
+        emailCode: {
+          subtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.',
+          formSubtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.'
+        },
+        verifications: {
+          emailAddress: {
+            subtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.'
           }
         }
       }
+    };
+    await window.Clerk.load({
+      localization: clerkLocalization
     });
 
     if (window.Clerk.isSignedIn) {
@@ -3098,13 +3114,7 @@ table.list td.date-cell {
       window.Clerk.mountSignIn(document.getElementById('sign-in'), {
         signInForceRedirectUrl: '/dashboard',
         signUpForceRedirectUrl: '/dashboard',
-        localization: {
-          signIn: {
-            start: {
-              title: 'Sign in to Applyd'
-            }
-          }
-        }
+        localization: clerkLocalization
       });
     }
   });

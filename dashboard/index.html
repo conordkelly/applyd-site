@@ -223,19 +223,13 @@ body {
   color: var(--text-2);
 }
 
-#sign-in-junk-note,
 #clerk-junk-note {
   display: block;
-  max-width: 400px;
-  margin: 16px auto 0;
+  margin: 8px 0 0;
   text-align: center;
   font-size: 13px;
   line-height: 1.45;
   color: #747686;
-}
-
-#clerk-junk-note {
-  margin: 8px 0 0;
 }
 
 /* onboarding */
@@ -1042,7 +1036,6 @@ table.list td.date-cell {
 
   <div id="signed-out-view" style="display:none; padding:60px 0;">
     <div id="sign-in"></div>
-    <p id="sign-in-junk-note">Please check your junk or spam folder if a verification code does not appear.</p>
   </div>
 
   <div id="app-view" style="display:none;">
@@ -3089,7 +3082,7 @@ table.list td.date-cell {
       console.error('Clerk failed to load — check the publishable key / frontend API domain in dashboard/index.html');
       return;
     }
-    var verifyCopy = 'Enter the code we sent you. Check junk or spam if nothing appears.';
+    var verifyCopy = 'Enter the verification code sent to your email. Check junk or spam if it does not appear.';
     var clerkLocalization = {
       signIn: {
         start: {
@@ -3119,32 +3112,33 @@ table.list td.date-cell {
       var children = node.children || [];
       for (var i = 0; i < children.length; i++) walkClerkNodes(children[i], visit);
     }
-    function placeJunkNoteInClerkCard() {
+    function ownText(node) {
+      var own = '';
+      var kids = node.childNodes || [];
+      for (var i = 0; i < kids.length; i++) {
+        if (kids[i].nodeType === 3) own += kids[i].textContent;
+      }
+      return own.replace(/\s+/g, ' ').trim();
+    }
+    function syncJunkNoteOnVerifyScreen() {
       var root = document.getElementById('sign-in');
       if (!root) return;
-      var subtitle = null;
+      var verifyHeading = null;
       var existing = null;
       walkClerkNodes(root, function (node) {
-        if (existing || !node.id && !node.childNodes) return;
-        if (node.id === 'clerk-junk-note') {
-          existing = node;
-          return;
-        }
-        var own = '';
-        var kids = node.childNodes || [];
-        for (var i = 0; i < kids.length; i++) {
-          if (kids[i].nodeType === 3) own += kids[i].textContent;
-        }
-        own = own.replace(/\s+/g, ' ').trim();
-        if (own === 'Enter the verification code sent to your email' || own === verifyCopy) {
-          subtitle = node;
-        }
+        if (node.id === 'clerk-junk-note') existing = node;
+        if (ownText(node) === 'Verify your email') verifyHeading = node;
       });
-      if (existing || !subtitle) return;
+      if (!verifyHeading) {
+        if (existing && existing.parentNode) existing.parentNode.removeChild(existing);
+        return;
+      }
+      if (existing) return;
       var note = document.createElement('p');
       note.id = 'clerk-junk-note';
-      note.textContent = 'Please check your junk or spam folder if nothing appears.';
-      subtitle.insertAdjacentElement('afterend', note);
+      note.textContent = 'Please check your junk or spam folder if a verification code does not appear.';
+      var insertAfter = verifyHeading.nextElementSibling || verifyHeading;
+      insertAfter.insertAdjacentElement('afterend', note);
     }
     await window.Clerk.load({
       localization: clerkLocalization,
@@ -3165,8 +3159,6 @@ table.list td.date-cell {
       document.getElementById('app-view').style.display = 'none';
       document.getElementById('signed-out-view').style.display = 'block';
       window.Clerk.mountSignIn(document.getElementById('sign-in'), {
-        routing: 'hash',
-        path: '/dashboard',
         withSignUp: true,
         signInUrl: '/dashboard',
         signUpUrl: '/dashboard',
@@ -3174,8 +3166,8 @@ table.list td.date-cell {
         signUpForceRedirectUrl: '/dashboard',
         localization: clerkLocalization
       });
-      placeJunkNoteInClerkCard();
-      new MutationObserver(placeJunkNoteInClerkCard).observe(document.getElementById('sign-in'), {
+      syncJunkNoteOnVerifyScreen();
+      new MutationObserver(syncJunkNoteOnVerifyScreen).observe(document.getElementById('sign-in'), {
         childList: true,
         subtree: true
       });

@@ -223,19 +223,19 @@ body {
   color: var(--text-2);
 }
 
-#sign-in-junk-note {
-  display: none;
+#sign-in-junk-note,
+#clerk-junk-note {
+  display: block;
+  max-width: 400px;
+  margin: 16px auto 0;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #747686;
 }
 
-.cl-headerSubtitle::after,
-.cl-formHeaderSubtitle::after {
-  content: " Please check your junk or spam folder if nothing appears.";
-  display: block;
-  margin-top: 8px;
-  color: #747686;
-  font-size: 13px;
-  font-weight: 400;
-  line-height: 1.4;
+#clerk-junk-note {
+  margin: 8px 0 0;
 }
 
 /* onboarding */
@@ -3089,46 +3089,67 @@ table.list td.date-cell {
       console.error('Clerk failed to load — check the publishable key / frontend API domain in dashboard/index.html');
       return;
     }
+    var verifyCopy = 'Enter the code we sent you. Check junk or spam if nothing appears.';
     var clerkLocalization = {
       signIn: {
         start: {
           title: 'Sign in to Applyd'
         },
         emailCode: {
-          subtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.',
-          formSubtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.'
+          subtitle: verifyCopy,
+          formSubtitle: verifyCopy
         }
       },
       signUp: {
         emailCode: {
-          subtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.',
-          formSubtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.'
+          subtitle: verifyCopy,
+          formSubtitle: verifyCopy
         },
         verifications: {
           emailAddress: {
-            subtitle: 'Enter the code we sent you. Check junk or spam if nothing appears.'
+            subtitle: verifyCopy
           }
         }
       }
     };
-    var clerkAppearance = {
-      elements: {
-        headerSubtitle: {
-          '&::after': {
-            content: '"Please check your junk or spam folder if nothing appears."',
-            display: 'block',
-            marginTop: '8px',
-            color: '#747686',
-            fontSize: '13px',
-            fontWeight: '400',
-            lineHeight: '1.4'
-          }
+    function walkClerkNodes(node, visit) {
+      if (!node) return;
+      visit(node);
+      if (node.shadowRoot) walkClerkNodes(node.shadowRoot, visit);
+      var children = node.children || [];
+      for (var i = 0; i < children.length; i++) walkClerkNodes(children[i], visit);
+    }
+    function placeJunkNoteInClerkCard() {
+      var root = document.getElementById('sign-in');
+      if (!root) return;
+      var subtitle = null;
+      var existing = null;
+      walkClerkNodes(root, function (node) {
+        if (existing || !node.id && !node.childNodes) return;
+        if (node.id === 'clerk-junk-note') {
+          existing = node;
+          return;
         }
-      }
-    };
+        var own = '';
+        var kids = node.childNodes || [];
+        for (var i = 0; i < kids.length; i++) {
+          if (kids[i].nodeType === 3) own += kids[i].textContent;
+        }
+        own = own.replace(/\s+/g, ' ').trim();
+        if (own === 'Enter the verification code sent to your email' || own === verifyCopy) {
+          subtitle = node;
+        }
+      });
+      if (existing || !subtitle) return;
+      var note = document.createElement('p');
+      note.id = 'clerk-junk-note';
+      note.textContent = 'Please check your junk or spam folder if nothing appears.';
+      subtitle.insertAdjacentElement('afterend', note);
+    }
     await window.Clerk.load({
       localization: clerkLocalization,
-      appearance: clerkAppearance
+      signInUrl: '/dashboard',
+      signUpUrl: '/dashboard'
     });
 
     if (window.Clerk.isSignedIn) {
@@ -3144,10 +3165,19 @@ table.list td.date-cell {
       document.getElementById('app-view').style.display = 'none';
       document.getElementById('signed-out-view').style.display = 'block';
       window.Clerk.mountSignIn(document.getElementById('sign-in'), {
+        routing: 'hash',
+        path: '/dashboard',
+        withSignUp: true,
+        signInUrl: '/dashboard',
+        signUpUrl: '/dashboard',
         signInForceRedirectUrl: '/dashboard',
         signUpForceRedirectUrl: '/dashboard',
-        localization: clerkLocalization,
-        appearance: clerkAppearance
+        localization: clerkLocalization
+      });
+      placeJunkNoteInClerkCard();
+      new MutationObserver(placeJunkNoteInClerkCard).observe(document.getElementById('sign-in'), {
+        childList: true,
+        subtree: true
       });
     }
   });

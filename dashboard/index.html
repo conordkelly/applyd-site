@@ -223,6 +223,15 @@ body {
   color: var(--text-2);
 }
 
+#sign-in-junk-note {
+  max-width: 400px;
+  margin: 14px auto 0;
+  text-align: center;
+  font-size: 13px;
+  line-height: 1.45;
+  color: #747686;
+}
+
 /* onboarding */
 
 .onboarding-banner {
@@ -3073,6 +3082,33 @@ table.list td.date-cell {
       console.error('Clerk failed to load — check the publishable key / frontend API domain in dashboard/index.html');
       return;
     }
+    function watchSignInJunkNote() {
+      var host = document.getElementById('sign-in');
+      if (!host || host.dataset.junkNoteWatch === '1') return;
+      host.dataset.junkNoteWatch = '1';
+      function syncNote() {
+        var text = String(host.innerText || '').toLowerCase();
+        var onCodeScreen = /verify your email|check your email|verification code/.test(text);
+        var note = document.getElementById('sign-in-junk-note');
+        if (!onCodeScreen) {
+          if (note) note.remove();
+          return;
+        }
+        if (note) return;
+        note = document.createElement('p');
+        note.id = 'sign-in-junk-note';
+        note.textContent = 'Please check your junk or spam folder if nothing appears.';
+        host.appendChild(note);
+      }
+      syncNote();
+      if (window.MutationObserver) {
+        new MutationObserver(syncNote).observe(host, {
+          childList: true,
+          subtree: true,
+          characterData: true
+        });
+      }
+    }
     var clerkLocalization = {
       signIn: {
         start: {
@@ -3116,6 +3152,7 @@ table.list td.date-cell {
         signUpForceRedirectUrl: '/dashboard',
         localization: clerkLocalization
       });
+      watchSignInJunkNote();
     }
   });
 })();

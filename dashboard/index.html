@@ -224,8 +224,14 @@ body {
 }
 
 #sign-in-junk-note {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 28px;
+  z-index: 10000;
+  width: calc(100% - 32px);
   max-width: 400px;
-  margin: 14px auto 0;
+  margin: 0;
   text-align: center;
   font-size: 13px;
   line-height: 1.45;
@@ -1036,6 +1042,7 @@ table.list td.date-cell {
 
   <div id="signed-out-view" style="display:none; padding:60px 0;">
     <div id="sign-in"></div>
+    <p id="sign-in-junk-note">Please check your junk or spam folder if a verification code does not appear.</p>
   </div>
 
   <div id="app-view" style="display:none;">
@@ -3082,33 +3089,6 @@ table.list td.date-cell {
       console.error('Clerk failed to load — check the publishable key / frontend API domain in dashboard/index.html');
       return;
     }
-    function watchSignInJunkNote() {
-      var host = document.getElementById('sign-in');
-      if (!host || host.dataset.junkNoteWatch === '1') return;
-      host.dataset.junkNoteWatch = '1';
-      function syncNote() {
-        var text = String(host.innerText || '').toLowerCase();
-        var onCodeScreen = /verify your email|check your email|verification code/.test(text);
-        var note = document.getElementById('sign-in-junk-note');
-        if (!onCodeScreen) {
-          if (note) note.remove();
-          return;
-        }
-        if (note) return;
-        note = document.createElement('p');
-        note.id = 'sign-in-junk-note';
-        note.textContent = 'Please check your junk or spam folder if nothing appears.';
-        host.appendChild(note);
-      }
-      syncNote();
-      if (window.MutationObserver) {
-        new MutationObserver(syncNote).observe(host, {
-          childList: true,
-          subtree: true,
-          characterData: true
-        });
-      }
-    }
     var clerkLocalization = {
       signIn: {
         start: {
@@ -3152,7 +3132,6 @@ table.list td.date-cell {
         signUpForceRedirectUrl: '/dashboard',
         localization: clerkLocalization
       });
-      watchSignInJunkNote();
     }
   });
 })();

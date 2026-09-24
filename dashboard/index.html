@@ -1210,7 +1210,16 @@ table.list td.date-cell {
           <h3>Location Preferences</h3>
           <p class="field-group-note">Home address is where you live. Preferred job location is where you want roles, often different.</p>
           <div class="field-grid">
-            <div class="field full"><label for="f-preferred_job_location">Preferred job location<span class="required-mark">*</span></label><input type="text" id="f-preferred_job_location" placeholder="Toronto, Ontario, Canada" /></div>
+            <div class="field full">
+              <label for="f-preferred_job_location">Preferred job location<span class="required-mark">*</span></label>
+              <div class="country-field" id="preferred-job-location-field">
+                <input type="text" id="f-preferred_job_location" autocomplete="off" placeholder="Search city or region..." />
+                <svg class="country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                  <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="country-dropdown-list" id="preferred-job-location-list" style="display:none;"></div>
+              </div>
+            </div>
             <div class="field">
               <label for="f-willing_onsite_local">Willing to work onsite/hybrid locally?</label>
               <select id="f-willing_onsite_local"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
@@ -1497,8 +1506,7 @@ table.list td.date-cell {
   ];
 
   // Shared by every "type to search, pick from a list" field on this form
-  // (phone country, country, state/province). One implementation instead
-  // of three near-identical copies now that there are three of them.
+  // (phone country, country, state/province, preferred job location).
   function createSearchableCombobox(opts) {
     var highlight = -1;
 
@@ -1816,6 +1824,45 @@ table.list td.date-cell {
     rest: PROVINCE_REST,
     formatLabel: function (c) { return c[0] + ' (' + c[1] + ')'; },
     matchesQuery: function (c, q) { return c[0].toLowerCase().indexOf(q) !== -1 || c[1].toLowerCase().indexOf(q) !== -1; }
+  });
+
+  var JOB_LOCATION_PINNED = [
+    'Toronto, Ontario, Canada',
+    'Vancouver, British Columbia, Canada',
+    'Montreal, Quebec, Canada',
+    'Ottawa, Ontario, Canada',
+    'Calgary, Alberta, Canada',
+    'Edmonton, Alberta, Canada',
+    'Waterloo, Ontario, Canada',
+    'Mississauga, Ontario, Canada',
+    'Hamilton, Ontario, Canada',
+    'Remote, Canada',
+    'Canada'
+  ];
+  var JOB_LOCATION_REST = [
+    'New York, New York, United States',
+    'San Francisco, California, United States',
+    'Los Angeles, California, United States',
+    'Seattle, Washington, United States',
+    'Austin, Texas, United States',
+    'Chicago, Illinois, United States',
+    'Boston, Massachusetts, United States',
+    'Denver, Colorado, United States',
+    'Atlanta, Georgia, United States',
+    'Miami, Florida, United States',
+    'Washington, District of Columbia, United States',
+    'Remote, United States',
+    'United States',
+    'Remote'
+  ];
+
+  createSearchableCombobox({
+    input: document.getElementById('f-preferred_job_location'),
+    list: document.getElementById('preferred-job-location-list'),
+    pinned: JOB_LOCATION_PINNED,
+    rest: JOB_LOCATION_REST,
+    formatLabel: function (c) { return c; },
+    matchesQuery: function (c, q) { return c.toLowerCase().indexOf(q) !== -1; }
   });
 
   document.getElementById('f-country').addEventListener('blur', function () {

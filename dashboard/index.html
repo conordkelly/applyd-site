@@ -1254,7 +1254,59 @@ table.list td.date-cell {
               </select>
             </div>
             <div class="field"><label for="f-school">School / university name<span class="required-mark">*</span></label><input type="text" id="f-school" placeholder="University of Toronto" /></div>
-            <div class="field"><label for="f-degree_name">Degree name<span class="required-mark">*</span></label><input type="text" id="f-degree_name" placeholder="B.Comm, Marketing Management" /></div>
+            <div class="field">
+              <label for="f-degree_name">Degree name<span class="required-mark">*</span></label>
+              <select id="f-degree_name">
+                <option value="">—</option>
+                <optgroup label="High school">
+                  <option value="High School Diploma">High School Diploma</option>
+                  <option value="GED">GED</option>
+                </optgroup>
+                <optgroup label="Certificate / diploma">
+                  <option value="Certificate">Certificate</option>
+                  <option value="Diploma">Diploma</option>
+                </optgroup>
+                <optgroup label="Associate">
+                  <option value="Associate of Arts (AA)">Associate of Arts (AA)</option>
+                  <option value="Associate of Science (AS)">Associate of Science (AS)</option>
+                  <option value="Associate of Applied Science (AAS)">Associate of Applied Science (AAS)</option>
+                  <option value="Associate Degree">Associate Degree</option>
+                </optgroup>
+                <optgroup label="Bachelor">
+                  <option value="Bachelor of Arts (BA)">Bachelor of Arts (BA)</option>
+                  <option value="Bachelor of Science (BS)">Bachelor of Science (BS)</option>
+                  <option value="Bachelor of Business Administration (BBA)">Bachelor of Business Administration (BBA)</option>
+                  <option value="Bachelor of Commerce (BCom)">Bachelor of Commerce (BCom)</option>
+                  <option value="Bachelor of Engineering (BEng)">Bachelor of Engineering (BEng)</option>
+                  <option value="Bachelor of Applied Science (BASc)">Bachelor of Applied Science (BASc)</option>
+                  <option value="Bachelor of Fine Arts (BFA)">Bachelor of Fine Arts (BFA)</option>
+                  <option value="Bachelor of Computer Science (BCS)">Bachelor of Computer Science (BCS)</option>
+                  <option value="Bachelor of Education (BEd)">Bachelor of Education (BEd)</option>
+                  <option value="Bachelor of Science in Nursing (BSN)">Bachelor of Science in Nursing (BSN)</option>
+                  <option value="Bachelor's Degree">Bachelor's Degree</option>
+                </optgroup>
+                <optgroup label="Master">
+                  <option value="Master of Arts (MA)">Master of Arts (MA)</option>
+                  <option value="Master of Science (MS)">Master of Science (MS)</option>
+                  <option value="Master of Business Administration (MBA)">Master of Business Administration (MBA)</option>
+                  <option value="Master of Engineering (MEng)">Master of Engineering (MEng)</option>
+                  <option value="Master of Fine Arts (MFA)">Master of Fine Arts (MFA)</option>
+                  <option value="Master of Education (MEd)">Master of Education (MEd)</option>
+                  <option value="Master of Public Health (MPH)">Master of Public Health (MPH)</option>
+                  <option value="Master of Public Administration (MPA)">Master of Public Administration (MPA)</option>
+                  <option value="Master of Laws (LLM)">Master of Laws (LLM)</option>
+                  <option value="Master's Degree">Master's Degree</option>
+                </optgroup>
+                <optgroup label="Doctoral / professional">
+                  <option value="Doctor of Philosophy (PhD)">Doctor of Philosophy (PhD)</option>
+                  <option value="Juris Doctor (JD)">Juris Doctor (JD)</option>
+                  <option value="Doctor of Medicine (MD)">Doctor of Medicine (MD)</option>
+                  <option value="Doctor of Education (EdD)">Doctor of Education (EdD)</option>
+                  <option value="Doctorate">Doctorate</option>
+                </optgroup>
+                <option value="Other">Other</option>
+              </select>
+            </div>
             <div class="field"><label for="f-education_start_year">Start year<span class="required-mark">*</span></label><input type="number" id="f-education_start_year" min="1950" max="2100" placeholder="2015" /></div>
             <div class="field"><label for="f-graduation_year">Graduation year<span class="required-mark">*</span></label><input type="number" id="f-graduation_year" min="1950" max="2100" placeholder="2019" /></div>
             <div class="field"><label for="f-target_roles">Target roles</label><input type="text" id="f-target_roles" placeholder="Product Manager, Senior PM" /></div>
@@ -1670,6 +1722,47 @@ table.list td.date-cell {
     'Other'
   ];
 
+  function normalizeDegreeName(val) {
+    var s = String(val || '').trim();
+    if (!s) return '';
+    var el = document.getElementById('f-degree_name');
+    if (el) {
+      var opts = el.options;
+      for (var i = 0; i < opts.length; i++) {
+        if (opts[i].value === s) return s;
+      }
+    }
+    var lower = s.toLowerCase();
+    if (lower.indexOf('b.com') !== -1 || lower.indexOf('bcomm') !== -1 || lower.indexOf('commerce') !== -1) {
+      return 'Bachelor of Commerce (BCom)';
+    }
+    if (lower.indexOf('bba') !== -1 || lower.indexOf('business administration') !== -1) {
+      if (lower.indexOf('master') !== -1 || lower.indexOf('mba') !== -1) return 'Master of Business Administration (MBA)';
+      return 'Bachelor of Business Administration (BBA)';
+    }
+    if (lower.indexOf('mba') !== -1) return 'Master of Business Administration (MBA)';
+    if (lower.indexOf('ph.d') !== -1 || lower.indexOf('phd') !== -1 || lower.indexOf('philosophy') !== -1) {
+      return 'Doctor of Philosophy (PhD)';
+    }
+    if (lower.indexOf('juris') !== -1 || lower === 'jd') return 'Juris Doctor (JD)';
+    if (lower.indexOf('bachelor of arts') !== -1 || /\bb\.?a\.?\b/.test(lower)) return 'Bachelor of Arts (BA)';
+    if (lower.indexOf('bachelor of science') !== -1 || /\bb\.?s\.?\b/.test(lower) || /\bbsc\b/.test(lower)) {
+      return 'Bachelor of Science (BS)';
+    }
+    if (lower.indexOf('bachelor of engineering') !== -1 || /\bb\.?eng\b/.test(lower)) {
+      return 'Bachelor of Engineering (BEng)';
+    }
+    if (lower.indexOf('master of arts') !== -1 || /\bm\.?a\.?\b/.test(lower)) return 'Master of Arts (MA)';
+    if (lower.indexOf('master of science') !== -1 || /\bm\.?s\.?\b/.test(lower) || /\bmsc\b/.test(lower)) {
+      return 'Master of Science (MS)';
+    }
+    if (lower.indexOf('bachelor') !== -1) return "Bachelor's Degree";
+    if (lower.indexOf('master') !== -1) return "Master's Degree";
+    if (lower.indexOf('associate') !== -1) return 'Associate Degree';
+    if (lower.indexOf('high school') !== -1 || lower.indexOf('secondary') !== -1) return 'High School Diploma';
+    return 'Other';
+  }
+
   function normalizeWorkPermitType(val) {
     var s = String(val || '').trim();
     if (!s) return '';
@@ -1693,6 +1786,7 @@ table.list td.date-cell {
       if (val === undefined || val === null) return;
       if (YES_NO_FIELDS.indexOf(key) !== -1) el.value = normalizeYesNo(val);
       else if (key === 'work_permit_type') el.value = normalizeWorkPermitType(val);
+      else if (key === 'degree_name') el.value = normalizeDegreeName(val);
       else el.value = val;
     });
 

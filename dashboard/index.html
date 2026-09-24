@@ -3073,7 +3073,15 @@ table.list td.date-cell {
       console.error('Clerk failed to load — check the publishable key / frontend API domain in dashboard/index.html');
       return;
     }
-    await window.Clerk.load();
+    await window.Clerk.load({
+      localization: {
+        signIn: {
+          start: {
+            title: 'Sign in to Applyd'
+          }
+        }
+      }
+    });
 
     if (window.Clerk.isSignedIn) {
       document.getElementById('signed-out-view').style.display = 'none';
@@ -3089,7 +3097,14 @@ table.list td.date-cell {
       document.getElementById('signed-out-view').style.display = 'block';
       window.Clerk.mountSignIn(document.getElementById('sign-in'), {
         signInForceRedirectUrl: '/dashboard',
-        signUpForceRedirectUrl: '/dashboard'
+        signUpForceRedirectUrl: '/dashboard',
+        localization: {
+          signIn: {
+            start: {
+              title: 'Sign in to Applyd'
+            }
+          }
+        }
       });
     }
   });

@@ -1213,7 +1213,7 @@ table.list td.date-cell {
             <div class="field full">
               <label for="f-preferred_job_location">Preferred job location<span class="required-mark">*</span></label>
               <div class="country-field" id="preferred-job-location-field">
-                <input type="text" id="f-preferred_job_location" autocomplete="off" placeholder="Search city or region..." />
+                <input type="text" id="f-preferred_job_location" autocomplete="off" placeholder="Type a city name..." />
                 <svg class="country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
                   <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
@@ -1505,8 +1505,9 @@ table.list td.date-cell {
     ['Yemen', '+967'], ['Zambia', '+260'], ['Zimbabwe', '+263']
   ];
 
-  // Shared by every "type to search, pick from a list" field on this form
-  // (phone country, country, state/province, preferred job location).
+  // Shared by every local "type to search, pick from a list" field
+  // (phone country, country, state/province). Job location uses a live
+  // city search instead.
   function createSearchableCombobox(opts) {
     var highlight = -1;
 
@@ -1824,45 +1825,6 @@ table.list td.date-cell {
     rest: PROVINCE_REST,
     formatLabel: function (c) { return c[0] + ' (' + c[1] + ')'; },
     matchesQuery: function (c, q) { return c[0].toLowerCase().indexOf(q) !== -1 || c[1].toLowerCase().indexOf(q) !== -1; }
-  });
-
-  var JOB_LOCATION_PINNED = [
-    'Toronto, Ontario, Canada',
-    'Vancouver, British Columbia, Canada',
-    'Montreal, Quebec, Canada',
-    'Ottawa, Ontario, Canada',
-    'Calgary, Alberta, Canada',
-    'Edmonton, Alberta, Canada',
-    'Waterloo, Ontario, Canada',
-    'Mississauga, Ontario, Canada',
-    'Hamilton, Ontario, Canada',
-    'Remote, Canada',
-    'Canada'
-  ];
-  var JOB_LOCATION_REST = [
-    'New York, New York, United States',
-    'San Francisco, California, United States',
-    'Los Angeles, California, United States',
-    'Seattle, Washington, United States',
-    'Austin, Texas, United States',
-    'Chicago, Illinois, United States',
-    'Boston, Massachusetts, United States',
-    'Denver, Colorado, United States',
-    'Atlanta, Georgia, United States',
-    'Miami, Florida, United States',
-    'Washington, District of Columbia, United States',
-    'Remote, United States',
-    'United States',
-    'Remote'
-  ];
-
-  createSearchableCombobox({
-    input: document.getElementById('f-preferred_job_location'),
-    list: document.getElementById('preferred-job-location-list'),
-    pinned: JOB_LOCATION_PINNED,
-    rest: JOB_LOCATION_REST,
-    formatLabel: function (c) { return c; },
-    matchesQuery: function (c, q) { return c.toLowerCase().indexOf(q) !== -1; }
   });
 
   document.getElementById('f-country').addEventListener('blur', function () {
@@ -2717,6 +2679,134 @@ table.list td.date-cell {
     }
     return payload;
   }
+
+  function createRemoteLocationCombobox(opts) {
+    var highlight = -1;
+    var timer = null;
+    var seq = 0;
+    var extras = ['Remote', 'Remote, Canada', 'Remote, United States'];
+
+    function extrasFor(q) {
+      var lower = (q || '').trim().toLowerCase();
+      if (!lower) return extras.slice();
+      return extras.filter(function (s) { return s.toLowerCase().indexOf(lower) !== -1; });
+    }
+
+    function optionEls() {
+      return Array.prototype.slice.call(opts.list.querySelectorAll('.country-option'));
+    }
+
+    function setHighlight(index) {
+      var els = optionEls();
+      if (!els.length) return;
+      if (index < 0) index = els.length - 1;
+      if (index >= els.length) index = 0;
+      els.forEach(function (o) { o.classList.remove('highlighted'); });
+      els[index].classList.add('highlighted');
+      els[index].scrollIntoView({ block: 'nearest' });
+      highlight = index;
+    }
+
+    function select(lbl) {
+      opts.input.value = lbl;
+      close();
+    }
+
+    function close() {
+      opts.list.style.display = 'none';
+    }
+
+    function renderItems(items, emptyText) {
+      highlight = -1;
+      opts.list.innerHTML = '';
+      if (!items.length) {
+        var empty = document.createElement('div');
+        empty.className = 'country-option-empty';
+        empty.textContent = emptyText || 'Type a city name';
+        opts.list.appendChild(empty);
+        return;
+      }
+      items.forEach(function (lbl) {
+        var el = document.createElement('div');
+        el.className = 'country-option';
+        el.textContent = lbl;
+        el.addEventListener('mousedown', function (e) {
+          e.preventDefault();
+          select(lbl);
+        });
+        opts.list.appendChild(el);
+      });
+    }
+
+    function search(query) {
+      var q = (query || '').trim();
+      var extra = extrasFor(q);
+      if (q.length < 2) {
+        renderItems(extra, q ? 'Keep typing a city name' : 'Type a city name');
+        opts.list.style.display = 'block';
+        return;
+      }
+      var my = ++seq;
+      renderItems(extra, 'Searching…');
+      opts.list.style.display = 'block';
+      clearTimeout(timer);
+      timer = setTimeout(function () {
+        apiFetch('/api/dashboard/locations?q=' + encodeURIComponent(q))
+          .then(function (data) {
+            if (my !== seq) return;
+            var found = (data && data.locations) || [];
+            var seen = {};
+            var merged = extra.concat(found).filter(function (s) {
+              if (!s || seen[s]) return false;
+              seen[s] = true;
+              return true;
+            });
+            renderItems(merged, 'No matching cities');
+          })
+          .catch(function () {
+            if (my !== seq) return;
+            renderItems(extra, 'Could not load cities — try again');
+          });
+      }, 250);
+    }
+
+    opts.input.addEventListener('focus', function () {
+      this.select();
+      search(this.value);
+    });
+    opts.input.addEventListener('input', function () {
+      search(this.value);
+    });
+    opts.input.addEventListener('blur', function () {
+      setTimeout(close, 120);
+    });
+    opts.input.addEventListener('keydown', function (e) {
+      var isOpen = opts.list.style.display !== 'none';
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        if (!isOpen) { search(this.value); return; }
+        setHighlight(highlight + 1);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        if (!isOpen) { search(this.value); return; }
+        setHighlight(highlight - 1);
+      } else if (e.key === 'Enter') {
+        if (isOpen && highlight >= 0) {
+          e.preventDefault();
+          var els = optionEls();
+          if (els[highlight]) els[highlight].dispatchEvent(new Event('mousedown'));
+        }
+      } else if (e.key === 'Escape') {
+        close();
+        this.blur();
+      }
+    });
+  }
+
+  createRemoteLocationCombobox({
+    input: document.getElementById('f-preferred_job_location'),
+    list: document.getElementById('preferred-job-location-list')
+  });
 
   function escapeHtml(s) {
     var d = document.createElement('div');

@@ -406,6 +406,13 @@ body {
   max-width: 60ch;
 }
 
+.panel-head p.has-note { margin-bottom: 10px; }
+
+.panel-head p.panel-note {
+  font-size: 13px;
+  color: var(--text-3);
+}
+
 /* excel-style grid */
 
 .grid-wrap {
@@ -1112,7 +1119,8 @@ table.list td.shot-cell {
       <section class="tab-panel active" id="panel-submission">
         <div class="panel-head">
           <h2>Jobs Submission</h2>
-          <p>Paste a link to each job posting you want to apply to. Add rows as you need, then submit — they'll move to Jobs Processing.</p>
+          <p class="has-note">Paste a link to each job posting you want to apply to. Add rows as you need, then submit — they'll move to Jobs Processing.</p>
+          <p class="panel-note">We currently process applications on Workday, Ashby, Greenhouse, and Lever. Not sure which one a posting uses? Check the link for the platform name, like myworkdayjobs.com, ashbyhq.com, greenhouse.io, or lever.co.</p>
           <p class="onboarding-reopen-wrap" id="onboarding-reopen-wrap" style="display:none;">
             <button type="button" class="inline-link-btn" id="onboarding-reopen">Show setup steps</button>
           </p>

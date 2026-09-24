@@ -1192,7 +1192,17 @@ table.list td.date-cell {
               <label for="f-require_future_sponsorship">Require future sponsorship?</label>
               <select id="f-require_future_sponsorship"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </div>
-            <div class="field full"><label for="f-work_permit_type">Status</label><input type="text" id="f-work_permit_type" placeholder="Citizen, Permanent Resident, Visa holder..." /></div>
+            <div class="field full">
+              <label for="f-work_permit_type">Status</label>
+              <select id="f-work_permit_type">
+                <option value="">—</option>
+                <option value="Citizen">Citizen</option>
+                <option value="Permanent resident">Permanent resident</option>
+                <option value="Work visa">Work visa</option>
+                <option value="Student visa">Student visa</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
           </div>
         </div>
 
@@ -1643,6 +1653,28 @@ table.list td.date-cell {
     return val;
   }
 
+  var WORK_PERMIT_OPTIONS = [
+    'Citizen',
+    'Permanent resident',
+    'Work visa',
+    'Student visa',
+    'Other'
+  ];
+
+  function normalizeWorkPermitType(val) {
+    var s = String(val || '').trim();
+    if (!s) return '';
+    if (WORK_PERMIT_OPTIONS.indexOf(s) !== -1) return s;
+    var lower = s.toLowerCase();
+    if (lower.indexOf('citizen') !== -1) return 'Citizen';
+    if (lower.indexOf('permanent') !== -1 || lower === 'pr') return 'Permanent resident';
+    if (lower.indexOf('student') !== -1 || lower.indexOf('study') !== -1) return 'Student visa';
+    if (lower.indexOf('visa') !== -1 || lower.indexOf('permit') !== -1 || lower.indexOf('pgwp') !== -1) {
+      return 'Work visa';
+    }
+    return 'Other';
+  }
+
   function fillProfileForm(profile) {
     profile = profile || {};
     PROFILE_FIELDS.forEach(function (key) {
@@ -1650,7 +1682,9 @@ table.list td.date-cell {
       if (!el) return;
       var val = profile[key];
       if (val === undefined || val === null) return;
-      el.value = YES_NO_FIELDS.indexOf(key) !== -1 ? normalizeYesNo(val) : val;
+      if (YES_NO_FIELDS.indexOf(key) !== -1) el.value = normalizeYesNo(val);
+      else if (key === 'work_permit_type') el.value = normalizeWorkPermitType(val);
+      else el.value = val;
     });
 
     var phoneEl = document.getElementById('f-phone');

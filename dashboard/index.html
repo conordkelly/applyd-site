@@ -556,6 +556,70 @@ table.list td.date-cell {
 
 .status-chip.completed { color: var(--signal); border-color: var(--signal); }
 
+table.list td.shot-cell {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.job-shot-btn {
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 10px;
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.job-shot-btn:hover { border-color: var(--text); }
+
+#job-screenshot-modal[hidden] { display: none; }
+
+#job-screenshot-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.job-screenshot-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(7, 18, 35, 0.55);
+}
+
+.job-screenshot-panel {
+  position: relative;
+  z-index: 1;
+  width: min(960px, 100%);
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+}
+
+.job-screenshot-panel img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.job-screenshot-close {
+  font: inherit;
+  font-size: 13px;
+  margin-bottom: 12px;
+  padding: 5px 10px;
+  border: 1px solid var(--hairline-strong);
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
 .empty-state {
   font-size: 14px;
   color: var(--text-3);
@@ -1083,6 +1147,14 @@ table.list td.date-cell {
         </div>
         <div id="completed-content"></div>
       </section>
+    </div>
+
+    <div id="job-screenshot-modal" hidden>
+      <div class="job-screenshot-backdrop" id="job-screenshot-backdrop"></div>
+      <div class="job-screenshot-panel">
+        <button type="button" class="job-screenshot-close" id="job-screenshot-close">Close</button>
+        <img id="job-screenshot-img" alt="Submitted application" />
+      </div>
     </div>
 
     <div id="info-section" style="display:none;">
@@ -2978,29 +3050,83 @@ table.list td.date-cell {
     return d.innerHTML;
   }
 
-  function renderList(container, rows, dateField, dateLabel) {
+  function renderList(container, rows, dateField, dateLabel, withScreenshot) {
     if (!rows.length) {
       container.innerHTML = '<div class="empty-state">Nothing here yet.</div>';
       return;
     }
-    var html = '<table class="list"><thead><tr><th>Job Link</th><th>' + dateLabel + '</th></tr></thead><tbody>';
+    var html = '<table class="list"><thead><tr><th>Job Link</th><th>' + dateLabel + '</th>' +
+      (withScreenshot ? '<th></th>' : '') +
+      '</tr></thead><tbody>';
     rows.forEach(function (r) {
       html += '<tr><td class="link-cell"><a href="' + escapeHtml(r.job_url) + '" target="_blank" rel="noopener">' + escapeHtml(r.job_url) + '</a></td>' +
-        '<td class="date-cell">' + escapeHtml((r[dateField] || '').replace('T', ' ').slice(0, 16)) + '</td></tr>';
+        '<td class="date-cell">' + escapeHtml((r[dateField] || '').replace('T', ' ').slice(0, 16)) + '</td>';
+      if (withScreenshot) {
+        html += r.has_screenshot
+          ? '<td class="shot-cell"><button type="button" class="job-shot-btn" data-job-id="' +
+            escapeHtml(String(r.id)) +
+            '">View page</button></td>'
+          : '<td class="shot-cell"></td>';
+      }
+      html += '</tr>';
     });
     html += '</tbody></table>';
     container.innerHTML = html;
+  }
+
+  var screenshotObjectUrl = '';
+
+  function closeJobScreenshot() {
+    var modal = document.getElementById('job-screenshot-modal');
+    var img = document.getElementById('job-screenshot-img');
+    if (modal) modal.hidden = true;
+    if (img) img.removeAttribute('src');
+    if (screenshotObjectUrl) {
+      URL.revokeObjectURL(screenshotObjectUrl);
+      screenshotObjectUrl = '';
+    }
+  }
+
+  async function openJobScreenshot(jobId) {
+    var token = await getToken();
+    var res = await fetch('/api/dashboard/jobs/' + encodeURIComponent(jobId) + '/screenshot', {
+      headers: { Authorization: 'Bearer ' + token }
+    });
+    if (!res.ok) {
+      window.alert('No screenshot for this application yet.');
+      return;
+    }
+    var blob = await res.blob();
+    if (screenshotObjectUrl) URL.revokeObjectURL(screenshotObjectUrl);
+    screenshotObjectUrl = URL.createObjectURL(blob);
+    var img = document.getElementById('job-screenshot-img');
+    var modal = document.getElementById('job-screenshot-modal');
+    if (img) img.src = screenshotObjectUrl;
+    if (modal) modal.hidden = false;
   }
 
   async function loadJobs() {
     try {
       var data = await apiFetch('/api/dashboard/jobs');
       renderList(document.getElementById('processing-content'), data.processing, 'created_at', 'Submitted');
-      renderList(document.getElementById('completed-content'), data.completed, 'completed_at', 'Date Submitted');
+      renderList(document.getElementById('completed-content'), data.completed, 'completed_at', 'Date Submitted', true);
     } catch (e) {
       console.error(e);
     }
   }
+
+  document.getElementById('completed-content').addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('.job-shot-btn') : null;
+    if (!btn) return;
+    openJobScreenshot(btn.getAttribute('data-job-id')).catch(function () {
+      window.alert('Could not load the screenshot.');
+    });
+  });
+  document.getElementById('job-screenshot-close').addEventListener('click', closeJobScreenshot);
+  document.getElementById('job-screenshot-backdrop').addEventListener('click', closeJobScreenshot);
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape') closeJobScreenshot();
+  });
 
   function renderUserJobsTable(rows) {
     if (!rows.length) return '<div class="empty-state">No jobs submitted yet.</div>';

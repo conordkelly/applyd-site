@@ -44,14 +44,42 @@ export async function onRequestGet(context) {
     results = q.results || [];
   }
 
-  const processing = results.filter(
-    (r) =>
-      r.status === "processing" &&
-      !(r.rejected_at && String(r.rejected_at).trim())
-  );
-  const completed = results.filter((r) => r.status === "completed");
+  const shotIds = await screenshotIdsForUser(env, data.userId);
+  const withShot = (row) => ({
+    ...row,
+    has_screenshot: shotIds.has(String(row.id)),
+  });
+
+  const processing = results
+    .filter(
+      (r) =>
+        r.status === "processing" &&
+        !(r.rejected_at && String(r.rejected_at).trim())
+    )
+    .map(withShot);
+  const completed = results
+    .filter((r) => r.status === "completed")
+    .map(withShot);
 
   return json({ processing, completed });
+}
+
+async function screenshotIdsForUser(env, userId) {
+  const ids = new Set();
+  if (!env.RESUMES) return ids;
+  try {
+    const listed = await env.RESUMES.list({
+      prefix: `job-screenshots/${userId}/`,
+    });
+    (listed.objects || []).forEach((obj) => {
+      const name = String(obj.key || "").split("/").pop() || "";
+      const id = name.replace(/\.(jpe?g|png)$/i, "");
+      if (id) ids.add(id);
+    });
+  } catch (e) {
+    console.log("screenshot list:", String(e && e.message ? e.message : e));
+  }
+  return ids;
 }
 
 export async function onRequestPost(context) {

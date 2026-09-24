@@ -1159,7 +1159,16 @@ table.list td.date-cell {
               </div>
             </div>
             <div class="field full"><label for="f-address">Street address<span class="required-mark">*</span></label><input type="text" id="f-address" placeholder="290 Bremner Blvd" /></div>
-            <div class="field"><label for="f-city">City<span class="required-mark">*</span></label><input type="text" id="f-city" placeholder="Toronto" /></div>
+            <div class="field">
+              <label for="f-city">City<span class="required-mark">*</span></label>
+              <div class="country-field" id="city-field">
+                <input type="text" id="f-city" autocomplete="off" placeholder="Type a city name..." />
+                <svg class="country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">
+                  <path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                <div class="country-dropdown-list" id="city-list" style="display:none;"></div>
+              </div>
+            </div>
             <div class="field">
               <label for="f-province_full">State / province<span class="required-mark">*</span></label>
               <div class="country-field" id="province-field">
@@ -2774,16 +2783,54 @@ table.list td.date-cell {
     return payload;
   }
 
+  function placeFromLabel(label) {
+    var parts = String(label || '').split(',').map(function (p) { return p.trim(); }).filter(Boolean);
+    return {
+      label: String(label || '').trim(),
+      city: parts[0] || '',
+      admin1: parts.length > 2 ? parts[1] : '',
+      country: parts.length > 1 ? parts[parts.length - 1] : ''
+    };
+  }
+
+  function normalizePlace(item) {
+    if (!item) return null;
+    if (typeof item === 'string') return placeFromLabel(item);
+    var city = String(item.city || '').trim();
+    var admin1 = String(item.admin1 || '').trim();
+    var country = String(item.country || '').trim();
+    var label = String(item.label || '').trim();
+    if (!label) label = [city, admin1, country].filter(Boolean).join(', ');
+    if (!label) return null;
+    return { label: label, city: city || placeFromLabel(label).city, admin1: admin1, country: country };
+  }
+
+  function provinceLabelFromAdmin(admin1) {
+    var name = String(admin1 || '').trim();
+    if (!name) return '';
+    var codes = Object.keys(PROVINCE_FULL_NAMES);
+    for (var i = 0; i < codes.length; i++) {
+      if (PROVINCE_FULL_NAMES[codes[i]].toLowerCase() === name.toLowerCase()) {
+        return PROVINCE_FULL_NAMES[codes[i]] + ' (' + codes[i] + ')';
+      }
+    }
+    return name;
+  }
+
   function createRemoteLocationCombobox(opts) {
     var highlight = -1;
     var timer = null;
     var seq = 0;
-    var extras = ['Remote', 'Remote, Canada', 'Remote, United States'];
+    var extras = opts.includeRemote === false ? [] : [
+      { label: 'Remote', city: 'Remote', admin1: '', country: '' },
+      { label: 'Remote, Canada', city: 'Remote', admin1: '', country: 'Canada' },
+      { label: 'Remote, United States', city: 'Remote', admin1: '', country: 'United States' }
+    ];
 
     function extrasFor(q) {
       var lower = (q || '').trim().toLowerCase();
       if (!lower) return extras.slice();
-      return extras.filter(function (s) { return s.toLowerCase().indexOf(lower) !== -1; });
+      return extras.filter(function (p) { return p.label.toLowerCase().indexOf(lower) !== -1; });
     }
 
     function optionEls() {
@@ -2801,8 +2848,11 @@ table.list td.date-cell {
       highlight = index;
     }
 
-    function select(lbl) {
-      opts.input.value = lbl;
+    function select(place) {
+      place = normalizePlace(place);
+      if (!place) return;
+      opts.input.value = opts.formatInput ? opts.formatInput(place) : place.label;
+      if (opts.onSelect) opts.onSelect(place);
       close();
     }
 
@@ -2820,13 +2870,13 @@ table.list td.date-cell {
         opts.list.appendChild(empty);
         return;
       }
-      items.forEach(function (lbl) {
+      items.forEach(function (place) {
         var el = document.createElement('div');
         el.className = 'country-option';
-        el.textContent = lbl;
+        el.textContent = place.label;
         el.addEventListener('mousedown', function (e) {
           e.preventDefault();
-          select(lbl);
+          select(place);
         });
         opts.list.appendChild(el);
       });
@@ -2848,11 +2898,11 @@ table.list td.date-cell {
         apiFetch('/api/dashboard/locations?q=' + encodeURIComponent(q))
           .then(function (data) {
             if (my !== seq) return;
-            var found = (data && data.locations) || [];
+            var found = ((data && data.locations) || []).map(normalizePlace).filter(Boolean);
             var seen = {};
-            var merged = extra.concat(found).filter(function (s) {
-              if (!s || seen[s]) return false;
-              seen[s] = true;
+            var merged = extra.concat(found).filter(function (p) {
+              if (!p || !p.label || seen[p.label]) return false;
+              seen[p.label] = true;
               return true;
             });
             renderItems(merged, 'No matching cities');
@@ -2900,6 +2950,26 @@ table.list td.date-cell {
   createRemoteLocationCombobox({
     input: document.getElementById('f-preferred_job_location'),
     list: document.getElementById('preferred-job-location-list')
+  });
+
+  createRemoteLocationCombobox({
+    input: document.getElementById('f-city'),
+    list: document.getElementById('city-list'),
+    includeRemote: false,
+    formatInput: function (place) { return place.city || place.label; },
+    onSelect: function (place) {
+      var provinceEl = document.getElementById('f-province_full');
+      var countryEl = document.getElementById('f-country');
+      if (provinceEl && place.admin1) provinceEl.value = provinceLabelFromAdmin(place.admin1);
+      if (countryEl && place.country) {
+        countryEl.value = place.country;
+        var resideEl = document.getElementById('f-currently_reside_canada');
+        if (resideEl && !resideEl.value) {
+          resideEl.value = place.country === 'Canada' ? 'Yes' : 'No';
+        }
+      }
+      updateJobSubmitGate();
+    }
   });
 
   function escapeHtml(s) {

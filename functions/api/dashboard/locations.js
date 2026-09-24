@@ -9,12 +9,19 @@ function json(data, status) {
 }
 
 function formatPlace(row) {
+  const city = String((row && row.name) || "").trim();
+  const admin1 = String((row && row.admin1) || "").trim();
+  const country = String((row && row.country) || "").trim();
   const parts = [];
-  [row && row.name, row && row.admin1, row && row.country].forEach((part) => {
-    const text = String(part || "").trim();
-    if (text && parts.indexOf(text) === -1) parts.push(text);
+  [city, admin1, country].forEach((part) => {
+    if (part && parts.indexOf(part) === -1) parts.push(part);
   });
-  return parts.join(", ");
+  return {
+    label: parts.join(", "),
+    city,
+    admin1,
+    country,
+  };
 }
 
 export async function onRequestGet(context) {
@@ -51,10 +58,10 @@ export async function onRequestGet(context) {
   const seen = {};
   const locations = [];
   for (let i = 0; i < rows.length; i++) {
-    const label = formatPlace(rows[i]);
-    if (!label || seen[label]) continue;
-    seen[label] = true;
-    locations.push(label);
+    const place = formatPlace(rows[i]);
+    if (!place.label || seen[place.label]) continue;
+    seen[place.label] = true;
+    locations.push(place);
   }
 
   return json({ locations });

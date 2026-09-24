@@ -639,6 +639,30 @@ table.list td.date-cell {
   color: var(--muted);
   margin: 0 0 12px;
 }
+.inbox-reply-choices {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 12px;
+}
+.inbox-reply-choices[hidden] {
+  display: none;
+}
+.inbox-reply-choices span {
+  font-size: 12px;
+  color: var(--muted);
+  margin-right: 4px;
+}
+.inbox-reply-choices button {
+  font: inherit;
+  font-size: 12.5px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  background: #fff;
+  cursor: pointer;
+  border-radius: 4px;
+}
 .inbox-body {
   white-space: pre-wrap;
   font-size: 14px;
@@ -2741,6 +2765,12 @@ table.list td.date-cell {
         '<button type="button" class="inline-link-btn inbox-detail-back" id="inbox-back">← Back</button>' +
         '<button type="button" class="inbox-reply-btn" id="inbox-reply">Reply in your email</button>' +
         '</div>' +
+        '<div class="inbox-reply-choices" id="inbox-reply-choices" hidden>' +
+        '<span>Open in</span>' +
+        '<button type="button" data-reply-service="gmail">Gmail</button>' +
+        '<button type="button" data-reply-service="outlook">Outlook</button>' +
+        '<button type="button" data-reply-service="app">Mail app</button>' +
+        '</div>' +
         '<p class="inbox-reply-note" id="inbox-reply-note" hidden></p>' +
         '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
         '<p class="inbox-msg-meta">From: ' + escapeHtml(m.from_address || '') +
@@ -2753,7 +2783,13 @@ table.list td.date-cell {
         list.style.display = 'block';
       });
       document.getElementById('inbox-reply').addEventListener('click', function () {
-        openInboxReply(m);
+        var choices = document.getElementById('inbox-reply-choices');
+        if (choices) choices.hidden = !choices.hidden;
+      });
+      detail.querySelectorAll('#inbox-reply-choices button').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          openInboxReply(m, btn.getAttribute('data-reply-service'));
+        });
       });
     } catch (e) {
       console.error(e);
@@ -2801,29 +2837,47 @@ table.list td.date-cell {
     var draft = 'To: ' + to + '\nSubject: ' + subject + '\n' + body;
     if (!navigator.clipboard || !navigator.clipboard.writeText) return;
     navigator.clipboard.writeText(draft).then(function () {
-      showInboxReplyNote('Opened your mail app. Full message copied if the quote was cut off.');
+      showInboxReplyNote('Opened your mail. Full message copied if the quote was cut off.');
     }).catch(function () {});
   }
 
-  function openInboxReply(m) {
+  function inboxReplyUrl(service, to, subject, body) {
+    if (service === 'gmail') {
+      return 'https://mail.google.com/mail/?view=cm&fs=1&tf=1&to=' +
+        encodeURIComponent(to) + '&su=' + encodeURIComponent(subject) +
+        '&body=' + encodeURIComponent(body);
+    }
+    if (service === 'outlook') {
+      return 'https://outlook.live.com/mail/0/deeplink/compose?to=' +
+        encodeURIComponent(to) + '&subject=' + encodeURIComponent(subject) +
+        '&body=' + encodeURIComponent(body);
+    }
+    return 'mailto:' + encodeURIComponent(to) +
+      '?subject=' + encodeURIComponent(subject) +
+      '&body=' + encodeURIComponent(body);
+  }
+
+  function openInboxReply(m, service) {
     var to = extractEmailAddress(m.from_address);
     if (!to) {
       showInboxReplyNote('This message has no reply address.');
       return;
     }
     var subject = replySubject(m.subject);
+    var maxChars = service === 'app' ? 900 : 4000;
+    var urlLimit = service === 'app' ? 1800 : 6000;
     var body = quoteInboxMessage(m, 8000);
-    var url = 'mailto:' + encodeURIComponent(to) +
-      '?subject=' + encodeURIComponent(subject) +
-      '&body=' + encodeURIComponent(body);
-    if (url.length > 1800) {
-      var shortBody = quoteInboxMessage(m, 900);
-      url = 'mailto:' + encodeURIComponent(to) +
-        '?subject=' + encodeURIComponent(subject) +
-        '&body=' + encodeURIComponent(shortBody);
-      copyInboxReplyDraft(to, subject, body);
+    var url = inboxReplyUrl(service, to, subject, body);
+    if (url.length > urlLimit) {
+      body = quoteInboxMessage(m, maxChars);
+      url = inboxReplyUrl(service, to, subject, body);
+      copyInboxReplyDraft(to, subject, quoteInboxMessage(m, 8000));
     }
-    window.location.href = url;
+    if (service === 'app') {
+      window.location.href = url;
+      return;
+    }
+    window.open(url, '_blank', 'noopener');
   }
 
   async function loadAdmin() {

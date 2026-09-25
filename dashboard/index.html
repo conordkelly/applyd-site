@@ -1072,6 +1072,31 @@ table.list td.shot-cell {
   table.list th, table.list td { font-size: 12px; }
   .field-grid { grid-template-columns: 1fr; }
 }
+
+/* first-time tour */
+.tour-overlay { position: fixed; inset: 0; z-index: 1000; }
+.tour-overlay.dim { background: rgba(10,12,16,0.55); }
+.tour-spotlight {
+  position: fixed; z-index: 1001; border-radius: 8px; pointer-events: none;
+  box-shadow: 0 0 0 9999px rgba(10,12,16,0.55);
+  transition: left .18s ease, top .18s ease, width .18s ease, height .18s ease;
+}
+.tour-pop {
+  position: fixed; z-index: 1002; width: 320px; max-width: calc(100vw - 32px);
+  background: var(--surface); border: 1px solid var(--hairline-strong);
+  border-radius: 8px; padding: 18px 18px 14px;
+  box-shadow: 0 12px 32px rgba(18,21,27,0.22);
+}
+.tour-count { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 6px; }
+.tour-title { font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 15.5px; color: var(--text); margin: 0 0 4px; }
+.tour-body { font-size: 13.5px; line-height: 1.5; color: var(--text-2); margin: 0 0 16px; }
+.tour-actions { display: flex; align-items: center; gap: 8px; }
+.tour-skip { margin-right: auto; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--text-3); background: none; border: none; padding: 0; text-decoration: underline; cursor: pointer; }
+.tour-skip:hover { color: var(--text); }
+.tour-back { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--accent); background: none; border: 1px solid var(--hairline-strong); border-radius: 6px; padding: 7px 12px; cursor: pointer; }
+.tour-next { font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 13px; color: var(--accent-ink); background: var(--accent); border: none; border-radius: 6px; padding: 8px 14px; cursor: pointer; }
+.tour-replay { width: 28px; height: 28px; flex-shrink: 0; font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--text-2); background: none; border: 1px solid var(--hairline-strong); border-radius: 50%; padding: 0; margin-right: 12px; cursor: pointer; }
+.tour-replay:hover { color: var(--accent); border-color: var(--accent); }
 </style>
 
 <div class="page">
@@ -1093,6 +1118,7 @@ table.list td.shot-cell {
       </div>
     </div>
     <div class="topbar-right">
+      <button type="button" class="tour-replay" id="tour-replay" title="Take the tour" aria-label="Take the tour">?</button>
       <div id="user-button"></div>
     </div>
   </header>
@@ -1788,7 +1814,8 @@ table.list td.shot-cell {
   var onboardingState = {
     welcomeDismissed: false,
     firstJobsSubmitted: false,
-    welcomeEmailSent: false
+    welcomeEmailSent: false,
+    tourSeen: false
   };
   var applyEmailState = {
     applyEmail: '',
@@ -1905,9 +1932,10 @@ table.list td.shot-cell {
       ? {
           welcomeDismissed: !!profile.onboarding.welcomeDismissed,
           firstJobsSubmitted: !!profile.onboarding.firstJobsSubmitted,
-          welcomeEmailSent: !!profile.onboarding.welcomeEmailSent
+          welcomeEmailSent: !!profile.onboarding.welcomeEmailSent,
+          tourSeen: !!profile.onboarding.tourSeen
         }
-      : { welcomeDismissed: false, firstJobsSubmitted: false, welcomeEmailSent: false };
+      : { welcomeDismissed: false, firstJobsSubmitted: false, welcomeEmailSent: false, tourSeen: false };
 
     applyEmailState.applyEmail = profile.apply_email ? String(profile.apply_email) : '';
     applyEmailState.forwardToPersonal = profile.apply_email_forward_to_personal !== false;
@@ -2149,6 +2177,116 @@ table.list td.shot-cell {
   });
 
   document.getElementById('onboarding-reopen').addEventListener('click', reopenOnboardingChecklist);
+
+  // First-time tour. Spotlights each nav area in turn; shown once per user
+  // (onboardingState.tourSeen, saved with the rest of the profile blob),
+  // replayable from the "?" button in the top bar.
+  var TOUR_STEPS = [
+    { target: '#info-view-link', title: 'My Info',
+      body: 'Add your details and upload your resume here. Fill it out once and every application uses it.' },
+    { target: '#jobs-view-link', title: 'My Jobs',
+      body: "Paste job links here and we apply for you. Once your info is complete, this is where you'll spend most of your time." },
+    { target: '.tabs', before: 'jobs', title: 'Submission, Processing, Completed',
+      body: "Paste new links under Submission. Processing shows applications we're working on. Completed shows what's been sent." },
+    { target: '#inbox-view-link', title: 'Inbox',
+      body: 'Emails sent to your Applyd address show up here, so you can see replies and interview requests. They also forward to your personal email.' },
+    { target: null, title: "You're all set",
+      body: 'Start by adding your details under My Info. The checklist on My Jobs will track your progress.', last: true }
+  ];
+  var tourIndex = 0, tourOverlay = null, tourSpot = null, tourPop = null;
+
+  function tourPlace(el) {
+    var vw = window.innerWidth, vh = window.innerHeight, pw = tourPop.offsetWidth, ph = tourPop.offsetHeight;
+    if (!el) {
+      tourSpot.style.display = 'none';
+      tourOverlay.className = 'tour-overlay dim';
+      tourPop.style.left = Math.max(16, (vw - pw) / 2) + 'px';
+      tourPop.style.top = Math.max(16, (vh - ph) / 2) + 'px';
+      return;
+    }
+    tourOverlay.className = 'tour-overlay';
+    tourSpot.style.display = 'block';
+    var r = el.getBoundingClientRect(), pad = 6;
+    tourSpot.style.left = (r.left - pad) + 'px';
+    tourSpot.style.top = (r.top - pad) + 'px';
+    tourSpot.style.width = (r.width + pad * 2) + 'px';
+    tourSpot.style.height = (r.height + pad * 2) + 'px';
+    var top = r.bottom + pad + 12;
+    if (top + ph > vh - 16) top = Math.max(16, r.top - pad - 12 - ph);
+    tourPop.style.top = top + 'px';
+    tourPop.style.left = Math.min(Math.max(16, r.left), vw - pw - 16) + 'px';
+  }
+
+  function tourShow() {
+    var step = TOUR_STEPS[tourIndex];
+    if (step.before === 'jobs') document.getElementById('jobs-view-link').click();
+    var el = step.target ? document.querySelector(step.target) : null;
+    if (el && el.offsetParent === null) el = null;
+    if (el) el.scrollIntoView({ block: 'center' });
+
+    tourPop.innerHTML =
+      '<div class="tour-count">' + (tourIndex + 1) + ' of ' + TOUR_STEPS.length + '</div>' +
+      '<h3 class="tour-title"></h3><p class="tour-body"></p>' +
+      '<div class="tour-actions"><button type="button" class="tour-skip">Skip tour</button>' +
+      (tourIndex > 0 ? '<button type="button" class="tour-back">Back</button>' : '') +
+      '<button type="button" class="tour-next"></button></div>';
+    tourPop.querySelector('.tour-title').textContent = step.title;
+    tourPop.querySelector('.tour-body').textContent = step.body;
+    tourPop.querySelector('.tour-next').textContent = step.last ? 'Go to My Info' : 'Next';
+    tourPop.querySelector('.tour-skip').addEventListener('click', endTour);
+    var back = tourPop.querySelector('.tour-back');
+    if (back) back.addEventListener('click', function () { tourIndex--; tourShow(); });
+    tourPop.querySelector('.tour-next').addEventListener('click', function () {
+      if (step.last) {
+        endTour();
+        document.getElementById('info-view-link').click();
+      } else {
+        tourIndex++;
+        tourShow();
+      }
+    });
+    tourPlace(el);
+  }
+
+  function onTourKey(e) { if (e.key === 'Escape') endTour(); }
+  function onTourResize() { if (tourPop) tourShow(); }
+
+  function endTour() {
+    [tourOverlay, tourSpot, tourPop].forEach(function (n) { if (n && n.parentNode) n.parentNode.removeChild(n); });
+    tourOverlay = tourSpot = tourPop = null;
+    document.removeEventListener('keydown', onTourKey);
+    window.removeEventListener('resize', onTourResize);
+    if (!onboardingState.tourSeen) {
+      onboardingState.tourSeen = true;
+      saveProfileToServer().catch(function () {});
+    }
+  }
+
+  function startTour() {
+    if (tourPop) endTour();
+    tourIndex = 0;
+    tourOverlay = document.createElement('div'); tourOverlay.className = 'tour-overlay';
+    tourSpot = document.createElement('div'); tourSpot.className = 'tour-spotlight';
+    tourPop = document.createElement('div'); tourPop.className = 'tour-pop';
+    tourPop.setAttribute('role', 'dialog');
+    tourPop.setAttribute('aria-live', 'polite');
+    document.body.appendChild(tourOverlay);
+    document.body.appendChild(tourSpot);
+    document.body.appendChild(tourPop);
+    tourShow();
+    document.addEventListener('keydown', onTourKey);
+    window.addEventListener('resize', onTourResize);
+  }
+
+  // Auto-start only for people who haven't seen it and are still early in
+  // setup: not already dismissed the checklist, not already finished it.
+  function maybeStartTour() {
+    if (onboardingState.tourSeen || onboardingState.welcomeDismissed) return;
+    if (computeOnboardingStatus().allDone) return;
+    setTimeout(startTour, 500);
+  }
+
+  document.getElementById('tour-replay').addEventListener('click', startTour);
 
   function setResumeStatus(text) {
     var statusEl = document.getElementById('resume-upload-status');
@@ -2775,6 +2913,7 @@ table.list td.shot-cell {
       maybePrefillNamesFromClerk();
       profileLoaded = true;
       maybeSendWelcomeEmail();
+      maybeStartTour();
     } catch (e) {
       console.error(e);
       updateJobSubmitGate();

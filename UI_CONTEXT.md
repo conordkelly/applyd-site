@@ -688,6 +688,32 @@ bound as the Email Routing catch-all on `everydaymail.ca`; it stores to D1
 and re-sends copies via Resend. Fill worker gets `canonical.contact.email` =
 apply address (`functions/api/worker/profile.js`).
 
+**First-time tour (2026-09-25).** A 5-step guided tour for new users: a
+dimmed page with a spotlight on each area and a small card explaining it
+(My Info, My Jobs, the Submission/Processing/Completed tabs, Inbox, then a
+closing "You're all set" card whose button goes to My Info). Vanilla JS in
+`dashboard/index.html` (`TOUR_STEPS`, `startTour()`/`tourShow()`/
+`endTour()`), same design tokens as the rest of the dashboard, no
+dependencies. Mocked up and approved before it was built.
+- Shows once: `onboardingState.tourSeen`, saved in `profile.onboarding`
+  with the checklist flags (no new table). Set when the tour is skipped or
+  finished, not when it starts, so closing the tab mid-tour shows it again
+  next visit.
+- Auto-start (`maybeStartTour()`, after the profile loads) only for people
+  who haven't seen it, haven't dismissed the checklist, and haven't
+  finished all three checklist steps. Existing users who already dismissed
+  or completed onboarding never see it unprompted.
+- Replay: the round "?" button in the top bar (`#tour-replay`) always
+  works. Replaying doesn't re-save anything.
+- Skip via "Skip tour" or Esc. Arrow-key shortcuts were left out on
+  purpose, since people use arrow keys to scroll and a stray press
+  shouldn't move the tour.
+- Step 3 switches to the My Jobs view first so the tabs are on screen.
+  Positioning clamps the card inside the viewport, so it holds up at
+  phone width.
+- If a nav label or view is renamed or removed, update the selectors in
+  `TOUR_STEPS` and the step copy together.
+
 ## Deferred / not built yet
 
 - No `/agencies` page live. `agencies-landing-archive.html` has the old

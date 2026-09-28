@@ -218,6 +218,13 @@ accent background) between three panels:
   date column.
 - **Completed** — jobs with `status = 'completed'`, same endpoint,
   "Date Submitted" column uses `completed_at`.
+  A small image icon to the right of the date opens a modal with the
+  screenshot of the filled application (the same JPEG shown in ApplyD
+  Review). Only rendered for jobs that have one — `GET /api/dashboard/jobs`
+  sets `has_screenshot` from R2 (`job-screenshots/{userId}/{jobId}.jpg`,
+  uploaded by the local worker via `PUT /api/worker/jobs/:id/screenshot`),
+  so jobs completed before 2026-09-24 show no icon. Image is fetched with
+  the Clerk token via `GET /api/dashboard/jobs/:id/screenshot`.
 
 **Not connected to the real Google Sheet or worker yet** — this is UI +
 D1 only, by explicit choice ("I don't want it to connect to a live google
@@ -349,8 +356,13 @@ desktop (`.field-grid`, collapses to one column under 520px):
    `profile.experience_roles`, an array of
    `{ company, role, location, start, end, present, bullets: [''] }` — the
    same shape `experience_bank.json` uses, plus `location` which is new
-   there too. `location` also flows into `canonical.experience[]`; the
-   worker doesn't read it yet. **Confirmed 2026-09-22 against the
+   there too. `location` also flows into `canonical.experience[]`.
+   **Worker (2026-09-28):** `load_experience_bank()` now carries `location`
+   and Workday My Experience types it per role (blank + optional → leave
+   empty; blank + required → `residence_address` as "City, Province,
+   Country"; Remote stays free-text, or country on a city picker).
+   Greenhouse / Ashby / Lever do not ask per-role work-history location.
+   **Confirmed 2026-09-22 against the
    real worker** (`~/.applyd/apply_worker.py`'s `load_experience_bank()`):
    it already prefers this exact site-canonical shape over the local file
    and reads `bullets[].text` from objects (or plain strings) to build the
@@ -627,8 +639,9 @@ company + title + location + start/end (or present) dates + at least one
 non-empty bullet, not just company + title (location added 2026-09-28,
 because Workday asks for it per role and a guessed default would often be
 wrong). Note the rule is "at least one usable role", not "every role" — a
-second, half-filled role doesn't block submit, so the worker still needs a
-fallback for roles with a blank location.
+second, half-filled role doesn't block submit. The worker leaves optional
+blank locations empty and, when Workday requires the field, falls back to
+`residence_address` (not a guessed resume city).
 
 **ATS credentials (2026-09-22).** `functions/api/_ats_passwords.js`
 generates a stable per-user Workday-style credential pair

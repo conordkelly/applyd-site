@@ -569,17 +569,20 @@ table.list td.shot-cell {
 }
 
 .job-shot-btn {
-  font: inherit;
-  font-size: 13px;
-  padding: 5px 10px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
   border: 1px solid var(--hairline-strong);
   background: var(--surface);
-  color: var(--text);
+  color: var(--text-2);
   border-radius: 4px;
   cursor: pointer;
 }
 
-.job-shot-btn:hover { border-color: var(--text); }
+.job-shot-btn:hover { border-color: var(--text); color: var(--text); }
 
 #job-screenshot-modal[hidden] { display: none; }
 
@@ -3255,7 +3258,10 @@ table.list td.shot-cell {
         html += r.has_screenshot
           ? '<td class="shot-cell"><button type="button" class="job-shot-btn" data-job-id="' +
             escapeHtml(String(r.id)) +
-            '">View page</button></td>'
+            '" title="View screenshot of the submitted application" aria-label="View screenshot of the submitted application">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5-5-8 9"/></svg>' +
+            '</button></td>'
           : '<td class="shot-cell"></td>';
       }
       html += '</tr>';

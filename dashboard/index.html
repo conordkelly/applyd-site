@@ -2361,7 +2361,7 @@ table.list td.shot-cell {
   });
 
   function emptyRole() {
-    return { company: '', role: '', start: '', end: '', present: false, bullets: [''] };
+    return { company: '', role: '', location: '', start: '', end: '', present: false, bullets: [''] };
   }
 
   function renderExperienceRoles() {
@@ -2408,6 +2408,10 @@ table.list td.shot-cell {
     });
     if (role.present) endField.style.display = 'none';
     grid.appendChild(endField);
+
+    grid.appendChild(makeRoleLocationField('Location', role.location, function (v) {
+      role.location = v;
+    }));
 
     card.appendChild(grid);
 
@@ -2542,6 +2546,34 @@ table.list td.shot-cell {
     input.addEventListener('input', function () { onChange(input.value); });
     field.appendChild(label);
     field.appendChild(input);
+    return field;
+  }
+
+  // Same worldwide city search as Preferred job location on My Info
+  // (createRemoteLocationCombobox), just built fresh per role instead of
+  // wired to static ids, since roles are dynamic and repeatable.
+  function makeRoleLocationField(labelText, value, onChange) {
+    var field = document.createElement('div');
+    field.className = 'field full';
+    field.innerHTML =
+      '<label></label>' +
+      '<div class="country-field">' +
+        '<input type="text" autocomplete="off" placeholder="Type a city name...">' +
+        '<svg class="country-chevron" width="10" height="6" viewBox="0 0 10 6" fill="none" aria-hidden="true">' +
+          '<path d="M1 1L5 5L9 1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>' +
+        '</svg>' +
+        '<div class="country-dropdown-list" style="display:none;"></div>' +
+      '</div>';
+    field.querySelector('label').textContent = labelText;
+    var input = field.querySelector('input');
+    var list = field.querySelector('.country-dropdown-list');
+    input.value = value || '';
+    input.addEventListener('input', function () { onChange(input.value); });
+    createRemoteLocationCombobox({
+      input: input,
+      list: list,
+      onSelect: function () { onChange(input.value); }
+    });
     return field;
   }
 
@@ -2713,6 +2745,7 @@ table.list td.shot-cell {
         years_experience: flat.years_experience || '',
         general_salary_expectation: salaryDisplay,
         salary_expectations_typed: flat.salary_typed_band || '',
+        salary_expectation: flat.salary_expectation || '',
         salary_min: flat.salary_min || '',
         salary_max: flat.salary_max || '',
         salary_currency: flat.salary_currency || '',
@@ -2738,6 +2771,7 @@ table.list td.shot-cell {
         return {
           company: role.company || '',
           role: role.role || '',
+          location: role.location || '',
           start: role.start || '',
           end: role.present ? 'Present' : (role.end || ''),
           present: !!role.present,

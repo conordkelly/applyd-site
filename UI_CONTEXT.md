@@ -328,7 +328,11 @@ desktop (`.field-grid`, collapses to one column under 520px):
    the worker), degree name (new), graduation year (new), target roles.
 6. **Work Experience Points** (new section, directly under Experience) —
    dynamic repeatable role cards (`+ Add role` / `Remove role`), each with
-   company, title, Workday-style month + year dropdowns or an "I currently work here"
+   company, title, a **Location** field (added 2026-09-28, `makeRoleLocationField()`
+   — the same worldwide-city combobox as My Info's Preferred job location,
+   `createRemoteLocationCombobox()`, just built fresh per role instead of
+   wired to static ids since roles repeat; optional, no required-mark),
+   Workday-style month + year dropdowns or an "I currently work here"
    checkbox that disables the end date, and a repeatable bullet list
    (`+ Add bullet` / per-bullet `Remove`). A brand-new profile
    (`experience_roles` never saved) starts with one blank "Role 1" card
@@ -336,8 +340,10 @@ desktop (`.field-grid`, collapses to one column under 520px):
    (user removed every role and saved) is left alone, since that's a
    deliberate choice, not a first-time state. Persisted as
    `profile.experience_roles`, an array of
-   `{ company, role, start, end, present, bullets: [''] }` — the same
-   shape `experience_bank.json` uses. **Confirmed 2026-09-22 against the
+   `{ company, role, location, start, end, present, bullets: [''] }` — the
+   same shape `experience_bank.json` uses, plus `location` which is new
+   there too. `location` also flows into `canonical.experience[]`; the
+   worker doesn't read it yet. **Confirmed 2026-09-22 against the
    real worker** (`~/.applyd/apply_worker.py`'s `load_experience_bank()`):
    it already prefers this exact site-canonical shape over the local file
    and reads `bullets[].text` from objects (or plain strings) to build the

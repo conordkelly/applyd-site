@@ -333,6 +333,12 @@ desktop (`.field-grid`, collapses to one column under 520px):
    `createRemoteLocationCombobox()`, just built fresh per role instead of
    wired to static ids since roles repeat; **required as of 2026-09-28**,
    asterisk label, counts toward the submit gate like company/title),
+   **City search behavior (2026-09-28):** every field using
+   `createRemoteLocationCombobox()` (Preferred job location, City, role
+   Location) stays closed on an empty click. The "Remote", "Remote, Canada",
+   "Remote, United States" shortcuts only appear once the typed text starts
+   like them (e.g. "rem"), never as a default list. Real city results still
+   start at 2 characters.
    Workday-style month + year dropdowns or an "I currently work here"
    checkbox that disables the end date, and a repeatable bullet list
    (`+ Add bullet` / per-bullet `Remove`). A brand-new profile

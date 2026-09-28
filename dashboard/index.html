@@ -3082,10 +3082,12 @@ table.list td.shot-cell {
       { label: 'Remote, United States', city: 'Remote', admin1: '', country: 'United States' }
     ];
 
+    // Remote options only show once the person starts typing something that
+    // begins like them ("rem", "remote, c"), never on an empty click.
     function extrasFor(q) {
       var lower = (q || '').trim().toLowerCase();
-      if (!lower) return extras.slice();
-      return extras.filter(function (p) { return p.label.toLowerCase().indexOf(lower) !== -1; });
+      if (!lower) return [];
+      return extras.filter(function (p) { return p.label.toLowerCase().indexOf(lower) === 0; });
     }
 
     function optionEls() {
@@ -3140,8 +3142,13 @@ table.list td.shot-cell {
     function search(query) {
       var q = (query || '').trim();
       var extra = extrasFor(q);
+      if (!q) {
+        seq++;
+        close();
+        return;
+      }
       if (q.length < 2) {
-        renderItems(extra, q ? 'Keep typing a city name' : 'Type a city name');
+        renderItems(extra, 'Keep typing a city name');
         opts.list.style.display = 'block';
         return;
       }

@@ -4,7 +4,7 @@
 //   { id, status: "processing"|"completed" }  // legacy
 // Auth: X-Worker-Key via /api/worker/_middleware.js
 
-const USER_COMPLETE_DELAY_MINUTES = 10;
+const USER_COMPLETE_DELAY_MINUTES = 2;
 
 function json(data, status) {
   return new Response(JSON.stringify(data), {

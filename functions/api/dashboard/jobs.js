@@ -1,11 +1,11 @@
 import { profileCompletenessGaps } from "./_profile_completeness.js";
 
-const USER_COMPLETE_DELAY_MINUTES = 10;
+const USER_COMPLETE_DELAY_MINUTES = 2;
 
 export async function onRequestGet(context) {
   const { env, data } = context;
 
-  // Promote ops-submitted jobs past the 10 min user-facing delay
+  // Promote ops-submitted jobs past the 2 min user-facing delay
   try {
     await env.DB.prepare(
       `UPDATE jobs

@@ -527,10 +527,10 @@ own middleware — not the Clerk dashboard middleware. Auth is
 | `GET /api/worker/profile?userId=` | `{ user, profile, canonical, resume }` |
 | `GET /api/worker/resume?userId=` | PDF stream from R2 for that user |
 | `GET /api/worker/jobs?status=processing` | Open queue (not rejected, not ops-completed waiting on delay) |
-| `PATCH /api/worker/jobs` | `action`: `ops_complete` (10 min user delay), `reject`, `reopen`; or legacy `status` |
+| `PATCH /api/worker/jobs` | `action`: `ops_complete` (2 min user delay), `reject`, `reopen`; or legacy `status` |
 
 Python worker + ApplyD Review: Start Job / ✕ reject / Re-queue / ops_complete.
-User Completed tab promotes ~10 min after ops Submit. Requires D1 columns
+User Completed tab promotes ~2 min after ops Submit. Requires D1 columns
 `ops_completed_at`, `rejected_at` (see `migrations/2026-09-21-jobs-ops-delay.sql`).
 
 **Validation on upload:** PDF only, checked three ways — filename ends in

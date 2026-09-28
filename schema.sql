@@ -11,7 +11,7 @@ CREATE TABLE IF NOT EXISTS jobs (
   status TEXT NOT NULL DEFAULT 'processing' CHECK (status IN ('processing', 'completed')),
   created_at TEXT NOT NULL DEFAULT (datetime('now')),
   completed_at TEXT,
-  -- Set when ops Submit in ApplyD Review; user Completed tab waits ~10 min
+  -- Set when ops Submit in ApplyD Review; user Completed tab waits ~2 min
   ops_completed_at TEXT,
   -- Set when ops ✕ / reject; hidden from user Processing + Job Queue
   rejected_at TEXT

@@ -27,6 +27,7 @@ function hasUsableExperience(roles) {
     return (
       filled(role && role.company) &&
       filled(role && role.role) &&
+      filled(role && role.location) &&
       roleHasDates(role) &&
       roleHasUsableBullet(role)
     );
@@ -82,7 +83,7 @@ export function profileCompletenessGaps(profile) {
   if (!hasResume(profile)) gaps.push("Resume PDF");
   if (!hasUsableExperience(profile.experience_roles)) {
     gaps.push(
-      "At least one work experience role (company, title, dates, and a bullet)"
+      "At least one work experience role (company, title, location, dates, and a bullet)"
     );
   }
 

@@ -1430,7 +1430,7 @@ table.list td.shot-cell {
 
         <div class="field-group" id="experience-roles-group">
           <h3>Work Experience Points</h3>
-          <p class="field-group-note">ApplyD uses this when completing your applications. Add each role you've held, with dates and bullet points the same way you'd list them on a resume. At least one role needs company, title, dates, and one bullet before you can submit jobs.</p>
+          <p class="field-group-note">ApplyD uses this when completing your applications. Add each role you've held, with dates and bullet points the same way you'd list them on a resume. At least one role needs company, title, location, dates, and one bullet before you can submit jobs.</p>
           <div id="experience-roles-list"></div>
           <button type="button" class="add-row-btn" id="add-role-btn" style="margin-top:16px;">+ Add role</button>
         </div>
@@ -2409,8 +2409,9 @@ table.list td.shot-cell {
     if (role.present) endField.style.display = 'none';
     grid.appendChild(endField);
 
-    grid.appendChild(makeRoleLocationField('Location', role.location, function (v) {
+    grid.appendChild(makeRoleLocationField('Location*', role.location, function (v) {
       role.location = v;
+      updateJobSubmitGate();
     }));
 
     card.appendChild(grid);
@@ -2875,13 +2876,14 @@ table.list td.shot-cell {
       return (
         String(role.company || '').trim() &&
         String(role.role || '').trim() &&
+        String(role.location || '').trim() &&
         roleHasDates(role) &&
         roleHasUsableBullet(role)
       );
     });
     if (!hasRole) {
       gaps.push(
-        'At least one work experience role (company, title, dates, and a bullet)'
+        'At least one work experience role (company, title, location, dates, and a bullet)'
       );
     }
     return gaps;

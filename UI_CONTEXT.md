@@ -331,7 +331,8 @@ desktop (`.field-grid`, collapses to one column under 520px):
    company, title, a **Location** field (added 2026-09-28, `makeRoleLocationField()`
    — the same worldwide-city combobox as My Info's Preferred job location,
    `createRemoteLocationCombobox()`, just built fresh per role instead of
-   wired to static ids since roles repeat; optional, no required-mark),
+   wired to static ids since roles repeat; **required as of 2026-09-28**,
+   asterisk label, counts toward the submit gate like company/title),
    Workday-style month + year dropdowns or an "I currently work here"
    checkbox that disables the end date, and a repeatable bullet list
    (`+ Add bullet` / per-bullet `Remove`). A brand-new profile
@@ -616,8 +617,12 @@ requires a "Start year" field on Education (new `f-education_start_year`
 input, alongside degree name and graduation year, all now required — keep
 the two `profileCompletenessGaps()` copies, client and server, in sync if
 this rule changes again), and a "usable" work experience role means
-company + title + start/end (or present) dates + at least one non-empty
-bullet, not just company + title.
+company + title + location + start/end (or present) dates + at least one
+non-empty bullet, not just company + title (location added 2026-09-28,
+because Workday asks for it per role and a guessed default would often be
+wrong). Note the rule is "at least one usable role", not "every role" — a
+second, half-filled role doesn't block submit, so the worker still needs a
+fallback for roles with a blank location.
 
 **ATS credentials (2026-09-22).** `functions/api/_ats_passwords.js`
 generates a stable per-user Workday-style credential pair

@@ -50,18 +50,17 @@ export async function onRequestGet(context) {
     has_screenshot: shotIds.has(String(row.id)),
   });
 
+  const isRejected = (r) => !!(r.rejected_at && String(r.rejected_at).trim());
+
   const processing = results
-    .filter(
-      (r) =>
-        r.status === "processing" &&
-        !(r.rejected_at && String(r.rejected_at).trim())
-    )
+    .filter((r) => r.status === "processing" && !isRejected(r))
     .map(withShot);
   const completed = results
-    .filter((r) => r.status === "completed")
+    .filter((r) => r.status === "completed" && !isRejected(r))
     .map(withShot);
+  const unable_to_process = results.filter(isRejected).map(withShot);
 
-  return json({ processing, completed });
+  return json({ processing, completed, unable_to_process });
 }
 
 async function screenshotIdsForUser(env, userId) {

@@ -225,6 +225,16 @@ accent background) between three panels:
   uploaded by the local worker via `PUT /api/worker/jobs/:id/screenshot`),
   so jobs completed before 2026-09-24 show no icon. Image is fetched with
   the Clerk token via `GET /api/dashboard/jobs/:id/screenshot`.
+- **Unable to Process** (added 2026-09-30) — jobs with `rejected_at` set,
+  i.e. ops clicked ✕ (Cancel job) in ApplyD Review. Previously these jobs
+  just vanished from the user's view entirely (excluded from both
+  Processing and Completed, shown nowhere); now `GET /api/dashboard/jobs`
+  returns them as a third array, `unable_to_process`, and this tab lists
+  them with a "Date" column (`rejected_at`). No reason text — the review
+  dashboard's reject action doesn't capture one yet. `completed` also now
+  explicitly excludes rejected rows (belt-and-suspenders — reject doesn't
+  change `status`, so a job rejected after already being completed would
+  otherwise double-count).
 
 **Not connected to the real Google Sheet or worker yet** — this is UI +
 D1 only, by explicit choice ("I don't want it to connect to a live google

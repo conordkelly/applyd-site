@@ -3757,7 +3757,13 @@ table.list td.shot-cell {
     var clerkLocalization = {
       signIn: {
         start: {
-          title: 'Sign in to Applyd'
+          title: 'Sign in to Applyd',
+          // Clerk's "combined" start screen (identifier + continue on one
+          // step, e.g. email-link/code sign-in) uses this key instead of
+          // `title` above and defaults to "Continue to {{applicationName}}"
+          // — applicationName is the Clerk app's own configured name
+          // ("My Application"), not something this repo controls otherwise.
+          titleCombined: 'Continue to Applyd'
         },
         emailCode: {
           subtitle: verifyCopy,

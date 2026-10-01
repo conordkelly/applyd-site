@@ -1,6 +1,6 @@
 // GET /api/worker/jobs?status=processing|completed&limit=50
 // PATCH /api/worker/jobs
-//   { id, action: "ops_complete" | "reject" | "reopen" }
+//   { id, action: "ops_complete" | "reject" | "reopen", reason? }
 //   { id, status: "processing"|"completed" }  // legacy
 // Auth: X-Worker-Key via /api/worker/_middleware.js
 
@@ -33,11 +33,85 @@ async function promoteDueCompletions(env) {
   }
 }
 
-function jobSelectList() {
+// withReason=false drops rejected_reason — used as a fallback when
+// migrations/2026-09-30-rejected-reason.sql hasn't been run on D1 yet, so
+// this endpoint (and ApplyD Review's Job Queue/Current/Cancelled tabs,
+// which all read it) keeps working with no reason support rather than
+// 503ing outright. Run that migration whenever convenient to pick up reasons.
+function jobSelectList(withReason) {
   return `SELECT j.id, j.user_id, j.job_url, j.status, j.created_at, j.completed_at,
-            j.ops_completed_at, j.rejected_at, j.rejected_reason, u.email AS user_email
+            j.ops_completed_at, j.rejected_at${withReason ? ", j.rejected_reason" : ""},
+            u.email AS user_email
      FROM jobs j
      LEFT JOIN users u ON u.id = j.user_id`;
+}
+
+async function fetchJobs(env, status, userId, limit, withReason) {
+  const sel = jobSelectList(withReason);
+  if (status === "processing") {
+    // Job Queue: open work only (not rejected, not ops-submitted waiting on delay)
+    const q = userId
+      ? await env.DB.prepare(
+          `${sel}
+           WHERE j.user_id = ?
+             AND j.status = 'processing'
+             AND j.rejected_at IS NULL
+             AND j.ops_completed_at IS NULL
+           ORDER BY j.created_at ASC LIMIT ?`
+        )
+          .bind(userId, limit)
+          .all()
+      : await env.DB.prepare(
+          `${sel}
+           WHERE j.status = 'processing'
+             AND j.rejected_at IS NULL
+             AND j.ops_completed_at IS NULL
+           ORDER BY j.created_at ASC LIMIT ?`
+        )
+          .bind(limit)
+          .all();
+    return q.results || [];
+  }
+  const q = userId
+    ? await env.DB.prepare(
+        `${sel}
+         WHERE j.user_id = ? AND j.status = 'completed'
+         ORDER BY j.created_at ASC LIMIT ?`
+      )
+        .bind(userId, limit)
+        .all()
+    : await env.DB.prepare(
+        `${sel}
+         WHERE j.status = 'completed'
+         ORDER BY j.created_at ASC LIMIT ?`
+      )
+        .bind(limit)
+        .all();
+  return q.results || [];
+}
+
+async function fetchJobsWithFallback(env, status, userId, limit) {
+  try {
+    return await fetchJobs(env, status, userId, limit, true);
+  } catch (e) {
+    // rejected_reason column missing — retry without it.
+    const rows = await fetchJobs(env, status, userId, limit, false);
+    return rows.map((r) => ({ ...r, rejected_reason: null }));
+  }
+}
+
+async function fetchJobRow(env, id) {
+  try {
+    return await env.DB.prepare(`${jobSelectList(true)} WHERE j.id = ?`)
+      .bind(id)
+      .first();
+  } catch (e) {
+    const row = await env.DB.prepare(`${jobSelectList(false)} WHERE j.id = ?`)
+      .bind(id)
+      .first();
+    if (row) row.rejected_reason = null;
+    return row;
+  }
 }
 
 export async function onRequestGet(context) {
@@ -57,58 +131,12 @@ export async function onRequestGet(context) {
 
   let results;
   try {
-    if (status === "processing") {
-      // Job Queue: open work only (not rejected, not ops-submitted waiting on delay)
-      if (userId) {
-        const q = await env.DB.prepare(
-          `${jobSelectList()}
-           WHERE j.user_id = ?
-             AND j.status = 'processing'
-             AND j.rejected_at IS NULL
-             AND j.ops_completed_at IS NULL
-           ORDER BY j.created_at ASC LIMIT ?`
-        )
-          .bind(userId, limit)
-          .all();
-        results = q.results || [];
-      } else {
-        const q = await env.DB.prepare(
-          `${jobSelectList()}
-           WHERE j.status = 'processing'
-             AND j.rejected_at IS NULL
-             AND j.ops_completed_at IS NULL
-           ORDER BY j.created_at ASC LIMIT ?`
-        )
-          .bind(limit)
-          .all();
-        results = q.results || [];
-      }
-    } else {
-      if (userId) {
-        const q = await env.DB.prepare(
-          `${jobSelectList()}
-           WHERE j.user_id = ? AND j.status = 'completed'
-           ORDER BY j.created_at ASC LIMIT ?`
-        )
-          .bind(userId, limit)
-          .all();
-        results = q.results || [];
-      } else {
-        const q = await env.DB.prepare(
-          `${jobSelectList()}
-           WHERE j.status = 'completed'
-           ORDER BY j.created_at ASC LIMIT ?`
-        )
-          .bind(limit)
-          .all();
-        results = q.results || [];
-      }
-    }
+    results = await fetchJobsWithFallback(env, status, userId, limit);
   } catch (e) {
     return json(
       {
         error:
-          "jobs query failed — run migrations/2026-09-21-jobs-ops-delay.sql and migrations/2026-09-30-rejected-reason.sql on D1",
+          "jobs query failed — run migrations/2026-09-21-jobs-ops-delay.sql on D1",
         detail: String(e && e.message ? e.message : e),
       },
       503
@@ -164,27 +192,54 @@ export async function onRequestPatch(context) {
       // later from ApplyD Review's Cancelled Jobs tab) doesn't reset the
       // date shown on the user's Unable to Process tab. reason only
       // overwrites when one was actually sent this call.
-      await env.DB.prepare(
-        `UPDATE jobs
-         SET rejected_at = COALESCE(rejected_at, datetime('now')),
-             ops_completed_at = NULL,
-             rejected_reason = COALESCE(?, rejected_reason)
-         WHERE id = ?`
-      )
-        .bind(reason, id)
-        .run();
+      try {
+        await env.DB.prepare(
+          `UPDATE jobs
+           SET rejected_at = COALESCE(rejected_at, datetime('now')),
+               ops_completed_at = NULL,
+               rejected_reason = COALESCE(?, rejected_reason)
+           WHERE id = ?`
+        )
+          .bind(reason, id)
+          .run();
+      } catch (e) {
+        // rejected_reason column missing — reject still works, the reason
+        // just doesn't persist until migrations/2026-09-30-rejected-reason.sql
+        // is run on D1.
+        await env.DB.prepare(
+          `UPDATE jobs
+           SET rejected_at = COALESCE(rejected_at, datetime('now')),
+               ops_completed_at = NULL
+           WHERE id = ?`
+        )
+          .bind(id)
+          .run();
+      }
     } else if (reopen) {
-      await env.DB.prepare(
-        `UPDATE jobs
-         SET status = 'processing',
-             completed_at = NULL,
-             ops_completed_at = NULL,
-             rejected_at = NULL,
-             rejected_reason = NULL
-         WHERE id = ?`
-      )
-        .bind(id)
-        .run();
+      try {
+        await env.DB.prepare(
+          `UPDATE jobs
+           SET status = 'processing',
+               completed_at = NULL,
+               ops_completed_at = NULL,
+               rejected_at = NULL,
+               rejected_reason = NULL
+           WHERE id = ?`
+        )
+          .bind(id)
+          .run();
+      } catch (e) {
+        await env.DB.prepare(
+          `UPDATE jobs
+           SET status = 'processing',
+               completed_at = NULL,
+               ops_completed_at = NULL,
+               rejected_at = NULL
+           WHERE id = ?`
+        )
+          .bind(id)
+          .run();
+      }
     } else if (status === "completed") {
       // Legacy immediate complete (avoid for user-delay path)
       await env.DB.prepare(
@@ -198,17 +253,30 @@ export async function onRequestPatch(context) {
         .bind(id)
         .run();
     } else if (status === "processing") {
-      await env.DB.prepare(
-        `UPDATE jobs
-         SET status = 'processing',
-             completed_at = NULL,
-             ops_completed_at = NULL,
-             rejected_at = NULL,
-             rejected_reason = NULL
-         WHERE id = ?`
-      )
-        .bind(id)
-        .run();
+      try {
+        await env.DB.prepare(
+          `UPDATE jobs
+           SET status = 'processing',
+               completed_at = NULL,
+               ops_completed_at = NULL,
+               rejected_at = NULL,
+               rejected_reason = NULL
+           WHERE id = ?`
+        )
+          .bind(id)
+          .run();
+      } catch (e) {
+        await env.DB.prepare(
+          `UPDATE jobs
+           SET status = 'processing',
+               completed_at = NULL,
+               ops_completed_at = NULL,
+               rejected_at = NULL
+           WHERE id = ?`
+        )
+          .bind(id)
+          .run();
+      }
     } else {
       return json(
         {
@@ -222,7 +290,7 @@ export async function onRequestPatch(context) {
     return json(
       {
         error:
-          "jobs update failed — run migrations/2026-09-21-jobs-ops-delay.sql and migrations/2026-09-30-rejected-reason.sql on D1",
+          "jobs update failed — run migrations/2026-09-21-jobs-ops-delay.sql on D1",
         detail: String(e && e.message ? e.message : e),
       },
       503
@@ -231,9 +299,7 @@ export async function onRequestPatch(context) {
 
   await promoteDueCompletions(env);
 
-  const row = await env.DB.prepare(`${jobSelectList()} WHERE j.id = ?`)
-    .bind(id)
-    .first();
+  const row = await fetchJobRow(env, id);
 
   return json({ ok: true, job: row });
 }

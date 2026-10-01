@@ -36,13 +36,28 @@ export async function onRequestGet(context) {
       .all();
     results = q.results || [];
   } catch (e) {
-    // Pre-migration fallback
-    const q = await env.DB.prepare(
-      "SELECT id, job_url, status, created_at, completed_at FROM jobs WHERE user_id = ? ORDER BY created_at DESC"
-    )
-      .bind(data.userId)
-      .all();
-    results = q.results || [];
+    // rejected_reason missing (migrations/2026-09-30-rejected-reason.sql not
+    // run yet) — keep the Processing/Completed/Unable to Process split
+    // working, just without reason text, instead of degrading further.
+    try {
+      const q = await env.DB.prepare(
+        `SELECT id, job_url, status, created_at, completed_at, ops_completed_at, rejected_at
+         FROM jobs
+         WHERE user_id = ?
+         ORDER BY created_at DESC`
+      )
+        .bind(data.userId)
+        .all();
+      results = (q.results || []).map((r) => ({ ...r, rejected_reason: null }));
+    } catch (e2) {
+      // Pre-2026-09-21 migration fallback
+      const q = await env.DB.prepare(
+        "SELECT id, job_url, status, created_at, completed_at FROM jobs WHERE user_id = ? ORDER BY created_at DESC"
+      )
+        .bind(data.userId)
+        .all();
+      results = q.results || [];
+    }
   }
 
   const shotIds = await screenshotIdsForUser(env, data.userId);

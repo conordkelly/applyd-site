@@ -1138,7 +1138,7 @@ table.list td.shot-cell {
         </svg>
         <div class="wordmark">Appl<span>y</span>d</div>
       </div>
-      <div class="nav-group">
+      <div class="nav-group" id="nav-group" style="display:none;">
         <a class="nav-link" href="/">Home</a>
         <button class="nav-link" id="info-view-link">My Info</button>
         <button class="nav-link active" id="jobs-view-link">My Jobs</button>
@@ -1147,7 +1147,7 @@ table.list td.shot-cell {
       </div>
     </div>
     <div class="topbar-right">
-      <button type="button" class="tour-replay" id="tour-replay" title="Take the tour" aria-label="Take the tour">?</button>
+      <button type="button" class="tour-replay" id="tour-replay" title="Take the tour" aria-label="Take the tour" style="display:none;">?</button>
       <div id="user-button"></div>
     </div>
   </header>
@@ -3904,6 +3904,11 @@ table.list td.shot-cell {
     if (window.Clerk.isSignedIn) {
       document.getElementById('signed-out-view').style.display = 'none';
       document.getElementById('app-view').style.display = 'block';
+      // The My Info / My Jobs / Inbox tabs (and the "?" tour button) have
+      // nothing to switch to before sign-in — showing them above the
+      // sign-in card was confusing. Both stay hidden until this branch.
+      document.getElementById('nav-group').style.display = 'flex';
+      document.getElementById('tour-replay').style.display = '';
       window.Clerk.mountUserButton(document.getElementById('user-button'));
       if (window.Clerk.user && window.Clerk.user.id === ADMIN_USER_ID) {
         document.getElementById('admin-view-link').style.display = 'inline-block';
@@ -3913,6 +3918,8 @@ table.list td.shot-cell {
     } else {
       document.getElementById('app-view').style.display = 'none';
       document.getElementById('signed-out-view').style.display = 'block';
+      document.getElementById('nav-group').style.display = 'none';
+      document.getElementById('tour-replay').style.display = 'none';
       window.Clerk.mountSignIn(document.getElementById('sign-in'), {
         withSignUp: true,
         signInUrl: '/dashboard',

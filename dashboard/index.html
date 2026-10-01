@@ -3501,7 +3501,7 @@ table.list td.shot-cell {
       var data = await apiFetch('/api/dashboard/jobs');
       renderList(document.getElementById('processing-content'), data.processing, 'created_at', 'Date Submitted', false, false, true);
       renderCompleted(document.getElementById('completed-content'), data.completed);
-      renderList(document.getElementById('unable-content'), data.unable_to_process, 'rejected_at', 'Date', false, true);
+      renderList(document.getElementById('unable-content'), data.unable_to_process, 'created_at', 'Date Submitted', false, true, true);
     } catch (e) {
       console.error(e);
     }

@@ -1425,11 +1425,11 @@ table.list td.shot-cell {
               <select id="f-require_sponsorship"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </div>
             <div class="field">
-              <label for="f-require_future_sponsorship">Require future sponsorship?</label>
+              <label for="f-require_future_sponsorship">Require future sponsorship?<span class="required-mark">*</span></label>
               <select id="f-require_future_sponsorship"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </div>
             <div class="field full">
-              <label for="f-work_permit_type">Status</label>
+              <label for="f-work_permit_type">Status<span class="required-mark">*</span></label>
               <select id="f-work_permit_type">
                 <option value="">—</option>
                 <option value="Citizen">Citizen</option>
@@ -2978,6 +2978,8 @@ table.list td.shot-cell {
     need('Postal / ZIP code', profile.postal_code);
     need('Work authorization', profile.legally_authorized);
     need('Visa sponsorship', profile.require_sponsorship);
+    need('Future sponsorship', profile.require_future_sponsorship);
+    need('Work status', profile.work_permit_type);
     need('Preferred job location', profile.preferred_job_location);
     need('School / university', profile.school);
     need('Degree name', profile.degree_name);

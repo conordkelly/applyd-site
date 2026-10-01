@@ -73,6 +73,8 @@ export function profileCompletenessGaps(profile) {
   need("Postal / ZIP code", profile.postal_code);
   need("Work authorization", profile.legally_authorized);
   need("Visa sponsorship", profile.require_sponsorship);
+  need("Future sponsorship", profile.require_future_sponsorship);
+  need("Work status", profile.work_permit_type);
   need("Preferred job location", profile.preferred_job_location);
   need("School / university", profile.school);
   need("Degree name", profile.degree_name);

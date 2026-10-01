@@ -4,7 +4,7 @@ Living plan for transactional mail (Applyd → user) and per-user **apply
 addresses** (ATS / portal identity). Update this when decisions change.
 Once built, keep runtime detail in `UI_CONTEXT.md`.
 
-Last updated: 2026-09-22 (apply-inbox build landed in repo; Email Routing wiring required).
+Last updated: 2026-09-30 (worker mail poll API for Workday email-verify).
 
 Related: `ONBOARDING_PLAN.md`, `UI_CONTEXT.md`, `email-worker/README.md`.
 
@@ -36,6 +36,9 @@ Related: `ONBOARDING_PLAN.md`, `UI_CONTEXT.md`, `email-worker/README.md`.
 - Admin Mail tab (by user)
 - Worker profile prefers `apply_email` for `canonical.contact.email`
 - Email Worker source: `email-worker/` (deploy separately)
+- **Worker mail poll:** `GET /api/worker/mail?userId=&since=&limit=` (X-Worker-Key)
+  returns recent messages **with bodies** so `apply_worker.py` can extract
+  Workday `/activate/` links without scraping Admin → MAIL
 
 ### You (finish wiring)
 
@@ -104,6 +107,14 @@ Related: `ONBOARDING_PLAN.md`, `UI_CONTEXT.md`, `email-worker/README.md`.
 1. Open admin apply-mail view.
 2. Select a user (list or tabs).
 3. Read that user's apply emails (v1: read only; no send-as).
+
+### Fill worker (Workday email-verify)
+
+1. After Create Account, Workday shows “An email has been sent… verify”.
+2. Worker waits ~2 minutes, then polls `GET /api/worker/mail` (same D1
+   store as Admin → MAIL).
+3. Parses `body_text` / `body_html` for `myworkday…/activate/…` URL.
+4. Opens the link in the application Chrome session, then retries Sign In.
 
 ### Forwarding policy
 
@@ -198,6 +209,7 @@ newer domains (never change an existing user's apply address).
 - [x] Forward-to-personal default on + settings toggle + warning
 - [x] Admin inbox by user (read-only)
 - [x] Worker reads `apply_email` for form fill
+- [x] Worker mail poll API (`/api/worker/mail`) for ATS verify-link extract
 - [x] Welcome email includes assigned address when available
 - [x] `UI_CONTEXT.md` updated when shipped
 
@@ -216,3 +228,4 @@ newer domains (never change an existing user's apply address).
 | 2026-09-22 | Admin view by user; read-only v1 (no reply-as) |
 | 2026-09-22 | Resend welcome live; copy includes email explainer |
 | 2026-09-22 | Apply-inbox code shipped; Email Routing Worker deploy still required |
+| 2026-09-30 | `GET /api/worker/mail` (X-Worker-Key) for Workday activate-link poll |

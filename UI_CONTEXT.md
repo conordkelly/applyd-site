@@ -46,6 +46,21 @@ One long page: topbar → hero → stat strip → demo (placeholder) → how it
 works → closing CTA → footer. No routing, no build step, just static
 HTML/CSS/JS with two forms wired to a Cloudflare Pages Function.
 
+**Signed-in state (added 2026-10-01):** loads the same Clerk instance as
+`/dashboard` (shared session cookie, same domain) purely to call
+`isSignedIn` — nothing from Clerk is mounted on this page. Signed-in
+visitors get Create Account / Sign In replaced with one "My Account" link
+(`#nav-my-account`, reuses `.sign-in-link` styling) and both waitlist
+forms (`#hero-form-block`, `#closing-form-block`) hidden — asking an
+existing account holder to join the waitlist or sign up again made no
+sense. Signed-out visitors see no change. Runs on `window.addEventListener
+("load", ...)`, same pattern as `dashboard/index.html`, since Clerk's
+`<script defer>` only defines `window.Clerk` after the whole document has
+parsed — checking for it any earlier (e.g. at the bottom of the page's own
+inline `<script>`) would always see `undefined`. No server-side session
+check, so a signed-in visitor briefly sees the signed-out nav before this
+runs.
+
 **Positioning:** individuals are the primary audience at the root domain,
 not agencies. This was a deliberate call, not just a copy change — the
 actual product (the dashboard) is a single-user tool with no roster view,

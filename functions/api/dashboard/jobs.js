@@ -1,4 +1,5 @@
 import { profileCompletenessGaps } from "./_profile_completeness.js";
+import { sendEmail, buildJobSubmissionEmail } from "../_email.js";
 
 const USER_COMPLETE_DELAY_MINUTES = 2;
 
@@ -98,7 +99,7 @@ async function screenshotIdsForUser(env, userId) {
 }
 
 export async function onRequestPost(context) {
-  const { request, env, data } = context;
+  const { request, env, data, waitUntil } = context;
 
   let body;
   try {
@@ -149,6 +150,30 @@ export async function onRequestPost(context) {
     "INSERT INTO jobs (user_id, job_url, status) VALUES (?, ?, 'processing')"
   );
   await env.DB.batch(cleaned.map((url) => stmt.bind(data.userId, url)));
+
+  // Notify the Applyd inbox. Runs after the response so a mail failure
+  // never affects the user's submission.
+  const notify = (async () => {
+    try {
+      const first = String(profile.first_name || "").trim();
+      const last = String(profile.last_name || "").trim();
+      const msg = buildJobSubmissionEmail({
+        name: (first + " " + last).trim(),
+        email: data.email || profile.email || "",
+        applyEmail: profile.apply_email || "",
+        links: cleaned,
+      });
+      await sendEmail(env, {
+        to: "info@applydjobs.com",
+        subject: msg.subject,
+        text: msg.text,
+        html: msg.html,
+      });
+    } catch (e) {
+      console.log("job-submit notify:", String(e && e.message ? e.message : e));
+    }
+  })();
+  if (typeof waitUntil === "function") waitUntil(notify);
 
   return json({ ok: true, submitted: cleaned.length });
 }

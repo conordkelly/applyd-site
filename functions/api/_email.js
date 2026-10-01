@@ -121,6 +121,71 @@ export function buildWelcomeEmail(opts) {
   return { subject, text, html };
 }
 
+/**
+ * Internal notice to the Applyd inbox when a user submits job links.
+ * @param {{ name?: string, email?: string, applyEmail?: string, links: string[], when?: Date }} opts
+ */
+export function buildJobSubmissionEmail(opts) {
+  const name = String((opts && opts.name) || "").trim() || "A user";
+  const email = String((opts && opts.email) || "").trim() || "(unknown)";
+  const applyEmail = String((opts && opts.applyEmail) || "").trim() || "(none yet)";
+  const links = (opts && opts.links) || [];
+  const when = (opts && opts.when) || new Date();
+  const whenStr =
+    when.toLocaleString("en-CA", {
+      timeZone: "America/Toronto",
+      dateStyle: "medium",
+      timeStyle: "short",
+    }) + " ET";
+  const n = links.length;
+  const jobs = n + (n === 1 ? " job" : " jobs");
+  const dash = "https://www.applydjobs.com/dashboard/";
+
+  const subject = "New job submission: " + name + " (" + jobs + ")";
+  const text = [
+    n + " new " + (n === 1 ? "job" : "jobs") + " submitted",
+    "",
+    "User: " + name,
+    "Personal email: " + email,
+    "Apply address: " + applyEmail,
+    "Submitted: " + whenStr,
+    "",
+    "Job links:",
+    ...links.map((l, i) => i + 1 + ". " + l),
+    "",
+    "Open review dashboard: " + dash,
+  ].join("\n");
+
+  const row = (k, v) =>
+    '<tr><td style="padding:4px 12px 4px 0;color:#666">' +
+    k +
+    '</td><td style="padding:4px 0">' +
+    escapeHtml(v) +
+    "</td></tr>";
+  const html =
+    '<p style="font-size:16px"><strong>' +
+    n +
+    " new " +
+    (n === 1 ? "job" : "jobs") +
+    " submitted</strong></p>" +
+    "<table>" +
+    row("User", name) +
+    row("Personal email", email) +
+    row("Apply address", applyEmail) +
+    row("Submitted", whenStr) +
+    "</table>" +
+    "<p><strong>Job links</strong></p><ol>" +
+    links
+      .map((l) => '<li><a href="' + escapeHtml(l) + '">' + escapeHtml(l) + "</a></li>")
+      .join("") +
+    "</ol>" +
+    '<p><a href="' +
+    dash +
+    '">Open review dashboard</a></p>';
+
+  return { subject, text, html };
+}
+
 function escapeHtml(s) {
   return String(s)
     .replace(/&/g, "&amp;")

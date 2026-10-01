@@ -3796,8 +3796,8 @@ table.list td.shot-cell {
       return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
     }
     var clerkTokens = clerkIsDarkTheme()
-      ? { bg: '#12151B', text: '#EDEFF3', text2: '#98A0AC', hairline: 'rgba(237,239,243,0.18)', accent: '#4C8DFF', accentInk: '#071223' }
-      : { bg: '#FFFFFF', text: '#12151B', text2: '#525964', hairline: 'rgba(18,21,27,0.20)', accent: '#1D5FD1', accentInk: '#F5F9FF' };
+      ? { bg: '#12151B', text: '#EDEFF3', text2: '#98A0AC', hairline: 'rgba(237,239,243,0.18)', inputBorder: 'rgba(237,239,243,0.38)', accent: '#4C8DFF', accentInk: '#071223' }
+      : { bg: '#FFFFFF', text: '#12151B', text2: '#525964', hairline: 'rgba(18,21,27,0.20)', inputBorder: 'rgba(18,21,27,0.38)', accent: '#1D5FD1', accentInk: '#F5F9FF' };
     var clerkAppearance = {
       variables: {
         colorPrimary: clerkTokens.accent,
@@ -3831,7 +3831,11 @@ table.list td.shot-cell {
         },
         formFieldInput: {
           fontFamily: "'JetBrains Mono', monospace",
-          fontSize: '13px'
+          fontSize: '13px',
+          // Darker than the card's own hairline border (colorBorder above)
+          // so the field itself reads clearly as an input, not just a
+          // faint outline.
+          borderColor: clerkTokens.inputBorder
         },
         formButtonPrimary: {
           fontFamily: "'Hanken Grotesk', sans-serif",

@@ -230,11 +230,21 @@ accent background) between three panels:
   just vanished from the user's view entirely (excluded from both
   Processing and Completed, shown nowhere); now `GET /api/dashboard/jobs`
   returns them as a third array, `unable_to_process`, and this tab lists
-  them with a "Date" column (`rejected_at`). No reason text — the review
-  dashboard's reject action doesn't capture one yet. `completed` also now
-  explicitly excludes rejected rows (belt-and-suspenders — reject doesn't
-  change `status`, so a job rejected after already being completed would
-  otherwise double-count).
+  them with "Date" (`rejected_at`) and "Reason" (`rejected_reason`)
+  columns. `completed` also explicitly excludes rejected rows
+  (belt-and-suspenders — reject doesn't change `status`, so a job rejected
+  after already being completed would otherwise double-count).
+
+  **Reason (added 2026-09-30, same day):** `rejected_reason` is a new D1
+  column (`migrations/2026-09-30-rejected-reason.sql` — run it on D1 the
+  same manual-paste way as the 09-21 migration). It's set by ApplyD
+  Review's new "Mark as Unable to Process" column on its Cancelled Jobs
+  tab (a reason input + Send/Update button, local to the review dashboard
+  — see `~/.applyd/review-dashboard/WIRING.md`), which PATCHes
+  `/api/worker/jobs` with `{action: "reject", reason}`. `rejected_at` is
+  now `COALESCE`d rather than overwritten on reject, so sending/updating a
+  reason later doesn't reset the date already shown to the user. Shows
+  "—" when no reason has been sent yet.
 
 **Not connected to the real Google Sheet or worker yet** — this is UI +
 D1 only, by explicit choice ("I don't want it to connect to a live google

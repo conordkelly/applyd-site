@@ -35,7 +35,7 @@ async function promoteDueCompletions(env) {
 
 function jobSelectList() {
   return `SELECT j.id, j.user_id, j.job_url, j.status, j.created_at, j.completed_at,
-            j.ops_completed_at, j.rejected_at, u.email AS user_email
+            j.ops_completed_at, j.rejected_at, j.rejected_reason, u.email AS user_email
      FROM jobs j
      LEFT JOIN users u ON u.id = j.user_id`;
 }
@@ -108,7 +108,7 @@ export async function onRequestGet(context) {
     return json(
       {
         error:
-          "jobs query failed — run migrations/2026-09-21-jobs-ops-delay.sql on D1",
+          "jobs query failed — run migrations/2026-09-21-jobs-ops-delay.sql and migrations/2026-09-30-rejected-reason.sql on D1",
         detail: String(e && e.message ? e.message : e),
       },
       503
@@ -137,6 +137,8 @@ export async function onRequestPatch(context) {
   const opsComplete = body.ops_completed === true || action === "ops_complete";
   const reject = body.reject === true || action === "reject";
   const reopen = body.reopen === true || action === "reopen";
+  const reasonRaw = typeof body.reason === "string" ? body.reason.trim() : "";
+  const reason = reasonRaw ? reasonRaw.slice(0, 2000) : null;
 
   const existing = await env.DB.prepare(
     "SELECT id, user_id, job_url, status FROM jobs WHERE id = ?"
@@ -158,13 +160,18 @@ export async function onRequestPatch(context) {
         .bind(id)
         .run();
     } else if (reject) {
+      // rejected_at is COALESCEd so re-sending a reason (e.g. filled in
+      // later from ApplyD Review's Cancelled Jobs tab) doesn't reset the
+      // date shown on the user's Unable to Process tab. reason only
+      // overwrites when one was actually sent this call.
       await env.DB.prepare(
         `UPDATE jobs
-         SET rejected_at = datetime('now'),
-             ops_completed_at = NULL
+         SET rejected_at = COALESCE(rejected_at, datetime('now')),
+             ops_completed_at = NULL,
+             rejected_reason = COALESCE(?, rejected_reason)
          WHERE id = ?`
       )
-        .bind(id)
+        .bind(reason, id)
         .run();
     } else if (reopen) {
       await env.DB.prepare(
@@ -172,7 +179,8 @@ export async function onRequestPatch(context) {
          SET status = 'processing',
              completed_at = NULL,
              ops_completed_at = NULL,
-             rejected_at = NULL
+             rejected_at = NULL,
+             rejected_reason = NULL
          WHERE id = ?`
       )
         .bind(id)
@@ -195,7 +203,8 @@ export async function onRequestPatch(context) {
          SET status = 'processing',
              completed_at = NULL,
              ops_completed_at = NULL,
-             rejected_at = NULL
+             rejected_at = NULL,
+             rejected_reason = NULL
          WHERE id = ?`
       )
         .bind(id)
@@ -213,7 +222,7 @@ export async function onRequestPatch(context) {
     return json(
       {
         error:
-          "jobs update failed — run migrations/2026-09-21-jobs-ops-delay.sql on D1",
+          "jobs update failed — run migrations/2026-09-21-jobs-ops-delay.sql and migrations/2026-09-30-rejected-reason.sql on D1",
         detail: String(e && e.message ? e.message : e),
       },
       503

@@ -551,6 +551,13 @@ table.list td.date-cell {
   white-space: nowrap;
 }
 
+table.list td.reason-cell {
+  color: var(--text-2);
+  max-width: 360px;
+}
+
+.reason-empty { color: var(--text-3); }
+
 .status-chip {
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
@@ -3253,17 +3260,21 @@ table.list td.shot-cell {
     return d.innerHTML;
   }
 
-  function renderList(container, rows, dateField, dateLabel, withScreenshot) {
+  function renderList(container, rows, dateField, dateLabel, withScreenshot, withReason) {
     if (!rows.length) {
       container.innerHTML = '<div class="empty-state">Nothing here yet.</div>';
       return;
     }
     var html = '<table class="list"><thead><tr><th>Job Link</th><th>' + dateLabel + '</th>' +
+      (withReason ? '<th>Reason</th>' : '') +
       (withScreenshot ? '<th></th>' : '') +
       '</tr></thead><tbody>';
     rows.forEach(function (r) {
       html += '<tr><td class="link-cell"><a href="' + escapeHtml(r.job_url) + '" target="_blank" rel="noopener">' + escapeHtml(r.job_url) + '</a></td>' +
         '<td class="date-cell">' + escapeHtml((r[dateField] || '').replace('T', ' ').slice(0, 16)) + '</td>';
+      if (withReason) {
+        html += '<td class="reason-cell">' + (r.rejected_reason ? escapeHtml(r.rejected_reason) : '<span class="reason-empty">—</span>') + '</td>';
+      }
       if (withScreenshot) {
         html += r.has_screenshot
           ? '<td class="shot-cell"><button type="button" class="job-shot-btn" data-job-id="' +
@@ -3316,7 +3327,7 @@ table.list td.shot-cell {
       var data = await apiFetch('/api/dashboard/jobs');
       renderList(document.getElementById('processing-content'), data.processing, 'created_at', 'Submitted');
       renderList(document.getElementById('completed-content'), data.completed, 'completed_at', 'Date Submitted', true);
-      renderList(document.getElementById('unable-content'), data.unable_to_process, 'rejected_at', 'Date');
+      renderList(document.getElementById('unable-content'), data.unable_to_process, 'rejected_at', 'Date', false, true);
     } catch (e) {
       console.error(e);
     }

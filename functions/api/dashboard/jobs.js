@@ -26,7 +26,8 @@ export async function onRequestGet(context) {
   let results = [];
   try {
     const q = await env.DB.prepare(
-      `SELECT id, job_url, status, created_at, completed_at, ops_completed_at, rejected_at
+      `SELECT id, job_url, status, created_at, completed_at, ops_completed_at,
+              rejected_at, rejected_reason
        FROM jobs
        WHERE user_id = ?
        ORDER BY created_at DESC`

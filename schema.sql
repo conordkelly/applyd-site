@@ -13,8 +13,11 @@ CREATE TABLE IF NOT EXISTS jobs (
   completed_at TEXT,
   -- Set when ops Submit in ApplyD Review; user Completed tab waits ~2 min
   ops_completed_at TEXT,
-  -- Set when ops ✕ / reject; hidden from user Processing + Job Queue
-  rejected_at TEXT
+  -- Set when ops ✕ / reject; moves the job from user Processing to the
+  -- user's Unable to Process tab (see UI_CONTEXT.md). rejected_reason is
+  -- the operator's typed explanation, shown beside it.
+  rejected_at TEXT,
+  rejected_reason TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_jobs_user_id ON jobs(user_id);

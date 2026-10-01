@@ -14,7 +14,12 @@ export default {
       console.log("apply-inbox: ignoring non-domain recipient", to);
       return;
     }
-    const from = String(message.from || "").trim();
+    const envelopeFrom = String(message.from || "").trim();
+    // Prefer the visible From header: the envelope sender is often a
+    // bounce-tracking ID (e.g. 0102...@amazonses.com) with no readable name.
+    const from =
+      String(message.headers.get("from") || "").trim() || envelopeFrom;
+    const replyToHeader = String(message.headers.get("reply-to") || "").trim();
     const subject = message.headers.get("subject") || "(no subject)";
     const receivedAt = new Date().toISOString();
     const id = crypto.randomUUID();
@@ -71,6 +76,7 @@ export default {
           to: personal,
           applyAddress: to,
           originalFrom: from,
+          replyTo: replyToHeader,
           subject,
           text: bodyText,
           html: bodyHtml,
@@ -177,36 +183,62 @@ function extractBodies(raw) {
   // Non-multipart: body after first blank line
   const split = raw.split(/\r?\n\r?\n/);
   if (split.length > 1) {
-    return { text: split.slice(1).join("\n\n").trim(), html: "" };
+    const enc = headerValue(split[0], "content-transfer-encoding");
+    return {
+      text: decodeTransfer(split.slice(1).join("\n\n"), enc).trim(),
+      html: "",
+    };
   }
   return { text: "", html: "" };
 }
 
+function headerValue(headers, name) {
+  const re = new RegExp("^" + name + ":\\s*([^\\r\\n]+)", "im");
+  const m = String(headers || "").match(re);
+  return m ? String(m[1] || "").trim() : "";
+}
+
 function extractMimePart(raw, mime) {
-  const re = new RegExp(
-    "Content-Type:\\s*" +
-      mime.replace("/", "\\/") +
-      "[^\\n]*\\n(?:Content-Transfer-Encoding:\\s*([^\\n]+)\\n)?(?:Content-[^\\n]+\\n)*\\r?\\n([\\s\\S]*?)(?=\\r?\\n--|$)",
+  const ctypeRe = new RegExp(
+    "Content-Type:\\s*" + mime.replace("/", "\\/") + "[^\\n]*",
     "i"
   );
-  const m = raw.match(re);
-  if (!m) return "";
-  let body = m[2] || "";
-  const enc = (m[1] || "").trim().toLowerCase();
-  if (enc === "base64") {
+  const idx = raw.search(ctypeRe);
+  if (idx < 0) return "";
+  const fromType = raw.slice(idx);
+  const headerEnd = fromType.search(/\r?\n\r?\n/);
+  if (headerEnd < 0) return "";
+  const partHeaders = fromType.slice(0, headerEnd);
+  let body = fromType.slice(headerEnd).replace(/^\r?\n\r?\n/, "");
+  const bound = body.search(/\r?\n--/);
+  if (bound >= 0) body = body.slice(0, bound);
+  const enc = headerValue(partHeaders, "content-transfer-encoding");
+  return decodeTransfer(body, enc).trim();
+}
+
+function decodeTransfer(body, enc) {
+  const e = String(enc || "").trim().toLowerCase();
+  if (e === "base64") {
     try {
-      body = atob(body.replace(/\s+/g, ""));
+      return atob(String(body || "").replace(/\s+/g, ""));
     } catch {
-      /* keep */
+      return String(body || "");
     }
-  } else if (enc === "quoted-printable") {
-    body = body
-      .replace(/=\r?\n/g, "")
-      .replace(/=([0-9A-Fa-f]{2})/g, (_, h) =>
-        String.fromCharCode(parseInt(h, 16))
-      );
   }
-  return body.trim();
+  // Soft line-wraps (`=\n`) mean quoted-printable even if the header
+  // was missed — leaving them in shows as random "=" in Gmail.
+  if (e === "quoted-printable" || /=\r?\n/.test(String(body || ""))) {
+    return decodeQuotedPrintable(body);
+  }
+  return String(body || "");
+}
+
+function decodeQuotedPrintable(body) {
+  return String(body || "")
+    .replace(/=\r?\n/g, "")
+    .replace(/=([0-9A-Fa-f]{2})/g, (_, h) =>
+      String.fromCharCode(parseInt(h, 16))
+    );
 }
 
 function stripHtml(html) {
@@ -218,28 +250,73 @@ function stripHtml(html) {
     .trim();
 }
 
+function looksLikeId(s) {
+  const t = String(s || "").trim();
+  // Long hex/dash strings or anything with no letters-only word in it.
+  return t.length > 20 && /^[0-9a-f-]+$/i.test(t);
+}
+
+function parseFromDisplayName(fromHeader) {
+  const s = String(fromHeader || "").trim();
+  const angle = s.match(/^"?([^"<]+)"?\s*<[^>]+>/);
+  if (angle) {
+    const n = String(angle[1] || "").trim().replace(/^["']|["']$/g, "");
+    if (n && !looksLikeId(n)) return n;
+  }
+  const addr = (s.match(/<([^>]+)>/) || [null, s])[1];
+  if (addr.includes("@")) {
+    const local = addr.split("@")[0];
+    const domain = addr.split("@")[1] || "";
+    if (!looksLikeId(local) && !/^(no-?reply|noreply|donotreply|do-not-reply|mailer|notifications?)$/i.test(local)) {
+      return local;
+    }
+    // Fall back to the company part of the domain (careers.clio.com -> Clio).
+    const parts = domain.split(".").filter(Boolean);
+    const root = parts.length >= 2 ? parts[parts.length - 2] : parts[0] || "";
+    if (root && !/^(amazonses|sendgrid|mailgun|mandrillapp|sparkpostmail|mcsv|rsgsv)$/i.test(root)) {
+      return root.charAt(0).toUpperCase() + root.slice(1);
+    }
+  }
+  return "";
+}
+
+function withoutApplyd(s) {
+  return String(s || "")
+    .replace(/applyd/gi, "")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
+function buildForwardFrom(opts, env) {
+  // Never use applydjobs.com / "Applyd" — a quoted reply would leak it.
+  const name = withoutApplyd(parseFromDisplayName(opts.originalFrom)) || "Mail";
+  const apply = String(opts.applyAddress || "").trim().toLowerCase();
+  if (apply && apply.endsWith("@" + APPLY_EMAIL_DOMAIN)) {
+    return name + " <" + apply + ">";
+  }
+  const envFrom = withoutApplyd(String((env && env.EMAIL_FROM) || "").trim());
+  if (envFrom && !/applyd/i.test(envFrom)) return envFrom;
+  return name + " <noreply@" + APPLY_EMAIL_DOMAIN + ">";
+}
+
 async function forwardViaResend(env, opts) {
   const apiKey = String((env && env.RESEND_API_KEY) || "").trim();
   if (!apiKey) return { skipped: true, reason: "no_api_key" };
 
-  const from =
-    String((env && env.EMAIL_FROM) || "").trim() ||
-    "Applyd <info@applydjobs.com>";
-  const subject = "[Applyd] " + opts.subject;
-  const intro =
-    "This message was sent to your Applyd apply address (" +
-    opts.applyAddress +
-    "). Reply from your personal email to the original sender (" +
-    opts.originalFrom +
-    ").\n\n---\n\n";
-  const text = intro + (opts.text || "");
+  const text = opts.text || "";
   const html =
-    "<p>This message was sent to your Applyd apply address (<code>" +
-    escapeHtml(opts.applyAddress) +
-    "</code>). Reply from your personal email to the original sender (" +
-    escapeHtml(opts.originalFrom) +
-    ").</p><hr/>" +
-    (opts.html || "<pre>" + escapeHtml(opts.text || "") + "</pre>");
+    opts.html ||
+    (text ? "<pre>" + escapeHtml(text) + "</pre>" : "");
+  const payload = {
+    from: buildForwardFrom(opts, env),
+    to: [opts.to],
+    subject: withoutApplyd(opts.subject) || opts.subject,
+    text,
+    html,
+  };
+  const replyTo =
+    String(opts.replyTo || "").trim() || String(opts.originalFrom || "").trim();
+  if (replyTo) payload.reply_to = replyTo;
 
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -247,13 +324,7 @@ async function forwardViaResend(env, opts) {
       Authorization: "Bearer " + apiKey,
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
-      from,
-      to: [opts.to],
-      subject,
-      text,
-      html,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {

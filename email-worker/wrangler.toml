@@ -22,5 +22,5 @@ database_name = "applyd-jobs"
 database_id = "ff5d04bd-3619-47ea-b392-c6b7b039c6ad"
 
 [vars]
-EMAIL_FROM = "Applyd <info@applydjobs.com>"
+EMAIL_FROM = "Mail <noreply@everydaymail.ca>"
 APPLY_EMAIL_DOMAIN = "everydaymail.ca"

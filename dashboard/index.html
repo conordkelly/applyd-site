@@ -1457,15 +1457,15 @@ table.list td.shot-cell {
               </div>
             </div>
             <div class="field">
-              <label for="f-willing_onsite_local">Willing to work onsite/hybrid locally?</label>
+              <label for="f-willing_onsite_local">Willing to work onsite/hybrid locally?<span class="required-mark">*</span></label>
               <select id="f-willing_onsite_local"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </div>
             <div class="field">
-              <label for="f-willing_relocate">Willing to relocate?</label>
+              <label for="f-willing_relocate">Willing to relocate?<span class="required-mark">*</span></label>
               <select id="f-willing_relocate"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </div>
             <div class="field">
-              <label for="f-currently_reside_canada">Currently reside in Canada?</label>
+              <label for="f-currently_reside_canada">Currently reside in Canada?<span class="required-mark">*</span></label>
               <select id="f-currently_reside_canada"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </div>
           </div>
@@ -2980,6 +2980,9 @@ table.list td.shot-cell {
     need('Visa sponsorship', profile.require_sponsorship);
     need('Future sponsorship', profile.require_future_sponsorship);
     need('Work status', profile.work_permit_type);
+    need('Willing to work onsite/hybrid', profile.willing_onsite_local);
+    need('Willing to relocate', profile.willing_relocate);
+    need('Currently reside in Canada', profile.currently_reside_canada);
     need('Preferred job location', profile.preferred_job_location);
     need('School / university', profile.school);
     need('Degree name', profile.degree_name);

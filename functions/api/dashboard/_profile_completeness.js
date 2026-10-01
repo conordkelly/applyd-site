@@ -75,6 +75,9 @@ export function profileCompletenessGaps(profile) {
   need("Visa sponsorship", profile.require_sponsorship);
   need("Future sponsorship", profile.require_future_sponsorship);
   need("Work status", profile.work_permit_type);
+  need("Willing to work onsite/hybrid", profile.willing_onsite_local);
+  need("Willing to relocate", profile.willing_relocate);
+  need("Currently reside in Canada", profile.currently_reside_canada);
   need("Preferred job location", profile.preferred_job_location);
   need("School / university", profile.school);
   need("Degree name", profile.degree_name);

@@ -268,6 +268,22 @@ to match the canonical contract in
 worker actually needs), rather than the earlier ad hoc field set modeled
 loosely on `~/.applyd/profile.json`.
 
+**Placeholder text (fixed 2026-10-01):** some users mistook example
+placeholder text (e.g. a postal code) for an already-filled-in answer — the
+browser's default placeholder color read too close to real input text,
+especially in monospace. Fixed two ways: `::placeholder` is now styled
+lighter (`--text-3`) and italic for every `.field` input/select/textarea
+and the country-search fields (CSS only, no copy change — this alone
+helped but still looked like a plausible real answer); and every
+realistic-looking example value (name, phone, address, postal code,
+school, company, salary, etc.) is now prefixed "e.g." in the placeholder
+string itself, which is what actually removes the ambiguity regardless of
+styling. Purely instructional placeholders ("Type a city name...",
+"Search country...", URL patterns ending "...") were left alone — they
+already read as hints, not answers. Reviewed as an Artifact canvas mockup
+(4 variants) before implementing; approved variant was lighter + italic +
+"e.g.".
+
 Sections (`.field-group`), each a fieldset-style block, two-column grid on
 desktop (`.field-grid`, collapses to one column under 520px):
 
@@ -788,3 +804,5 @@ dependencies. Mocked up and approved before it was built.
   (`browser_closed_on_error`), not only on genuine success.
 - Stripe / billing not wired yet.
 - Per-user apply inboxes: code landed (see **`EMAIL_PLAN.md`** / `email-worker/`). Finish Email Routing catch-all + deploy `applyd-email-inbox` Worker.
+
+**Landing copy + Clerk input border (2026-10-01).** Closing-section lede and form note on `index.html` no longer say "onboarding a small number before public launch"; now "Your next application takes seconds, not an hour. Start today." / "join the waitlist". Clerk `formFieldInput` in `dashboard/index.html` sets an explicit 1.5px border plus box-shadow ring so the email field is visible.

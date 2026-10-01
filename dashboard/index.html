@@ -878,6 +878,19 @@ table.list td.shot-cell {
   padding: 10px 11px;
 }
 
+/* Some users mistook example placeholder text (e.g. a postal code) for an
+   already-filled-in answer — the browser default placeholder color reads
+   too close to real input text, especially in a monospace font. Lighter
+   + italic makes "hint" unmistakable at a glance; the "e.g." wording on
+   the placeholders themselves (not styling) is what actually removes the
+   ambiguity for realistic-looking example values. */
+.field input::placeholder, .field select::placeholder, .field textarea::placeholder,
+.country-field input::placeholder {
+  color: var(--text-3);
+  font-style: italic;
+  opacity: 1;
+}
+
 .field input:focus, .field select:focus, .field textarea:focus {
   outline: 2px solid var(--accent);
   outline-offset: -1px;
@@ -1254,15 +1267,15 @@ table.list td.shot-cell {
         <div class="field-group">
           <h3>Personal</h3>
           <div class="field-grid">
-            <div class="field"><label for="f-first_name">First name<span class="required-mark">*</span></label><input type="text" id="f-first_name" placeholder="Jane" /></div>
-            <div class="field"><label for="f-last_name">Last name<span class="required-mark">*</span></label><input type="text" id="f-last_name" placeholder="Doe" /></div>
+            <div class="field"><label for="f-first_name">First name<span class="required-mark">*</span></label><input type="text" id="f-first_name" placeholder="e.g. Jane" /></div>
+            <div class="field"><label for="f-last_name">Last name<span class="required-mark">*</span></label><input type="text" id="f-last_name" placeholder="e.g. Doe" /></div>
             <div class="field full">
               <label for="f-full_name">Full legal name</label>
-              <input type="text" id="f-full_name" placeholder="Jane Doe" />
+              <input type="text" id="f-full_name" placeholder="e.g. Jane Doe" />
               <p class="field-hint">Auto-filled from first + last name if left blank.</p>
             </div>
-            <div class="field"><label for="f-preferred_name">Preferred name</label><input type="text" id="f-preferred_name" placeholder="Jane" /></div>
-            <div class="field"><label for="f-phone">Phone<span class="required-mark">*</span></label><input type="tel" id="f-phone" inputmode="numeric" maxlength="12" placeholder="555-123-4567" /></div>
+            <div class="field"><label for="f-preferred_name">Preferred name</label><input type="text" id="f-preferred_name" placeholder="e.g. Jane" /></div>
+            <div class="field"><label for="f-phone">Phone<span class="required-mark">*</span></label><input type="tel" id="f-phone" inputmode="numeric" maxlength="12" placeholder="e.g. 555-123-4567" /></div>
             <div class="field">
               <label for="f-phone_country_display">Phone country<span class="required-mark">*</span></label>
               <div class="country-field" id="phone-country-field">
@@ -1273,7 +1286,7 @@ table.list td.shot-cell {
                 <div class="country-dropdown-list" id="phone-country-list" style="display:none;"></div>
               </div>
             </div>
-            <div class="field full"><label for="f-address">Street address<span class="required-mark">*</span></label><input type="text" id="f-address" placeholder="290 Bremner Blvd" /></div>
+            <div class="field full"><label for="f-address">Street address<span class="required-mark">*</span></label><input type="text" id="f-address" placeholder="e.g. 290 Bremner Blvd" /></div>
             <div class="field">
               <label for="f-city">City<span class="required-mark">*</span></label>
               <div class="country-field" id="city-field">
@@ -1304,7 +1317,7 @@ table.list td.shot-cell {
                 <div class="country-dropdown-list" id="country-name-list" style="display:none;"></div>
               </div>
             </div>
-            <div class="field"><label for="f-postal_code">Postal / ZIP code<span class="required-mark">*</span></label><input type="text" id="f-postal_code" placeholder="M5V 3L9" /></div>
+            <div class="field"><label for="f-postal_code">Postal / ZIP code<span class="required-mark">*</span></label><input type="text" id="f-postal_code" placeholder="e.g. M5V 3L9" /></div>
             <div class="field"><label for="f-linkedin_url">LinkedIn URL</label><input type="url" id="f-linkedin_url" placeholder="https://linkedin.com/in/..." /></div>
             <div class="field"><label for="f-github_url">GitHub URL</label><input type="url" id="f-github_url" placeholder="https://github.com/..." /></div>
             <div class="field full"><label for="f-portfolio_url">Portfolio / website URL</label><input type="url" id="f-portfolio_url" placeholder="https://..." /></div>
@@ -1372,9 +1385,9 @@ table.list td.shot-cell {
         <div class="field-group">
           <h3>Experience</h3>
           <div class="field-grid">
-            <div class="field"><label for="f-current_title">Current title<span class="label-hint-inline"> (leave blank or list most recent experience if not applicable)</span></label><input type="text" id="f-current_title" placeholder="Product Manager" /></div>
-            <div class="field"><label for="f-current_company">Current company<span class="label-hint-inline"> (leave blank or list most recent experience if not applicable)</span></label><input type="text" id="f-current_company" placeholder="Acme Corp" /></div>
-            <div class="field"><label for="f-years_experience">Years of experience</label><input type="number" id="f-years_experience" min="0" placeholder="5" /></div>
+            <div class="field"><label for="f-current_title">Current title<span class="label-hint-inline"> (leave blank or list most recent experience if not applicable)</span></label><input type="text" id="f-current_title" placeholder="e.g. Product Manager" /></div>
+            <div class="field"><label for="f-current_company">Current company<span class="label-hint-inline"> (leave blank or list most recent experience if not applicable)</span></label><input type="text" id="f-current_company" placeholder="e.g. Acme Corp" /></div>
+            <div class="field"><label for="f-years_experience">Years of experience</label><input type="number" id="f-years_experience" min="0" placeholder="e.g. 5" /></div>
             <div class="field">
               <label for="f-education_level">Highest education level</label>
               <select id="f-education_level">
@@ -1387,7 +1400,7 @@ table.list td.shot-cell {
                 <option>Other</option>
               </select>
             </div>
-            <div class="field"><label for="f-school">School / university name<span class="required-mark">*</span></label><input type="text" id="f-school" placeholder="University of Toronto" /></div>
+            <div class="field"><label for="f-school">School / university name<span class="required-mark">*</span></label><input type="text" id="f-school" placeholder="e.g. University of Toronto" /></div>
             <div class="field">
               <label for="f-degree_name">Degree name<span class="required-mark">*</span></label>
               <select id="f-degree_name">
@@ -1441,9 +1454,9 @@ table.list td.shot-cell {
                 <option value="Other">Other</option>
               </select>
             </div>
-            <div class="field"><label for="f-education_start_year">Start year<span class="required-mark">*</span></label><input type="number" id="f-education_start_year" min="1950" max="2100" placeholder="2015" /></div>
-            <div class="field"><label for="f-graduation_year">Graduation year<span class="required-mark">*</span></label><input type="number" id="f-graduation_year" min="1950" max="2100" placeholder="2019" /></div>
-            <div class="field"><label for="f-target_roles">Target roles</label><input type="text" id="f-target_roles" placeholder="Product Manager, Senior PM" /></div>
+            <div class="field"><label for="f-education_start_year">Start year<span class="required-mark">*</span></label><input type="number" id="f-education_start_year" min="1950" max="2100" placeholder="e.g. 2015" /></div>
+            <div class="field"><label for="f-graduation_year">Graduation year<span class="required-mark">*</span></label><input type="number" id="f-graduation_year" min="1950" max="2100" placeholder="e.g. 2019" /></div>
+            <div class="field"><label for="f-target_roles">Target roles</label><input type="text" id="f-target_roles" placeholder="e.g. Product Manager, Senior PM" /></div>
           </div>
         </div>
 
@@ -1457,7 +1470,7 @@ table.list td.shot-cell {
         <div class="field-group">
           <h3>Compensation</h3>
           <div class="field-grid">
-            <div class="field"><label for="f-salary_expectation">Desired salary<span class="required-mark">*</span></label><input type="number" id="f-salary_expectation" placeholder="100000" /></div>
+            <div class="field"><label for="f-salary_expectation">Desired salary<span class="required-mark">*</span></label><input type="number" id="f-salary_expectation" placeholder="e.g. 100000" /></div>
             <div class="field">
               <label for="f-salary_currency">Currency</label>
               <select id="f-salary_currency">
@@ -1465,8 +1478,8 @@ table.list td.shot-cell {
                 <option>USD</option><option>CAD</option><option>EUR</option><option>GBP</option><option>AUD</option><option>Other</option>
               </select>
             </div>
-            <div class="field"><label for="f-salary_min">Minimum acceptable</label><input type="number" id="f-salary_min" placeholder="90000" /></div>
-            <div class="field"><label for="f-salary_max">Maximum range</label><input type="number" id="f-salary_max" placeholder="120000" /></div>
+            <div class="field"><label for="f-salary_min">Minimum acceptable</label><input type="number" id="f-salary_min" placeholder="e.g. 90000" /></div>
+            <div class="field"><label for="f-salary_max">Maximum range</label><input type="number" id="f-salary_max" placeholder="e.g. 120000" /></div>
             <p class="salary-preview" id="salary-preview"></p>
           </div>
         </div>
@@ -3835,7 +3848,11 @@ table.list td.shot-cell {
           // Darker than the card's own hairline border (colorBorder above)
           // so the field itself reads clearly as an input, not just a
           // faint outline.
-          borderColor: clerkTokens.inputBorder
+          borderColor: clerkTokens.inputBorder,
+          // Newer Clerk themes draw the field outline with a box-shadow ring
+          // rather than a border, so set both explicitly.
+          border: '1.5px solid ' + clerkTokens.inputBorder,
+          boxShadow: '0 0 0 1px ' + clerkTokens.inputBorder + ', 0 1px 2px rgba(18,21,27,0.08)'
         },
         formButtonPrimary: {
           fontFamily: "'Hanken Grotesk', sans-serif",

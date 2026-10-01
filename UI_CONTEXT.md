@@ -806,3 +806,5 @@ dependencies. Mocked up and approved before it was built.
 - Per-user apply inboxes: code landed (see **`EMAIL_PLAN.md`** / `email-worker/`). Finish Email Routing catch-all + deploy `applyd-email-inbox` Worker.
 
 **Landing copy + Clerk input border (2026-10-01).** Closing-section lede and form note on `index.html` no longer say "onboarding a small number before public launch"; now "Your next application takes seconds - not hours. Start today." / "join the waitlist". Clerk `formFieldInput` in `dashboard/index.html` sets an explicit 1.5px border plus box-shadow ring so the email field is visible.
+
+**Spam help (2026-10-01).** My Info > Apply email now has a collapsible "Keep these emails out of spam" (`details.spam-help`) with Gmail/Outlook whitelist steps; `.spam-addr` spans are filled with the user's apply address in `renderApplyEmailSettings`. Reason: forwards from the new everydaymail.ca domain land in spam.

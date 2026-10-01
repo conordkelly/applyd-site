@@ -229,3 +229,4 @@ newer domains (never change an existing user's apply address).
 | 2026-09-22 | Resend welcome live; copy includes email explainer |
 | 2026-09-22 | Apply-inbox code shipped; Email Routing Worker deploy still required |
 | 2026-09-30 | `GET /api/worker/mail` (X-Worker-Key) for Workday activate-link poll |
+| 2026-09-30 | `PATCH /api/worker/apply-email` ops reassign of `@everydaymail.ca` (test / recovery) |

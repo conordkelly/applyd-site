@@ -557,6 +557,38 @@ table.list td.date-cell {
   white-space: nowrap;
 }
 
+/* Jobs Completed table: fixed layout so it never needs horizontal scroll */
+table.list.completed-list { table-layout: fixed; }
+table.list.completed-list th.c, table.list.completed-list td.c { text-align: center; }
+table.list.completed-list col.col-date { width: 120px; }
+table.list.completed-list col.col-shot { width: 110px; }
+table.list.completed-list col.col-report { width: 96px; }
+table.list.completed-list th { white-space: normal; line-height: 1.35; vertical-align: bottom; }
+table.list.completed-list td.date-cell { white-space: normal; line-height: 1.45; font-size: 12.5px; }
+.report-btn {
+  display: inline-block;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--text);
+  text-decoration: none;
+  padding: 6px 10px;
+  border: 1px solid var(--hairline-strong);
+  background: var(--surface);
+  border-radius: 4px;
+}
+.report-btn:hover { border-color: var(--accent); color: var(--accent); }
+.shot-none { color: var(--text-3); }
+@media (max-width: 760px) {
+  table.list.completed-list col.col-date { width: 78px; }
+  table.list.completed-list col.col-shot { width: 78px; }
+  table.list.completed-list col.col-report { width: 70px; }
+  table.list.completed-list th { font-size: 9.5px; letter-spacing: 0.03em; padding: 8px 4px; }
+  table.list.completed-list td { padding: 10px 4px; }
+  table.list.completed-list td.date-cell { font-size: 11px; }
+  .report-btn { font-size: 11.5px; padding: 5px 6px; }
+}
+
 table.list td.reason-cell {
   color: var(--text-2);
   max-width: 360px;
@@ -3301,6 +3333,67 @@ table.list td.shot-cell {
     return d.innerHTML;
   }
 
+  var MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  // D1 timestamps are UTC ("YYYY-MM-DD HH:MM:SS", no zone marker). Parse as
+  // UTC, then show in the viewer's own time zone: "Oct 1/2026" over "2:17 PM".
+  function formatLocalDateTime(ts) {
+    if (!ts) return null;
+    var d = new Date(String(ts).replace(' ', 'T') + (/[zZ]|[+-]\d\d:?\d\d$/.test(ts) ? '' : 'Z'));
+    if (isNaN(d.getTime())) return null;
+    var h = d.getHours();
+    var ampm = h >= 12 ? 'PM' : 'AM';
+    var h12 = h % 12 === 0 ? 12 : h % 12;
+    var mm = ('0' + d.getMinutes()).slice(-2);
+    return {
+      date: MONTHS[d.getMonth()] + ' ' + d.getDate() + '/' + d.getFullYear(),
+      time: h12 + ':' + mm + ' ' + ampm
+    };
+  }
+
+  function reportIssueHref(r, completedLabel) {
+    var email = (window.Clerk && window.Clerk.user && window.Clerk.user.primaryEmailAddress)
+      ? window.Clerk.user.primaryEmailAddress.emailAddress : '';
+    var body = 'Job: ' + r.job_url + '\n' +
+      'Completed: ' + completedLabel + '\n' +
+      'Account: ' + email + '\n\n' +
+      'What went wrong, or do you want to withdraw it?\n' +
+      '(Withdrawing isn\'t always possible once it\'s submitted.)\n';
+    return 'mailto:info@applydjobs.com?subject=' + encodeURIComponent('Issue with a completed application') +
+      '&body=' + encodeURIComponent(body);
+  }
+
+  function renderCompleted(container, rows) {
+    if (!rows.length) {
+      container.innerHTML = '<div class="empty-state">Nothing here yet.</div>';
+      return;
+    }
+    // Date Completed = when the application was actually submitted
+    // (ops_completed_at); completed_at is that plus the ~2 min user delay
+    // and is only the fallback for older rows.
+    var sorted = rows.slice().sort(function (a, b) {
+      return String(b.ops_completed_at || b.completed_at || '').localeCompare(String(a.ops_completed_at || a.completed_at || ''));
+    });
+    var html = '<table class="list completed-list"><colgroup><col><col class="col-date"><col class="col-shot"><col class="col-report"></colgroup>' +
+      '<thead><tr><th>Job Link</th><th>Date Completed</th><th class="c">Submission Screenshot</th><th class="c">Report an Issue</th></tr></thead><tbody>';
+    sorted.forEach(function (r) {
+      var when = formatLocalDateTime(r.ops_completed_at || r.completed_at);
+      var dateHtml = when ? escapeHtml(when.date) + '<br>' + escapeHtml(when.time) : '';
+      var completedLabel = when ? when.date + ', ' + when.time : '';
+      html += '<tr><td class="link-cell"><a href="' + escapeHtml(r.job_url) + '" target="_blank" rel="noopener">' + escapeHtml(r.job_url) + '</a></td>' +
+        '<td class="date-cell">' + dateHtml + '</td>' +
+        '<td class="c shot-cell">' + (r.has_screenshot
+          ? '<button type="button" class="job-shot-btn" data-job-id="' + escapeHtml(String(r.id)) +
+            '" title="View screenshot of the submitted application" aria-label="View screenshot of the submitted application">' +
+            '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5-5-8 9"/></svg></button>'
+          : '<span class="shot-none">-</span>') + '</td>' +
+        '<td class="c"><a class="report-btn" href="' + escapeHtml(reportIssueHref(r, completedLabel)) + '">Report</a></td></tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
   function renderList(container, rows, dateField, dateLabel, withScreenshot, withReason) {
     if (!rows.length) {
       container.innerHTML = '<div class="empty-state">Nothing here yet.</div>';
@@ -3367,7 +3460,7 @@ table.list td.shot-cell {
     try {
       var data = await apiFetch('/api/dashboard/jobs');
       renderList(document.getElementById('processing-content'), data.processing, 'created_at', 'Submitted');
-      renderList(document.getElementById('completed-content'), data.completed, 'completed_at', 'Date Submitted', true);
+      renderCompleted(document.getElementById('completed-content'), data.completed);
       renderList(document.getElementById('unable-content'), data.unable_to_process, 'rejected_at', 'Date', false, true);
     } catch (e) {
       console.error(e);

@@ -231,8 +231,14 @@ accent background) between three panels:
 - **Processing** — jobs with `status = 'processing'`, fetched from
   `/api/dashboard/jobs` (GET), rendered as a table with a "Submitted"
   date column.
-- **Completed** — jobs with `status = 'completed'`, same endpoint,
-  "Date Submitted" column uses `completed_at`.
+- **Completed** — jobs with `status = 'completed'`, same endpoint.
+  Columns (2026-10-01): Job Link, Date Completed, Submission Screenshot,
+  Report an Issue (Date Submitted was removed). Date Completed =
+  `ops_completed_at` (when ops clicked Submit in ApplyD Review; falls back
+  to `completed_at` for older rows), shown as "Oct 1/2026" over "2:17 PM"
+  in the viewer's own time zone (D1 stores UTC). "Report" is a mailto link
+  to info@applydjobs.com pre-filled with job URL, completed time and the
+  account email. Table is fixed-layout so it never needs horizontal scroll.
   A small image icon to the right of the date opens a modal with the
   screenshot of the filled application (the same JPEG shown in ApplyD
   Review). Only rendered for jobs that have one — `GET /api/dashboard/jobs`

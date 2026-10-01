@@ -408,6 +408,11 @@ body {
 
 .panel-head p.has-note { margin-bottom: 10px; }
 
+/* Inbox has no tabs/banner above its panel-head (unlike My Jobs' .tabs,
+   margin-top 28px) to put space between it and the topbar's hairline —
+   without this "INBOX" sits flush against that line. */
+#inbox-section > .panel-head { margin-top: 28px; }
+
 .panel-head p.panel-note {
   font-size: 13px;
   color: var(--text-3);

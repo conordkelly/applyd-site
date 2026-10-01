@@ -569,6 +569,7 @@ table.list td.reason-cell {
 }
 
 .status-chip.completed { color: var(--signal); border-color: var(--signal); }
+.status-chip.unable { color: var(--accent); border-color: var(--accent); cursor: help; }
 
 table.list td.shot-cell {
   width: 1%;
@@ -3363,9 +3364,16 @@ table.list td.shot-cell {
     if (!rows.length) return '<div class="empty-state">No jobs submitted yet.</div>';
     var html = '<table class="list"><thead><tr><th>Job Link</th><th>Status</th><th>Submitted</th><th>Completed</th></tr></thead><tbody>';
     rows.forEach(function (r) {
-      var statusClass = r.status === 'completed' ? 'status-chip completed' : 'status-chip';
+      // rejected_at wins regardless of the status column — reject never
+      // changes status itself, so a job stuck showing "processing" here
+      // even after it moved to the user's Unable to Process tab was the
+      // admin view not checking this at all.
+      var isRejected = !!(r.rejected_at && String(r.rejected_at).trim());
+      var statusLabel = isRejected ? 'unable to process' : r.status;
+      var statusClass = isRejected ? 'status-chip unable' : (r.status === 'completed' ? 'status-chip completed' : 'status-chip');
+      var statusTitle = isRejected && r.rejected_reason ? ' title="' + escapeHtml(r.rejected_reason) + '"' : '';
       html += '<tr><td class="link-cell"><a href="' + escapeHtml(r.job_url) + '" target="_blank" rel="noopener">' + escapeHtml(r.job_url) + '</a></td>' +
-        '<td><span class="' + statusClass + '">' + escapeHtml(r.status) + '</span></td>' +
+        '<td><span class="' + statusClass + '"' + statusTitle + '>' + escapeHtml(statusLabel) + '</span></td>' +
         '<td class="date-cell">' + escapeHtml((r.created_at || '').replace('T', ' ').slice(0, 16)) + '</td>' +
         '<td class="date-cell">' + escapeHtml((r.completed_at || '').replace('T', ' ').slice(0, 16)) + '</td></tr>';
     });

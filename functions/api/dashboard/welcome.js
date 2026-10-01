@@ -1,4 +1,4 @@
-import { sendEmail, buildWelcomeEmail } from "../_email.js";
+import { sendEmail, buildWelcomeEmail, buildSignupNoticeEmail } from "../_email.js";
 import { ensureApplyEmail } from "../_apply_email.js";
 
 function json(data, status) {
@@ -9,7 +9,7 @@ function json(data, status) {
 }
 
 export async function onRequestPost(context) {
-  const { request, env, data } = context;
+  const { request, env, data, waitUntil } = context;
   const userId = data.userId;
   const email = String(data.email || "").trim();
 
@@ -120,6 +120,32 @@ export async function onRequestPost(context) {
   )
     .bind(userId, JSON.stringify(profile))
     .run();
+
+  // Tell the Applyd inbox about the new user. Only reached once per user
+  // (welcomeEmailSent is set above), and never blocks the response.
+  const notice = (async () => {
+    try {
+      const msg = buildSignupNoticeEmail({
+        kind: "account",
+        name: (
+          String(profile.first_name || firstName || "").trim() +
+          " " +
+          String(profile.last_name || clerkLast || "").trim()
+        ).trim(),
+        email,
+        applyEmail: profile.apply_email || "",
+      });
+      await sendEmail(env, {
+        to: "info@applydjobs.com",
+        subject: msg.subject,
+        text: msg.text,
+        html: msg.html,
+      });
+    } catch (e) {
+      console.log("signup notify:", String(e && e.message ? e.message : e));
+    }
+  })();
+  if (typeof waitUntil === "function") waitUntil(notice);
 
   return json({
     ok: true,

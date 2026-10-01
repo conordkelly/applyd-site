@@ -186,6 +186,54 @@ export function buildJobSubmissionEmail(opts) {
   return { subject, text, html };
 }
 
+/**
+ * Internal notice to the Applyd inbox when someone signs up.
+ * @param {{ kind: "account" | "waitlist", name?: string, email: string, applyEmail?: string, when?: Date }} opts
+ */
+export function buildSignupNoticeEmail(opts) {
+  const isWaitlist = opts && opts.kind === "waitlist";
+  const name = String((opts && opts.name) || "").trim();
+  const email = String((opts && opts.email) || "").trim() || "(unknown)";
+  const applyEmail = String((opts && opts.applyEmail) || "").trim();
+  const when = (opts && opts.when) || new Date();
+  const whenStr =
+    when.toLocaleString("en-CA", {
+      timeZone: "America/Toronto",
+      dateStyle: "medium",
+      timeStyle: "short",
+    }) + " ET";
+
+  const title = isWaitlist ? "New waitlist signup" : "New user signed up";
+  const subject = isWaitlist
+    ? "New waitlist signup: " + email
+    : "New signup: " + (name || email);
+
+  const rows = [];
+  if (!isWaitlist && name) rows.push(["Name", name]);
+  rows.push(["Email", email]);
+  if (!isWaitlist && applyEmail) rows.push(["Apply address", applyEmail]);
+  rows.push(["Signed up", whenStr]);
+
+  const text = [title, "", ...rows.map((r) => r[0] + ": " + r[1])].join("\n");
+  const html =
+    '<p style="font-size:16px"><strong>' +
+    title +
+    "</strong></p><table>" +
+    rows
+      .map(
+        (r) =>
+          '<tr><td style="padding:4px 12px 4px 0;color:#666">' +
+          r[0] +
+          '</td><td style="padding:4px 0">' +
+          escapeHtml(r[1]) +
+          "</td></tr>"
+      )
+      .join("") +
+    "</table>";
+
+  return { subject, text, html };
+}
+
 function escapeHtml(s) {
   return String(s)
     .replace(/&/g, "&amp;")

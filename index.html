@@ -814,6 +814,7 @@ footer.site {
       <a class="create-account-link" id="nav-create-account" href="/dashboard">Create Account</a>
       <a class="sign-in-link" id="nav-sign-in" href="/dashboard">Sign In</a>
       <a class="sign-in-link" id="nav-my-account" href="/dashboard" style="display:none;">My Account</a>
+      <div id="nav-user-button" style="display:none;"></div>
     </div>
   </header>
 
@@ -1125,6 +1126,11 @@ footer.site {
     if (create) create.style.display = "none";
     if (signIn) signIn.style.display = "none";
     if (account) account.style.display = "";
+    var userBtn = document.getElementById("nav-user-button");
+    if (userBtn) {
+      userBtn.style.display = "flex";
+      window.Clerk.mountUserButton(userBtn);
+    }
     var heroBlock = document.getElementById("hero-form-block");
     var closingBlock = document.getElementById("closing-form-block");
     if (heroBlock) heroBlock.style.display = "none";
@@ -1139,7 +1145,23 @@ footer.site {
       console.error("Clerk failed to load on landing page — leaving signed-out nav as-is.");
       return;
     }
-    window.Clerk.load().then(function () {
+    // Same brand colors/fonts as /dashboard so the account menu matches.
+    var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var t = dark
+      ? { bg: "#12151B", text: "#EDEFF3", text2: "#98A0AC", border: "rgba(237,239,243,0.18)", accent: "#4C8DFF", ink: "#071223" }
+      : { bg: "#FFFFFF", text: "#12151B", text2: "#525964", border: "rgba(18,21,27,0.20)", accent: "#1D5FD1", ink: "#F5F9FF" };
+    window.Clerk.load({
+      appearance: {
+        variables: {
+          colorPrimary: t.accent, colorPrimaryForeground: t.ink, colorBackground: t.bg,
+          colorForeground: t.text, colorMutedForeground: t.text2, colorBorder: t.border,
+          colorInput: t.bg, colorInputForeground: t.text, colorRing: t.accent,
+          borderRadius: "0.375rem",
+          fontFamily: "'Hanken Grotesk', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif"
+        },
+        elements: { card: { boxShadow: "none" } }
+      }
+    }).then(function () {
       if (window.Clerk.isSignedIn) applydShowSignedIn();
     }).catch(function (e) {
       console.error("Clerk failed to load on landing page:", e);

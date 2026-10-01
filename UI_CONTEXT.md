@@ -235,14 +235,22 @@ accent background) between three panels:
   (belt-and-suspenders — reject doesn't change `status`, so a job rejected
   after already being completed would otherwise double-count).
 
-  **Reason (added 2026-09-30, same day):** `rejected_reason` is a new D1
-  column (`migrations/2026-09-30-rejected-reason.sql` — run it on D1 the
-  same manual-paste way as the 09-21 migration). It's set by ApplyD
-  Review's new "Mark as Unable to Process" column on its Cancelled Jobs
-  tab (a reason input + Send/Update button, local to the review dashboard
-  — see `~/.applyd/review-dashboard/WIRING.md`), which PATCHes
+  **Reason (added 2026-09-30, same day):** `rejected_reason` is a D1
+  column (`migrations/2026-09-30-rejected-reason.sql` — **already applied**
+  to the live D1 database on 2026-10-01, not just a pending migration
+  file. It was run via a one-off endpoint, `POST
+  /api/worker/migrate_rejected_reason`, called once with curl using the
+  worker key — not pasted into Cloudflare's D1 Console — and then deleted
+  from the repo once it had run; `functions/api/worker/jobs.js` and
+  `functions/api/dashboard/jobs.js` still carry a graceful fallback for
+  this column being absent, which is what made running the migration
+  non-urgent in the first place and is worth keeping as a pattern for any
+  future column addition here). The reason itself is set by ApplyD
+  Review's "Unable" column on its Cancelled Jobs tab (a flag icon that
+  opens a reason prompt, local to the review dashboard — see
+  `~/.applyd/review-dashboard/WIRING.md`), which PATCHes
   `/api/worker/jobs` with `{action: "reject", reason}`. `rejected_at` is
-  now `COALESCE`d rather than overwritten on reject, so sending/updating a
+  `COALESCE`d rather than overwritten on reject, so sending/updating a
   reason later doesn't reset the date already shown to the user. Shows
   "—" when no reason has been sent yet.
 

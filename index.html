@@ -6,8 +6,7 @@
 <!-- Same Clerk instance as /dashboard (shared session cookie, same domain)
      — loaded here only to check isSignedIn so this page can swap its
      Create Account / Sign In buttons for one "My Account" link and hide
-     the waitlist forms for people who already have an account. Nothing
-     is mounted here. -->
+     nothing else. Nothing is mounted here. -->
 <script
   defer
   crossorigin="anonymous"
@@ -826,19 +825,6 @@ footer.site .footer-email:hover { color: var(--accent); }
       <div class="eyebrow">Paste a job link. We apply for you.</div>
       <h1>Never Complete Another<br><span class="accent-word">Job Application</span></h1>
       <p class="lede">Stop wasting hours on job application forms. Give Applyd your info once, send us the link, and relax. We'll fill it out and submit it for you, with a human reviewing every application before it goes out.</p>
-
-      <div class="form-block" id="hero-form-block">
-        <form class="email-form" id="hero-form">
-          <input type="email" required placeholder="you@email.com" aria-label="Email" id="hero-email">
-          <button type="submit">Start Today</button>
-        </form>
-        <div class="form-success">
-          <span class="tick">✓</span>
-          <p>You're on the list. We'll email you when it's your turn.</p>
-        </div>
-        <p class="form-note">Join the waitlist and we'll email you when your spot opens.</p>
-        <p class="form-error">Something went wrong. Try again in a moment.</p>
-      </div>
     </div>
 
     <div class="spine"></div>
@@ -920,17 +906,6 @@ footer.site .footer-email:hover { color: var(--accent); }
   <section class="closing">
     <h2>Job searching, <span class="accent-word">automated.</span></h2>
     <p class="lede">Your next application takes seconds - not hours. Start today.</p>
-    <div class="form-block" id="closing-form-block">
-      <form class="email-form" id="closing-form">
-        <input type="email" required placeholder="you@email.com" aria-label="Email" id="closing-email">
-        <button type="submit">Start Today</button>
-      </form>
-      <div class="form-success">
-        <span class="tick">✓</span>
-        <p>You're on the list. We'll email you when it's your turn.</p>
-      </div>
-      <p class="form-error">Something went wrong. Try again in a moment.</p>
-    </div>
   </section>
 
   <footer class="site">
@@ -1083,43 +1058,9 @@ footer.site .footer-email:hover { color: var(--accent); }
   updateClock();
   setInterval(updateClock, 1000);
 
-  function wireForm(formId, blockId) {
-    var form = document.getElementById(formId);
-    var block = document.getElementById(blockId);
-    var button = form.querySelector("button");
-    var input = form.querySelector("input[type=email]");
-    var originalLabel = button.textContent;
-
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      block.classList.remove("error");
-      button.disabled = true;
-      button.textContent = "Sending...";
-
-      fetch("/api/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: input.value.trim() })
-      })
-        .then(function (res) {
-          if (!res.ok) throw new Error("request failed");
-          block.classList.add("sent");
-        })
-        .catch(function () {
-          block.classList.add("error");
-          button.disabled = false;
-          button.textContent = originalLabel;
-        });
-    });
-  }
-
-  wireForm("hero-form", "hero-form-block");
-  wireForm("closing-form", "closing-form-block");
 
   // Signed-in visitors (same Clerk session as /dashboard): swap Create
-  // Account / Sign In for one "My Account" link, and drop the waitlist
-  // forms — both are asking someone who already has an account to sign
-  // up again. Signed-out visitors see no change at all. This runs after
+  // Account / Sign In for one "My Account" link, . Signed-out visitors see no change. This runs after
   // Clerk loads (async), so a signed-in visitor sees the signed-out nav
   // for an instant first; there's no server-side session check on this
   // static page to avoid that flash.
@@ -1135,10 +1076,6 @@ footer.site .footer-email:hover { color: var(--accent); }
       userBtn.style.display = "flex";
       window.Clerk.mountUserButton(userBtn);
     }
-    var heroBlock = document.getElementById("hero-form-block");
-    var closingBlock = document.getElementById("closing-form-block");
-    if (heroBlock) heroBlock.style.display = "none";
-    if (closingBlock) closingBlock.style.display = "none";
   }
 
   // Clerk's <script defer> only runs (and defines window.Clerk) once the

@@ -830,3 +830,5 @@ dependencies. Mocked up and approved before it was built.
 **Landing copy + Clerk input border (2026-10-01).** Closing-section lede and form note on `index.html` no longer say "onboarding a small number before public launch"; now "Your next application takes seconds - not hours. Start today." / "join the waitlist". Clerk `formFieldInput` in `dashboard/index.html` sets an explicit 1.5px border plus box-shadow ring so the email field is visible.
 
 **Spam help (2026-10-01).** My Info > Apply email now has a collapsible "Keep these emails out of spam" (`details.spam-help`) with Gmail/Outlook whitelist steps; `.spam-addr` spans are filled with the user's apply address in `renderApplyEmailSettings`. Reason: forwards from the new everydaymail.ca domain land in spam.
+
+**Landing forms removed (2026-10-01).** The hero and closing email/waitlist forms (and their JS) are gone from `index.html`; signed-out visitors now see the same page as signed-in ones, with Create Account / Sign In in the nav as the only call to action. `/api/subscribe` still exists but nothing calls it.

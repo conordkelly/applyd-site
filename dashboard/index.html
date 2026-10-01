@@ -576,6 +576,8 @@ table.list.completed-list td.date-cell { white-space: normal; line-height: 1.45;
   border: 1px solid var(--hairline-strong);
   background: var(--surface);
   border-radius: 4px;
+  cursor: pointer;
+  line-height: normal;
 }
 .report-btn:hover { border-color: var(--accent); color: var(--accent); }
 .shot-none { color: var(--text-3); }
@@ -630,6 +632,18 @@ table.list td.shot-cell {
 
 .job-shot-btn:hover { border-color: var(--text); color: var(--text); }
 
+
+#report-modal[hidden] { display: none; }
+#report-modal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.report-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.5); }
+.report-panel { position: relative; width: 100%; max-width: 360px; background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 8px; padding: 22px; }
+.report-panel h3 { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 22px; text-transform: uppercase; margin: 0 0 6px; }
+.report-panel p { font-size: 13.5px; color: var(--text-2); margin: 0 0 16px; line-height: 1.5; }
+.report-open-in { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-2); margin-bottom: 8px; }
+.report-services { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.report-services button { font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; font-weight: 600; padding: 8px 14px; border: 1px solid var(--hairline-strong); background: var(--surface); color: var(--text); border-radius: 6px; cursor: pointer; }
+.report-services button:hover { border-color: var(--accent); color: var(--accent); }
+.report-close { font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; background: none; border: none; color: var(--text-2); cursor: pointer; padding: 0; text-decoration: underline; }
 #job-screenshot-modal[hidden] { display: none; }
 
 #job-screenshot-modal {
@@ -1257,6 +1271,21 @@ table.list td.shot-cell {
         </div>
         <div id="unable-content"></div>
       </section>
+    </div>
+
+    <div id="report-modal" hidden>
+      <div class="report-backdrop" id="report-backdrop"></div>
+      <div class="report-panel" role="dialog" aria-modal="true" aria-labelledby="report-title">
+        <h3 id="report-title">Report an issue</h3>
+        <p>Pick the email you use and we'll start a message to info@applydjobs.com with this job's details filled in.</p>
+        <div class="report-open-in">Open in</div>
+        <div class="report-services">
+          <button type="button" data-report-service="gmail">Gmail</button>
+          <button type="button" data-report-service="outlook">Outlook</button>
+          <button type="button" data-report-service="app">Mail app</button>
+        </div>
+        <button type="button" class="report-close" id="report-close">Cancel</button>
+      </div>
     </div>
 
     <div id="job-screenshot-modal" hidden>
@@ -3351,17 +3380,21 @@ table.list td.shot-cell {
     };
   }
 
-  function reportIssueHref(r, completedLabel) {
+  function reportIssueDraft(r, completedLabel) {
     var email = (window.Clerk && window.Clerk.user && window.Clerk.user.primaryEmailAddress)
       ? window.Clerk.user.primaryEmailAddress.emailAddress : '';
-    var body = 'Job: ' + r.job_url + '\n' +
-      'Completed: ' + completedLabel + '\n' +
-      'Account: ' + email + '\n\n' +
-      'What went wrong, or do you want to withdraw it?\n' +
-      '(Withdrawing isn\'t always possible once it\'s submitted.)\n';
-    return 'mailto:info@applydjobs.com?subject=' + encodeURIComponent('Issue with a completed application') +
-      '&body=' + encodeURIComponent(body);
+    return {
+      to: 'info@applydjobs.com',
+      subject: 'Issue with a completed application',
+      body: 'Job: ' + r.job_url + '\n' +
+        'Completed: ' + completedLabel + '\n' +
+        'Account: ' + email + '\n\n' +
+        'What went wrong, or do you want to withdraw it?\n' +
+        '(Withdrawing isn\'t always possible once it\'s submitted.)\n'
+    };
   }
+
+  var reportDrafts = {};
 
   function renderCompleted(container, rows) {
     if (!rows.length) {
@@ -3380,6 +3413,7 @@ table.list td.shot-cell {
       var when = formatLocalDateTime(r.ops_completed_at || r.completed_at);
       var dateHtml = when ? escapeHtml(when.date) + '<br>' + escapeHtml(when.time) : '';
       var completedLabel = when ? when.date + ', ' + when.time : '';
+      reportDrafts[String(r.id)] = reportIssueDraft(r, completedLabel);
       html += '<tr><td class="link-cell"><a href="' + escapeHtml(r.job_url) + '" target="_blank" rel="noopener">' + escapeHtml(r.job_url) + '</a></td>' +
         '<td class="date-cell">' + dateHtml + '</td>' +
         '<td class="c shot-cell">' + (r.has_screenshot
@@ -3388,7 +3422,7 @@ table.list td.shot-cell {
             '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
             '<rect x="3" y="4" width="18" height="16" rx="2"/><circle cx="8.5" cy="9.5" r="1.5"/><path d="M21 16l-5-5-8 9"/></svg></button>'
           : '<span class="shot-none">-</span>') + '</td>' +
-        '<td class="c"><a class="report-btn" href="' + escapeHtml(reportIssueHref(r, completedLabel)) + '">Report</a></td></tr>';
+        '<td class="c"><button type="button" class="report-btn" data-job-id="' + escapeHtml(String(r.id)) + '">Report</button></td></tr>';
     });
     html += '</tbody></table>';
     container.innerHTML = html;
@@ -3474,6 +3508,33 @@ table.list td.shot-cell {
       window.alert('Could not load the screenshot.');
     });
   });
+  var reportCurrentId = null;
+  function closeReportModal() {
+    var m = document.getElementById('report-modal');
+    if (m) m.hidden = true;
+    reportCurrentId = null;
+  }
+  document.getElementById('completed-content').addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('.report-btn') : null;
+    if (!btn) return;
+    reportCurrentId = btn.getAttribute('data-job-id');
+    document.getElementById('report-modal').hidden = false;
+  });
+  document.querySelectorAll('#report-modal [data-report-service]').forEach(function (b) {
+    b.addEventListener('click', function () {
+      var d = reportDrafts[reportCurrentId];
+      if (!d) return;
+      var service = b.getAttribute('data-report-service');
+      var url = inboxReplyUrl(service, d.to, d.subject, d.body);
+      closeReportModal();
+      if (service === 'app') { window.location.href = url; return; }
+      window.open(url, '_blank', 'noopener');
+    });
+  });
+  document.getElementById('report-close').addEventListener('click', closeReportModal);
+  document.getElementById('report-backdrop').addEventListener('click', closeReportModal);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') closeReportModal(); });
+
   document.getElementById('job-screenshot-close').addEventListener('click', closeJobScreenshot);
   document.getElementById('job-screenshot-backdrop').addEventListener('click', closeJobScreenshot);
   document.addEventListener('keydown', function (e) {

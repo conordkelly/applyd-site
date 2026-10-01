@@ -236,8 +236,9 @@ accent background) between three panels:
   Report an Issue (Date Submitted was removed). Date Completed =
   `ops_completed_at` (when ops clicked Submit in ApplyD Review; falls back
   to `completed_at` for older rows), shown as "Oct 1/2026" over "2:17 PM"
-  in the viewer's own time zone (D1 stores UTC). "Report" is a mailto link
-  to info@applydjobs.com pre-filled with job URL, completed time and the
+  in the viewer's own time zone (D1 stores UTC). "Report" opens a small pop-up (same Gmail / Outlook / Mail app choice
+  as the Inbox reply flow, reusing `inboxReplyUrl`) that starts an email to
+  info@applydjobs.com pre-filled with job URL, completed time and the
   account email. Table is fixed-layout so it never needs horizontal scroll.
   A small image icon to the right of the date opens a modal with the
   screenshot of the filled application (the same JPEG shown in ApplyD

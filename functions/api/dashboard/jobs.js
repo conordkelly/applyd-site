@@ -147,8 +147,8 @@ export async function onRequestPost(context) {
     );
   }
 
-  const { used, limit: jobLimit } = await getAllotment(env, data.userId);
-  const remaining = jobLimit - used;
+  const { used, limit: jobLimit, unlimited } = await getAllotment(env, data.userId);
+  const remaining = unlimited ? Infinity : jobLimit - used;
   if (remaining <= 0) {
     return json(
       {

@@ -1,6 +1,7 @@
 // POST /api/dashboard/admin/allocation — admin only
 //   { user_id, action: "add", amount }  raises that user's job limit by amount
 //   { user_id, action: "reset" }        usage goes back to 0 (limit unchanged)
+//   { user_id, action: "unlimited" }    no cap for that user
 import { getAllotment, DEFAULT_JOB_LIMIT } from "../_job_limit.js";
 
 function json(data, status) {
@@ -31,13 +32,16 @@ export async function onRequestPost(context) {
         return json({ error: "amount must be a whole number from 1 to 10000" }, 400);
       }
       const cur = await getAllotment(env, userId);
+      if (cur.unlimited) return json({ error: "That user is already unlimited" }, 400);
       await env.DB.prepare("UPDATE users SET job_limit = ? WHERE id = ?")
         .bind(cur.limit + amount, userId).run();
+    } else if (action === "unlimited") {
+      await env.DB.prepare("UPDATE users SET job_limit = -1 WHERE id = ?").bind(userId).run();
     } else if (action === "reset") {
       await env.DB.prepare("UPDATE users SET job_reset_at = datetime('now') WHERE id = ?")
         .bind(userId).run();
     } else {
-      return json({ error: "action must be add or reset" }, 400);
+      return json({ error: "action must be add, reset or unlimited" }, 400);
     }
   } catch (e) {
     return json({

@@ -3542,13 +3542,16 @@ table.list td.shot-cell {
   var jobUsage = null;
 
   function jobsAtLimit() {
-    return !!(jobUsage && jobUsage.used >= jobUsage.limit);
+    return !!(jobUsage && !jobUsage.unlimited && jobUsage.used >= jobUsage.limit);
   }
 
   function renderJobUsage() {
     var el = document.getElementById('job-usage');
     if (!el || !jobUsage) return;
-    if (jobsAtLimit()) {
+    if (jobUsage.unlimited) {
+      el.className = 'usage-note';
+      el.textContent = jobUsage.used + ' jobs submitted (unlimited).';
+    } else if (jobsAtLimit()) {
       el.className = 'usage-note limit';
       el.innerHTML = 'You\'ve used all ' + jobUsage.limit + ' of your jobs. Contact <a href="mailto:info@applydjobs.com">info@applydjobs.com</a> to request more.';
     } else {
@@ -3850,10 +3853,11 @@ table.list td.shot-cell {
           '<div class="user-group-head"><span class="email">' + escapeHtml(u.email || u.id) + '</span>' +
           '<span class="count">' + u.jobs.length + ' job(s)</span></div>' +
           '<div class="alloc-row" data-uid="' + escapeHtml(u.id) + '">' +
-          '<span>Allotment: <b>' + (u.usage ? u.usage.used + ' / ' + u.usage.limit : '?') + '</b></span>' +
+          '<span>Allotment: <b>' + (u.usage ? (u.usage.unlimited ? u.usage.used + ' / unlimited' : u.usage.used + ' / ' + u.usage.limit) : '?') + '</b></span>' +
           '<input type="number" min="1" max="10000" value="25" class="alloc-amt" aria-label="Jobs to add">' +
           '<button type="button" class="alloc-btn" data-act="add">Add jobs</button>' +
           '<button type="button" class="alloc-btn" data-act="reset">Reset usage</button>' +
+          '<button type="button" class="alloc-btn" data-act="unlimited">Make unlimited</button>' +
           '</div>' +
           renderUserJobsTable(u.jobs) +
           '</div>';

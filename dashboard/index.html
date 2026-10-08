@@ -409,6 +409,17 @@ body {
 .panel-head p.has-note { margin-bottom: 10px; }
 
 .panel-head p.usage-note { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.03em; color: var(--text-2); margin-bottom: 10px; }
+#panel-submission { position: relative; }
+.usage-badge { position: absolute; top: 26px; right: 28px; min-width: 150px; padding: 12px 14px; border: 1px solid var(--hairline-strong); border-radius: 8px; background: var(--surface); text-align: right; }
+.usage-badge[hidden] { display: none; }
+.usage-top { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; }
+.usage-num { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 30px; line-height: 1; color: var(--text); }
+.usage-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
+.usage-bar { height: 4px; background: var(--hairline); border-radius: 2px; margin-top: 10px; overflow: hidden; }
+.usage-bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 2px; }
+.usage-badge.limit { border-color: var(--accent); }
+.usage-badge.limit .usage-num { color: var(--accent); }
+@media (max-width: 760px) { .usage-badge { position: static; margin-bottom: 18px; text-align: left; } .usage-top { justify-content: flex-start; } }
 .panel-head p.usage-note.limit { color: var(--accent); }
 .panel-head p.usage-note a { color: inherit; }
 .alloc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--hairline); font-size: 13px; color: var(--text-2); }
@@ -1252,10 +1263,14 @@ table.list td.shot-cell {
       </nav>
 
       <section class="tab-panel active" id="panel-submission">
+        <div class="usage-badge" id="job-usage" hidden>
+          <div class="usage-top"><span class="usage-num" id="job-usage-num"></span><span class="usage-label" id="job-usage-label">Jobs used</span></div>
+          <div class="usage-bar"><i id="job-usage-fill"></i></div>
+        </div>
         <div class="panel-head">
           <h2>Jobs Submission</h2>
           <p class="has-note">Paste a link to the job you want to apply to below - once you hit submit, they'll move to Jobs Processing.</p>
-          <p class="usage-note" id="job-usage"></p>
+          <p class="usage-note limit" id="job-usage-msg" hidden></p>
           <p class="panel-note">We currently process applications on Workday, Ashby, Greenhouse, and Lever. Not sure which one a posting uses? Check the link for the platform name, like myworkdayjobs.com, ashbyhq.com, greenhouse.io, or lever.co.</p>
           <p class="onboarding-reopen-wrap" id="onboarding-reopen-wrap" style="display:none;">
             <button type="button" class="inline-link-btn" id="onboarding-reopen">Show setup steps</button>
@@ -3546,17 +3561,31 @@ table.list td.shot-cell {
   }
 
   function renderJobUsage() {
-    var el = document.getElementById('job-usage');
-    if (!el || !jobUsage) return;
+    var badge = document.getElementById('job-usage');
+    var msg = document.getElementById('job-usage-msg');
+    if (!badge || !jobUsage) return;
+    var num = document.getElementById('job-usage-num');
+    var label = document.getElementById('job-usage-label');
+    var fill = document.getElementById('job-usage-fill');
+    badge.hidden = false;
     if (jobUsage.unlimited) {
-      el.className = 'usage-note';
-      el.textContent = jobUsage.used + ' jobs submitted (unlimited).';
-    } else if (jobsAtLimit()) {
-      el.className = 'usage-note limit';
-      el.innerHTML = 'You\'ve used all ' + jobUsage.limit + ' of your jobs. Contact <a href="mailto:info@applydjobs.com">info@applydjobs.com</a> to request more.';
+      num.textContent = String(jobUsage.used);
+      label.textContent = 'Jobs submitted';
+      fill.style.width = '0';
+      badge.classList.remove('limit');
+      msg.hidden = true;
     } else {
-      el.className = 'usage-note';
-      el.textContent = jobUsage.used + ' of ' + jobUsage.limit + ' jobs used.';
+      var pct = jobUsage.limit > 0 ? Math.min(100, Math.round(jobUsage.used / jobUsage.limit * 100)) : 100;
+      num.textContent = jobUsage.used + ' / ' + jobUsage.limit;
+      label.textContent = 'Jobs used';
+      fill.style.width = pct + '%';
+      badge.classList.toggle('limit', jobsAtLimit());
+      if (jobsAtLimit()) {
+        msg.innerHTML = 'You\'ve used all ' + jobUsage.limit + ' of your jobs. Contact <a href="mailto:info@applydjobs.com">info@applydjobs.com</a> to request more.';
+        msg.hidden = false;
+      } else {
+        msg.hidden = true;
+      }
     }
     updateJobSubmitGate();
   }

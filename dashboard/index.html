@@ -408,6 +408,15 @@ body {
 
 .panel-head p.has-note { margin-bottom: 10px; }
 
+.panel-head p.usage-note { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.03em; color: var(--text-2); margin-bottom: 10px; }
+.panel-head p.usage-note.limit { color: var(--accent); }
+.panel-head p.usage-note a { color: inherit; }
+.alloc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--hairline); font-size: 13px; color: var(--text-2); }
+.alloc-row b { color: var(--text); font-family: 'JetBrains Mono', monospace; }
+.alloc-row input { width: 70px; font-family: 'JetBrains Mono', monospace; font-size: 12.5px; color: var(--text); background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 4px; padding: 5px 7px; }
+.alloc-row button { font: inherit; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border: 1px solid var(--hairline-strong); background: var(--surface); color: var(--text); border-radius: 4px; cursor: pointer; }
+.alloc-row button:hover { border-color: var(--accent); color: var(--accent); }
+
 /* Inbox and My Info have no tabs/banner above their panel-head (unlike My Jobs' .tabs,
    margin-top 28px) to put space between it and the topbar's hairline —
    without this "INBOX" sits flush against that line. */
@@ -1246,6 +1255,7 @@ table.list td.shot-cell {
         <div class="panel-head">
           <h2>Jobs Submission</h2>
           <p class="has-note">Paste a link to the job you want to apply to below - once you hit submit, they'll move to Jobs Processing.</p>
+          <p class="usage-note" id="job-usage"></p>
           <p class="panel-note">We currently process applications on Workday, Ashby, Greenhouse, and Lever. Not sure which one a posting uses? Check the link for the platform name, like myworkdayjobs.com, ashbyhq.com, greenhouse.io, or lever.co.</p>
           <p class="onboarding-reopen-wrap" id="onboarding-reopen-wrap" style="display:none;">
             <button type="button" class="inline-link-btn" id="onboarding-reopen">Show setup steps</button>
@@ -3050,8 +3060,8 @@ table.list td.shot-cell {
     if (!btn || !note) return;
     var gaps = profileCompletenessGaps(collectProfileForm());
     if (!gaps.length) {
-      btn.disabled = false;
-      btn.title = '';
+      btn.disabled = jobsAtLimit();
+      btn.title = jobsAtLimit() ? 'You have used all of your jobs' : '';
       if (note.dataset.gate === '1') {
         note.style.display = 'none';
         note.textContent = '';
@@ -3529,9 +3539,29 @@ table.list td.shot-cell {
     if (modal) modal.hidden = false;
   }
 
+  var jobUsage = null;
+
+  function jobsAtLimit() {
+    return !!(jobUsage && jobUsage.used >= jobUsage.limit);
+  }
+
+  function renderJobUsage() {
+    var el = document.getElementById('job-usage');
+    if (!el || !jobUsage) return;
+    if (jobsAtLimit()) {
+      el.className = 'usage-note limit';
+      el.innerHTML = 'You\'ve used all ' + jobUsage.limit + ' of your jobs. Contact <a href="mailto:info@applydjobs.com">info@applydjobs.com</a> to request more.';
+    } else {
+      el.className = 'usage-note';
+      el.textContent = jobUsage.used + ' of ' + jobUsage.limit + ' jobs used.';
+    }
+    updateJobSubmitGate();
+  }
+
   async function loadJobs() {
     try {
       var data = await apiFetch('/api/dashboard/jobs');
+      if (data.usage) { jobUsage = data.usage; renderJobUsage(); }
       renderList(document.getElementById('processing-content'), data.processing, 'created_at', 'Date Submitted', false, false, true);
       renderCompleted(document.getElementById('completed-content'), data.completed);
       renderList(document.getElementById('unable-content'), data.unable_to_process, 'created_at', 'Date Submitted', false, true, true);
@@ -3819,6 +3849,12 @@ table.list td.shot-cell {
         return '<div class="user-group">' +
           '<div class="user-group-head"><span class="email">' + escapeHtml(u.email || u.id) + '</span>' +
           '<span class="count">' + u.jobs.length + ' job(s)</span></div>' +
+          '<div class="alloc-row" data-uid="' + escapeHtml(u.id) + '">' +
+          '<span>Allotment: <b>' + (u.usage ? u.usage.used + ' / ' + u.usage.limit : '?') + '</b></span>' +
+          '<input type="number" min="1" max="10000" value="25" class="alloc-amt" aria-label="Jobs to add">' +
+          '<button type="button" class="alloc-btn" data-act="add">Add jobs</button>' +
+          '<button type="button" class="alloc-btn" data-act="reset">Reset usage</button>' +
+          '</div>' +
           renderUserJobsTable(u.jobs) +
           '</div>';
       }).join('');
@@ -3827,6 +3863,28 @@ table.list td.shot-cell {
       console.error(e);
     }
   }
+
+  document.getElementById('admin-content').addEventListener('click', async function (e) {
+    var btn = e.target.closest ? e.target.closest('.alloc-btn') : null;
+    if (!btn) return;
+    var row = btn.closest('.alloc-row');
+    var uid = row.getAttribute('data-uid');
+    var act = btn.getAttribute('data-act');
+    var body = { user_id: uid, action: act };
+    if (act === 'add') {
+      body.amount = parseInt(row.querySelector('.alloc-amt').value, 10);
+    } else if (!window.confirm('Reset this user\'s job usage back to 0?')) {
+      return;
+    }
+    btn.disabled = true;
+    try {
+      await apiFetch('/api/dashboard/admin/allocation', { method: 'POST', body: JSON.stringify(body) });
+      await loadAdmin();
+    } catch (err) {
+      btn.disabled = false;
+      window.alert('Couldn\'t update: ' + (err && err.message ? err.message : err));
+    }
+  });
 
   async function loadAdminMail(container) {
     container = container || document.getElementById('admin-content');
@@ -3962,6 +4020,7 @@ table.list td.shot-cell {
         method: 'POST',
         body: JSON.stringify({ links: links })
       });
+      loadJobs();
       note.textContent = 'Submitted ' + res.submitted + ' role(s) — moved to Jobs Processing.';
       note.className = 'submit-note ok';
       note.style.display = 'block';

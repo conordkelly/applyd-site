@@ -1,3 +1,5 @@
+import { getAllotment } from "./_job_limit.js";
+
 export async function onRequestGet(context) {
   const { env, data } = context;
 
@@ -24,10 +26,11 @@ export async function onRequestGet(context) {
     ).all());
   }
 
-  const byUser = users.map((u) => ({
+  const byUser = await Promise.all(users.map(async (u) => ({
     ...u,
     jobs: jobs.filter((j) => j.user_id === u.id),
-  }));
+    usage: await getAllotment(env, u.id),
+  })));
 
   return json({ users: byUser });
 }

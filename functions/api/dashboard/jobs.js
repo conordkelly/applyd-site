@@ -1,4 +1,5 @@
 import { profileCompletenessGaps } from "./_profile_completeness.js";
+import { getAllotment } from "./_job_limit.js";
 import { sendEmail, buildJobSubmissionEmail } from "../_email.js";
 
 const USER_COMPLETE_DELAY_MINUTES = 2;
@@ -77,7 +78,7 @@ export async function onRequestGet(context) {
     .map(withShot);
   const unable_to_process = results.filter(isRejected).map(withShot);
 
-  return json({ processing, completed, unable_to_process });
+  return json({ processing, completed, unable_to_process, usage: await getAllotment(env, data.userId) });
 }
 
 async function screenshotIdsForUser(env, userId) {
@@ -143,6 +144,34 @@ export async function onRequestPost(context) {
         gaps,
       },
       400
+    );
+  }
+
+  const { used, limit: jobLimit } = await getAllotment(env, data.userId);
+  const remaining = jobLimit - used;
+  if (remaining <= 0) {
+    return json(
+      {
+        error:
+          "You've used all " + jobLimit +
+          " of your jobs. Contact info@applydjobs.com to request more.",
+        used,
+        limit: jobLimit,
+      },
+      403
+    );
+  }
+  if (cleaned.length > remaining) {
+    return json(
+      {
+        error:
+          "You have " + remaining + " of " + jobLimit +
+          " jobs left, but tried to submit " + cleaned.length +
+          ". Remove some links, or contact info@applydjobs.com to request more.",
+        used,
+        limit: jobLimit,
+      },
+      403
     );
   }
 

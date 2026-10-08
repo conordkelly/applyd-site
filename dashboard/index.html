@@ -1486,6 +1486,10 @@ table.list td.shot-cell {
               <label for="f-currently_reside_canada">Currently reside in Canada?<span class="required-mark">*</span></label>
               <select id="f-currently_reside_canada"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
             </div>
+            <div class="field">
+              <label for="f-notice_period">Notice period (before starting new role)<span class="required-mark">*</span></label>
+              <select id="f-notice_period"><option value="">—</option><option value="1 Week">1 Week</option><option value="2 Weeks">2 Weeks</option><option value="3 Weeks">3 Weeks</option><option value="4 Weeks">4 Weeks</option><option value="Other/NA">Other/NA</option></select>
+            </div>
           </div>
         </div>
 
@@ -1721,7 +1725,7 @@ table.list td.shot-cell {
     'country', 'address', 'city', 'province_full', 'postal_code',
     'linkedin_url', 'github_url', 'portfolio_url',
     'legally_authorized', 'require_sponsorship', 'require_future_sponsorship', 'work_permit_type',
-    'preferred_job_location', 'willing_onsite_local', 'willing_relocate', 'currently_reside_canada',
+    'preferred_job_location', 'willing_onsite_local', 'willing_relocate', 'currently_reside_canada', 'notice_period',
     'current_title', 'current_company', 'years_experience', 'education_level',
     'school', 'degree_name', 'education_start_year', 'graduation_year', 'target_roles',
     'salary_expectation', 'salary_currency', 'salary_min', 'salary_max',
@@ -2888,6 +2892,7 @@ table.list td.shot-cell {
         current_company: flat.current_company || '',
         current_title: flat.current_title || '',
         years_experience: flat.years_experience || '',
+        notice_period: flat.notice_period || '',
         general_salary_expectation: salaryDisplay,
         salary_expectations_typed: flat.salary_typed_band || '',
         salary_expectation: flat.salary_expectation || '',
@@ -3005,6 +3010,7 @@ table.list td.shot-cell {
     need('Willing to work onsite/hybrid', profile.willing_onsite_local);
     need('Willing to relocate', profile.willing_relocate);
     need('Currently reside in Canada', profile.currently_reside_canada);
+    need('Notice period', profile.notice_period);
     need('Preferred job location', profile.preferred_job_location);
     need('School / university', profile.school);
     need('Degree name', profile.degree_name);

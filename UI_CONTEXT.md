@@ -290,6 +290,13 @@ to match the canonical contract in
 worker actually needs), rather than the earlier ad hoc field set modeled
 loosely on `~/.applyd/profile.json`.
 
+**Notice period (added 2026-10-08):** required dropdown "Notice period
+(before starting new role)" in the work/location block (1 Week, 2 Weeks,
+3 Weeks, 4 Weeks, Other/NA). Saved as `notice_period`, mapped to
+`canonical.professional_background.notice_period`, and enforced in both
+completeness checks (client + `_profile_completeness.js`). The worker does
+not read it yet; its existing Workday notice-period answers are hardcoded.
+
 **Placeholder text (fixed 2026-10-01):** some users mistook example
 placeholder text (e.g. a postal code) for an already-filled-in answer — the
 browser's default placeholder color read too close to real input text,

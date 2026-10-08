@@ -78,6 +78,7 @@ export function profileCompletenessGaps(profile) {
   need("Willing to work onsite/hybrid", profile.willing_onsite_local);
   need("Willing to relocate", profile.willing_relocate);
   need("Currently reside in Canada", profile.currently_reside_canada);
+  need("Notice period", profile.notice_period);
   need("Preferred job location", profile.preferred_job_location);
   need("School / university", profile.school);
   need("Degree name", profile.degree_name);

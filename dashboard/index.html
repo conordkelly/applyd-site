@@ -4202,10 +4202,13 @@ table.list td.shot-cell {
           '<span class="count">' + u.jobs.length + ' job(s)</span></div>' +
           '<div class="alloc-row" data-uid="' + escapeHtml(u.id) + '">' +
           '<span>Allotment: <b>' + (u.usage ? (u.usage.unlimited ? u.usage.used + ' / unlimited' : u.usage.used + ' / ' + u.usage.limit) : '?') + '</b></span>' +
-          '<input type="number" min="1" max="10000" value="25" class="alloc-amt" aria-label="Jobs to add">' +
-          '<button type="button" class="alloc-btn" data-act="add">Add jobs</button>' +
-          '<button type="button" class="alloc-btn" data-act="reset">Reset usage</button>' +
-          '<button type="button" class="alloc-btn" data-act="unlimited">Make unlimited</button>' +
+          '<input type="number" min="1" max="10000" value="25" class="alloc-amt" aria-label="Number of jobs">' +
+          (u.usage && u.usage.unlimited
+            ? '<button type="button" class="alloc-btn" data-act="limit">Make limited</button>' +
+              '<button type="button" class="alloc-btn" data-act="reset">Reset usage</button>'
+            : '<button type="button" class="alloc-btn" data-act="add">Add jobs</button>' +
+              '<button type="button" class="alloc-btn" data-act="reset">Reset usage</button>' +
+              '<button type="button" class="alloc-btn" data-act="unlimited">Make unlimited</button>') +
           '</div>' +
           renderUserJobsTable(u.jobs) +
           '</div>';
@@ -4223,8 +4226,14 @@ table.list td.shot-cell {
     var uid = row.getAttribute('data-uid');
     var act = btn.getAttribute('data-act');
     var body = { user_id: uid, action: act };
+    var amt = parseInt(row.querySelector('.alloc-amt').value, 10);
     if (act === 'add') {
-      body.amount = parseInt(row.querySelector('.alloc-amt').value, 10);
+      body.amount = amt;
+    } else if (act === 'limit') {
+      body.amount = amt;
+      if (!window.confirm('Limit this user to ' + amt + ' jobs remaining?')) return;
+    } else if (act === 'unlimited') {
+      if (!window.confirm('Make this user unlimited?')) return;
     } else if (!window.confirm('Reset this user\'s job usage back to 0?')) {
       return;
     }

@@ -541,6 +541,15 @@ Visible only to `ADMIN_USER_ID`. Fetches `/api/dashboard/admin` (GET,
 — email header + job count, then each user's jobs as a table (link,
 status chip, submitted date, completed date).
 
+Each user card has an allotment row: the allotment (`used / limit`, or
+`used / unlimited`), a number box, and buttons for that user's state.
+Limited users get **Add jobs**, **Reset usage** and **Make unlimited**.
+Unlimited users get **Make limited** (sets how many jobs they have left to the
+number in the box; `POST /api/dashboard/admin/allocation` action `limit`) and
+**Reset usage**. Make unlimited and Reset usage each ask their own confirm
+question (Make unlimited used to ask the reset question by mistake). Added
+2026-10-12; mocked up and approved first.
+
 ### Billing (`#billing-section`, added 2026-10-12)
 
 Pay as you go: **$2.99 CAD buys 25 automated applications**, jobs do not

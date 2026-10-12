@@ -558,6 +558,12 @@ Up** button that opens the Billing page. Under 10 left the badge border and
 number turn accent blue and a note appears; at 0 the note says to top up and
 Submit is disabled. Unlimited users see "Jobs submitted" and no button.
 
+If a declined card turned auto-reload off (`users.auto_reload_error` set), the
+Billing page shows a red alert box (`#billing-alert`, tokens `--danger`,
+`--danger-bg`, `--danger-line`, defined for light and dark) headed "Auto-reload
+is off". It clears when the user turns auto-reload back on. Billing error
+messages (`.bill-msg.err`) use the same red.
+
 Returning from Stripe lands on `/dashboard/?billing=success|cancel|card`;
 `handleBillingReturn()` opens Billing, polls a few seconds for the webhook to
 add the jobs (it compares `limit` against the value saved in

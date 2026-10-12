@@ -3,6 +3,13 @@
 //   { id, action: "ops_complete" | "reject" | "reopen", reason? }
 //   { id, status: "processing"|"completed" }  // legacy
 // Auth: X-Worker-Key via /api/worker/_middleware.js
+//
+// GET ...&allotment=1 (opt-in; used by ApplyD Review's Job Queue) stamps every
+// row with that user's own account numbers — allotment_used, allotment_limit
+// (null when unlimited), allotment_unlimited — plus allotment_n, this job's
+// 1-based position in the count. Same rules as the account page.
+
+import { getAllotment } from "../dashboard/_job_limit.js";
 
 const USER_COMPLETE_DELAY_MINUTES = 2;
 
@@ -114,6 +121,53 @@ async function fetchJobRow(env, id) {
   }
 }
 
+// Uses getAllotment() so "used" and "limit" are exactly what the user's own
+// account shows (their real limit incl. top-ups/admin changes or unlimited;
+// jobs counted since their last reset, not counting Unable to Process). The
+// per-job position uses the same filter, oldest first. Never throws: on any
+// failure the rows are returned unchanged and the caller falls back.
+async function attachAllotment(env, rows) {
+  const byUser = new Map();
+  for (const uid of new Set(rows.map((r) => r && r.user_id).filter(Boolean))) {
+    try {
+      const a = await getAllotment(env, uid);
+      const where =
+        "user_id = ? AND rejected_at IS NULL" + (a.resetAt ? " AND created_at > ?" : "");
+      const args = a.resetAt ? [uid, a.resetAt] : [uid];
+      let list;
+      try {
+        list = await env.DB.prepare(
+          "SELECT id FROM jobs WHERE " + where + " ORDER BY created_at ASC, id ASC"
+        )
+          .bind(...args)
+          .all();
+      } catch (e) {
+        list = await env.DB.prepare(
+          "SELECT id FROM jobs WHERE user_id = ? ORDER BY created_at ASC, id ASC"
+        )
+          .bind(uid)
+          .all();
+      }
+      const pos = new Map();
+      (list.results || []).forEach((j, i) => pos.set(j.id, i + 1));
+      byUser.set(uid, { a, pos });
+    } catch (e) {
+      console.log("attachAllotment:", String(e && e.message ? e.message : e));
+    }
+  }
+  return rows.map((r) => {
+    const u = r && byUser.get(r.user_id);
+    if (!u) return r;
+    return {
+      ...r,
+      allotment_used: u.a.used,
+      allotment_limit: u.a.limit,
+      allotment_unlimited: u.a.unlimited,
+      allotment_n: u.pos.get(r.id) || null,
+    };
+  });
+}
+
 export async function onRequestGet(context) {
   const { request, env } = context;
   const url = new URL(request.url);
@@ -141,6 +195,10 @@ export async function onRequestGet(context) {
       },
       503
     );
+  }
+
+  if (url.searchParams.get("allotment") === "1") {
+    results = await attachAllotment(env, results);
   }
 
   return json({ jobs: results, count: results.length });

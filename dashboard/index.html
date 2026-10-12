@@ -410,16 +410,20 @@ body {
 
 .panel-head p.usage-note { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.03em; color: var(--text-2); margin-bottom: 10px; }
 #panel-submission { position: relative; }
-.usage-badge { position: absolute; top: 26px; right: 28px; min-width: 150px; padding: 12px 14px; border: 1px solid var(--hairline-strong); border-radius: 8px; background: var(--surface); text-align: right; }
+.usage-badge { position: absolute; top: 26px; right: 28px; width: 330px; padding: 14px; border: 1px solid var(--hairline-strong); border-radius: 8px; background: var(--surface); }
 .usage-badge[hidden] { display: none; }
-.usage-top { display: flex; align-items: baseline; justify-content: flex-end; gap: 8px; }
+.usage-top { display: flex; align-items: baseline; justify-content: flex-start; gap: 10px; }
+.usage-auto { margin-left: auto; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: var(--text-3); }
+.usage-auto.on { color: var(--signal); }
+.usage-topup { display: block; width: 100%; margin-top: 12px; font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent-ink); background: var(--accent); border: none; border-radius: 6px; padding: 8px 11px; cursor: pointer; }
+.usage-topup[hidden] { display: none; }
 .usage-num { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 30px; line-height: 1; color: var(--text); }
 .usage-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
 .usage-bar { height: 4px; background: var(--hairline); border-radius: 2px; margin-top: 10px; overflow: hidden; }
 .usage-bar i { display: block; height: 100%; width: 0; background: var(--accent); border-radius: 2px; }
 .usage-badge.limit { border-color: var(--accent); }
 .usage-badge.limit .usage-num { color: var(--accent); }
-@media (max-width: 760px) { .usage-badge { position: static; margin-bottom: 18px; text-align: left; } .usage-top { justify-content: flex-start; } }
+@media (max-width: 980px) { .usage-badge { position: static; width: 100%; margin-bottom: 18px; } }
 .panel-head p.usage-note.limit { color: var(--accent); }
 .panel-head p.usage-note a { color: inherit; }
 .alloc-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--hairline); font-size: 13px; color: var(--text-2); }
@@ -432,7 +436,55 @@ body {
    margin-top 28px) to put space between it and the topbar's hairline —
    without this "INBOX" sits flush against that line. */
 #inbox-section > .panel-head,
+#billing-section > .panel-head,
 #info-section > .panel-head { margin-top: 28px; }
+
+/* Billing (pay as you go) */
+.bill-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; padding: 18px; max-width: 560px; margin-bottom: 16px; }
+.bill-kv { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 14px; }
+.bill-kv:first-child { border-top: none; padding-top: 0; }
+.bill-kv span:first-child { color: var(--text-2); }
+.bill-kv span:last-child { text-align: right; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
+.bill-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--hairline); }
+.bill-toggle small { display: block; color: var(--text-2); font-size: 12px; margin-top: 2px; }
+.bill-sw { width: 40px; height: 22px; border-radius: 11px; background: var(--hairline-strong); position: relative; border: none; cursor: pointer; flex: none; padding: 0; }
+.bill-sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); transition: left 0.15s; }
+.bill-sw[aria-checked="true"] { background: var(--accent); }
+.bill-sw[aria-checked="true"]::after { left: 21px; background: var(--accent-ink); }
+.bill-actions { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
+.bill-btn { font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent-ink); background: var(--accent); border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
+.bill-btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--hairline-strong); }
+.bill-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.bill-btn[hidden] { display: none; }
+.bill-msg { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.03em; margin: 0 0 16px; color: var(--text-2); }
+.bill-msg.ok { color: var(--signal); }
+.bill-msg.err { color: var(--accent); }
+.bill-msg[hidden] { display: none; }
+.bill-hist { width: 100%; border-collapse: collapse; font-size: 13px; }
+.bill-hist th { text-align: left; font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); padding: 8px 0; border-bottom: 1px solid var(--hairline-strong); }
+.bill-hist td { padding: 9px 0; border-bottom: 1px solid var(--hairline); }
+.bill-hist th:last-child, .bill-hist td:last-child { text-align: right; }
+.bill-hist .tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: var(--text-2); }
+.bill-empty { font-size: 13px; color: var(--text-2); margin: 0; }
+#topup-modal[hidden] { display: none; }
+#topup-modal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.topup-panel { position: relative; width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 10px; padding: 24px; }
+.topup-panel h3 { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 26px; text-transform: uppercase; margin: 0 0 4px; }
+.topup-panel p { font-size: 14px; color: var(--text-2); margin: 0 0 16px; line-height: 1.5; }
+.topup-price { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 14px 0; border-top: 1px solid var(--hairline); border-bottom: 1px solid var(--hairline); margin-bottom: 16px; }
+.topup-price .n { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 30px; }
+.topup-price .n small { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); margin-left: 6px; }
+.topup-price .p { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 20px; }
+.topup-price .p small { font-size: 11px; color: var(--text-2); letter-spacing: 0.04em; }
+.topup-chk { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; margin-bottom: 18px; cursor: pointer; }
+.topup-chk input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent); }
+.topup-chk small { display: block; color: var(--text-2); font-size: 12px; margin-top: 2px; }
+.topup-go { width: 100%; font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: var(--accent-ink); background: var(--accent); border: none; border-radius: 6px; padding: 12px 22px; cursor: pointer; }
+.topup-go:disabled { opacity: 0.6; cursor: not-allowed; }
+.topup-fine { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.03em; color: var(--text-3); text-align: center; margin: 12px 0 0 !important; }
+.topup-err { font-size: 13px; color: var(--accent); margin: 0 0 12px !important; }
+.topup-err[hidden] { display: none; }
+.topup-close { width: 100%; background: none; border: none; color: var(--text-2); font-family: 'Hanken Grotesk', sans-serif; font-size: 13px; cursor: pointer; margin-top: 10px; padding: 6px; }
 
 .inbox-callout {
   display: flex;
@@ -1233,6 +1285,7 @@ table.list td.shot-cell {
         <button class="nav-link" id="info-view-link">My Info</button>
         <button class="nav-link active" id="jobs-view-link">My Jobs</button>
         <button class="nav-link" id="inbox-view-link">Inbox</button>
+        <button class="nav-link" id="billing-view-link">Billing</button>
         <button class="nav-link" id="admin-view-link" style="display:none;">Admin</button>
       </div>
     </div>
@@ -1264,8 +1317,9 @@ table.list td.shot-cell {
 
       <section class="tab-panel active" id="panel-submission">
         <div class="usage-badge" id="job-usage" hidden>
-          <div class="usage-top"><span class="usage-num" id="job-usage-num"></span><span class="usage-label" id="job-usage-label">Jobs used</span></div>
+          <div class="usage-top"><span class="usage-num" id="job-usage-num"></span><span class="usage-label" id="job-usage-label">Jobs Remaining</span><span class="usage-auto" id="job-usage-auto"></span></div>
           <div class="usage-bar"><i id="job-usage-fill"></i></div>
+          <button type="button" class="usage-topup" id="job-usage-topup">Top Up</button>
         </div>
         <div class="panel-head">
           <h2>Jobs Submission</h2>
@@ -1328,6 +1382,20 @@ table.list td.shot-cell {
           <button type="button" data-report-service="app">Mail app</button>
         </div>
         <button type="button" class="report-close" id="report-close">Cancel</button>
+      </div>
+    </div>
+
+    <div id="topup-modal" hidden>
+      <div class="report-backdrop" id="topup-backdrop"></div>
+      <div class="topup-panel" role="dialog" aria-modal="true" aria-labelledby="topup-title">
+        <h3 id="topup-title">Top Up</h3>
+        <p>You pay on Stripe's secure page. Applyd never sees your card.</p>
+        <div class="topup-price"><div class="n">25<small>jobs</small></div><div class="p">$2.99 <small>CAD</small></div></div>
+        <label class="topup-chk" for="topup-auto"><input type="checkbox" id="topup-auto" checked><span>Auto-reload when I have fewer than 10 jobs left<small>Charges $2.99 CAD for 25 more jobs. Turn it off any time under Billing.</small></span></label>
+        <p class="topup-err" id="topup-err" hidden></p>
+        <button type="button" class="topup-go" id="topup-go">Continue to payment</button>
+        <p class="topup-fine">Powered by Stripe</p>
+        <button type="button" class="topup-close" id="topup-close">Cancel</button>
       </div>
     </div>
 
@@ -1639,6 +1707,33 @@ table.list td.shot-cell {
       <div id="inbox-detail" class="inbox-detail" style="display:none;"></div>
     </div>
 
+    <div id="billing-section" style="display:none;">
+      <div class="panel-head">
+        <h2>Billing</h2>
+        <p>Pay as you go. $2.99 CAD buys 25 automated applications. Your jobs do not expire.</p>
+        <p class="bill-msg" id="billing-msg" hidden></p>
+      </div>
+      <div class="bill-card">
+        <div class="bill-kv"><span>Jobs remaining</span><span id="billing-remaining">-</span></div>
+        <div class="bill-kv"><span>Card on file</span><span id="billing-card">-</span></div>
+        <div class="bill-toggle">
+          <div>Auto-reload<small>Adds 25 jobs for $2.99 CAD when you have fewer than 10 left.</small></div>
+          <button type="button" class="bill-sw" id="billing-auto" role="switch" aria-checked="false" aria-label="Auto-reload"></button>
+        </div>
+        <div class="bill-actions">
+          <button type="button" class="bill-btn" id="billing-topup">Top Up</button>
+          <button type="button" class="bill-btn ghost" id="billing-update-card" hidden>Update card</button>
+        </div>
+      </div>
+      <div class="bill-card" id="billing-history-card">
+        <table class="bill-hist">
+          <thead><tr><th>Date</th><th>Description</th><th>Amount</th></tr></thead>
+          <tbody id="billing-history"></tbody>
+        </table>
+        <p class="bill-empty" id="billing-history-empty" hidden>No payments yet.</p>
+      </div>
+    </div>
+
     <div id="admin-section" style="display:none;">
       <div class="panel-head">
         <h2>Admin</h2>
@@ -1691,6 +1786,8 @@ table.list td.shot-cell {
   var infoViewLink = document.getElementById('info-view-link');
   var inboxViewLink = document.getElementById('inbox-view-link');
   var adminViewLink = document.getElementById('admin-view-link');
+  var billingViewLink = document.getElementById('billing-view-link');
+  var billingSection = document.getElementById('billing-section');
   var jobsSection = document.getElementById('jobs-section');
   var infoSection = document.getElementById('info-section');
   var inboxSection = document.getElementById('inbox-section');
@@ -1699,7 +1796,7 @@ table.list td.shot-cell {
   var adminSelectedUserId = null;
 
   function setActiveView(link) {
-    [jobsViewLink, infoViewLink, inboxViewLink, adminViewLink].forEach(function (l) {
+    [jobsViewLink, infoViewLink, inboxViewLink, billingViewLink, adminViewLink].forEach(function (l) {
       if (l) l.classList.remove('active');
     });
     link.classList.add('active');
@@ -1710,6 +1807,7 @@ table.list td.shot-cell {
     infoSection.style.display = 'none';
     inboxSection.style.display = 'none';
     adminSection.style.display = 'none';
+    billingSection.style.display = 'none';
     setActiveView(jobsViewLink);
   }
 
@@ -1718,6 +1816,7 @@ table.list td.shot-cell {
     infoSection.style.display = 'block';
     inboxSection.style.display = 'none';
     adminSection.style.display = 'none';
+    billingSection.style.display = 'none';
     setActiveView(infoViewLink);
     loadInfo();
   }
@@ -1727,6 +1826,7 @@ table.list td.shot-cell {
     infoSection.style.display = 'none';
     inboxSection.style.display = 'block';
     adminSection.style.display = 'none';
+    billingSection.style.display = 'none';
     setActiveView(inboxViewLink);
     loadInbox();
   }
@@ -1736,14 +1836,26 @@ table.list td.shot-cell {
     infoSection.style.display = 'none';
     inboxSection.style.display = 'none';
     adminSection.style.display = 'block';
+    billingSection.style.display = 'none';
     setActiveView(adminViewLink);
     loadAdmin();
+  }
+
+  function showBillingView() {
+    jobsSection.style.display = 'none';
+    infoSection.style.display = 'none';
+    inboxSection.style.display = 'none';
+    adminSection.style.display = 'none';
+    billingSection.style.display = 'block';
+    setActiveView(billingViewLink);
+    loadBilling();
   }
 
   jobsViewLink.addEventListener('click', showJobsView);
   infoViewLink.addEventListener('click', showInfoView);
   inboxViewLink.addEventListener('click', showInboxView);
   adminViewLink.addEventListener('click', showAdminView);
+  billingViewLink.addEventListener('click', showBillingView);
 
   var PROFILE_FIELDS = [
     'first_name', 'last_name', 'full_name', 'preferred_name', 'phone', 'phone_country_display',
@@ -3567,27 +3679,217 @@ table.list td.shot-cell {
     var num = document.getElementById('job-usage-num');
     var label = document.getElementById('job-usage-label');
     var fill = document.getElementById('job-usage-fill');
+    var auto = document.getElementById('job-usage-auto');
+    var topup = document.getElementById('job-usage-topup');
     badge.hidden = false;
     if (jobUsage.unlimited) {
       num.textContent = String(jobUsage.used);
       label.textContent = 'Jobs submitted';
       fill.style.width = '0';
+      auto.textContent = '';
+      topup.hidden = true;
       badge.classList.remove('limit');
       msg.hidden = true;
     } else {
-      var pct = jobUsage.limit > 0 ? Math.min(100, Math.round(jobUsage.used / jobUsage.limit * 100)) : 100;
-      num.textContent = jobUsage.used + ' / ' + jobUsage.limit;
-      label.textContent = 'Jobs used';
-      fill.style.width = pct + '%';
-      badge.classList.toggle('limit', jobsAtLimit());
-      if (jobsAtLimit()) {
-        msg.innerHTML = 'You\'ve used all ' + jobUsage.limit + ' of your jobs. Contact <a href="mailto:info@applydjobs.com">info@applydjobs.com</a> to request more.';
+      var remaining = Math.max(0, jobUsage.limit - jobUsage.used);
+      var low = remaining < 10;
+      num.textContent = String(remaining);
+      label.textContent = 'Jobs Remaining';
+      // Bar is full at one pack (25) or more, empty at 0.
+      fill.style.width = Math.min(100, Math.round(remaining / 25 * 100)) + '%';
+      auto.textContent = jobUsage.auto_reload ? 'Auto-reload on' : 'Auto-reload off';
+      auto.classList.toggle('on', !!jobUsage.auto_reload);
+      topup.hidden = false;
+      badge.classList.toggle('limit', low);
+      if (remaining <= 0) {
+        msg.textContent = 'You are out of jobs. Top up with 25 jobs for $2.99 CAD to keep applying.';
+        msg.hidden = false;
+      } else if (low) {
+        msg.textContent = jobUsage.auto_reload
+          ? 'Only ' + remaining + ' jobs left. Auto-reload will add 25 more for $2.99 CAD when you next submit.'
+          : 'Only ' + remaining + ' jobs left. Top up to keep applying without a break.';
         msg.hidden = false;
       } else {
         msg.hidden = true;
       }
     }
     updateJobSubmitGate();
+  }
+
+  document.getElementById('job-usage-topup').addEventListener('click', function () {
+    showBillingView();
+    window.scrollTo(0, 0);
+  });
+
+  // ---- Billing (pay as you go, Stripe Checkout) ----
+  var billingData = null;
+  var billingEls = {
+    msg: document.getElementById('billing-msg'),
+    remaining: document.getElementById('billing-remaining'),
+    card: document.getElementById('billing-card'),
+    auto: document.getElementById('billing-auto'),
+    topup: document.getElementById('billing-topup'),
+    updateCard: document.getElementById('billing-update-card'),
+    history: document.getElementById('billing-history'),
+    historyEmpty: document.getElementById('billing-history-empty')
+  };
+
+  function setBillingMsg(text, kind) {
+    billingEls.msg.textContent = text || '';
+    billingEls.msg.className = 'bill-msg' + (kind ? ' ' + kind : '');
+    billingEls.msg.hidden = !text;
+  }
+
+  function renderBilling() {
+    var b = billingData;
+    if (!b) return;
+    billingEls.remaining.textContent = b.unlimited ? 'Unlimited' : String(b.remaining);
+    billingEls.card.textContent = b.card
+      ? ((b.card.brand ? b.card.brand.charAt(0).toUpperCase() + b.card.brand.slice(1) + ' ' : '') + 'ending ' + b.card.last4)
+      : 'None yet';
+    billingEls.auto.setAttribute('aria-checked', b.auto_reload ? 'true' : 'false');
+    billingEls.updateCard.hidden = !b.card;
+    billingEls.topup.disabled = !b.configured;
+    if (b.auto_reload_error) {
+      setBillingMsg(b.auto_reload_error, 'err');
+    } else if (!b.configured) {
+      setBillingMsg('Payments are not set up yet. Please check back soon.', 'err');
+    }
+    billingEls.history.innerHTML = '';
+    billingEls.historyEmpty.hidden = !!(b.history && b.history.length);
+    (b.history || []).forEach(function (h) {
+      var when = formatLocalDateTime(h.created_at);
+      var tr = document.createElement('tr');
+      var d = document.createElement('td');
+      d.textContent = when ? when.date : '';
+      var desc = document.createElement('td');
+      desc.textContent = h.jobs + ' jobs ';
+      if (h.kind === 'auto') {
+        var tag = document.createElement('span');
+        tag.className = 'tag';
+        tag.textContent = 'auto-reload';
+        desc.appendChild(tag);
+      }
+      var amt = document.createElement('td');
+      amt.textContent = '$' + (h.amount_cents / 100).toFixed(2);
+      tr.appendChild(d);
+      tr.appendChild(desc);
+      tr.appendChild(amt);
+      billingEls.history.appendChild(tr);
+    });
+  }
+
+  async function loadBilling() {
+    try {
+      billingData = await apiFetch('/api/dashboard/billing');
+      renderBilling();
+    } catch (e) {
+      setBillingMsg((e && e.message) || 'Could not load billing.', 'err');
+    }
+  }
+
+  var topupModal = document.getElementById('topup-modal');
+  var topupGo = document.getElementById('topup-go');
+  var topupErr = document.getElementById('topup-err');
+
+  function openTopup(autoChecked) {
+    document.getElementById('topup-auto').checked = autoChecked;
+    topupErr.hidden = true;
+    topupGo.disabled = false;
+    topupGo.textContent = 'Continue to payment';
+    topupModal.hidden = false;
+    topupGo.focus();
+  }
+  function closeTopup() { topupModal.hidden = true; }
+
+  async function startCheckout(payload, btn, idleLabel, onError) {
+    btn.disabled = true;
+    btn.textContent = 'Opening Stripe...';
+    try {
+      var res = await apiFetch('/api/dashboard/billing/checkout', {
+        method: 'POST',
+        body: JSON.stringify(payload)
+      });
+      // Remember where the allotment stood so the return trip can tell when
+      // the webhook has added the jobs.
+      try {
+        if (billingData && billingData.limit != null) sessionStorage.setItem('applyd_bill_limit', String(billingData.limit));
+      } catch (e) {}
+      window.location.href = res.url;
+    } catch (e) {
+      onError((e && e.message) || 'Could not start checkout. Please try again.');
+      btn.disabled = false;
+      btn.textContent = idleLabel;
+    }
+  }
+
+  billingEls.topup.addEventListener('click', function () {
+    // Pre-tick auto-reload unless they already have a card and turned it off.
+    var keepOff = !!(billingData && billingData.card && !billingData.auto_reload);
+    openTopup(!keepOff);
+  });
+  topupGo.addEventListener('click', function () {
+    startCheckout({ auto_reload: document.getElementById('topup-auto').checked }, topupGo, 'Continue to payment', function (m) {
+      topupErr.textContent = m;
+      topupErr.hidden = false;
+    });
+  });
+  document.getElementById('topup-close').addEventListener('click', closeTopup);
+  document.getElementById('topup-backdrop').addEventListener('click', closeTopup);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !topupModal.hidden) closeTopup(); });
+
+  billingEls.updateCard.addEventListener('click', function () {
+    startCheckout({ update_card: true }, billingEls.updateCard, 'Update card', function (m) {
+      setBillingMsg(m, 'err');
+    });
+  });
+
+  billingEls.auto.addEventListener('click', async function () {
+    if (!billingData) return;
+    var turningOn = !billingData.auto_reload;
+    if (turningOn && !billingData.card) { openTopup(true); return; }
+    try {
+      await apiFetch('/api/dashboard/billing/auto-reload', {
+        method: 'POST',
+        body: JSON.stringify({ enabled: turningOn })
+      });
+      setBillingMsg(turningOn ? 'Auto-reload is on.' : 'Auto-reload is off.', 'ok');
+      await loadBilling();
+      loadJobs();
+    } catch (e) {
+      setBillingMsg((e && e.message) || 'Could not change auto-reload.', 'err');
+    }
+  });
+
+  // Back from Stripe: /dashboard/?billing=success|cancel|card. The webhook
+  // adds the jobs, which can land a moment after the redirect, so poll briefly.
+  async function handleBillingReturn() {
+    var params = new URLSearchParams(window.location.search);
+    var state = params.get('billing');
+    if (!state) return;
+    history.replaceState(null, '', window.location.pathname);
+    showBillingView();
+    if (state === 'cancel') {
+      setBillingMsg('Checkout canceled. You were not charged.', '');
+      return;
+    }
+    var baseline = null;
+    try { baseline = parseInt(sessionStorage.getItem('applyd_bill_limit'), 10); } catch (e) {}
+    if (isNaN(baseline)) baseline = null;
+    setBillingMsg(state === 'success' ? 'Payment received. Adding your jobs...' : 'Saving your new card...', 'ok');
+    var done = false;
+    for (var i = 0; i < 10 && !done; i++) {
+      await loadBilling();
+      if (state === 'card') { done = i >= 1; }
+      else if (billingData && (billingData.unlimited || (baseline !== null && billingData.limit > baseline))) { done = true; }
+      else if (baseline === null && i >= 2) { done = true; }
+      if (!done) await new Promise(function (r) { setTimeout(r, 2000); });
+    }
+    try { sessionStorage.removeItem('applyd_bill_limit'); } catch (e) {}
+    loadJobs();
+    if (state === 'card') setBillingMsg('Card updated.', 'ok');
+    else if (done) setBillingMsg('Payment received. Your jobs are added.', 'ok');
+    else setBillingMsg('Payment received. Your jobs can take a minute to appear. Refresh this page shortly.', 'ok');
   }
 
   async function loadJobs() {
@@ -4054,7 +4356,9 @@ table.list td.shot-cell {
         body: JSON.stringify({ links: links })
       });
       loadJobs();
-      note.textContent = 'Submitted ' + res.submitted + ' role(s) — moved to Jobs Processing.';
+      note.textContent = 'Submitted ' + res.submitted + ' role(s) — moved to Jobs Processing.' +
+        (res.auto_reload === 'reloaded' ? ' Auto-reload added 25 more jobs.' : '') +
+        (res.auto_reload === 'failed' ? ' Auto-reload could not charge your card and is now off. Update your card on the Billing page.' : '');
       note.className = 'submit-note ok';
       note.style.display = 'block';
       delete note.dataset.gate;
@@ -4206,6 +4510,7 @@ table.list td.shot-cell {
       }
       loadJobs();
       loadInfo();
+      handleBillingReturn();
     } else {
       document.getElementById('app-view').style.display = 'none';
       document.getElementById('signed-out-view').style.display = 'block';

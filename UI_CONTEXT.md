@@ -541,6 +541,50 @@ Visible only to `ADMIN_USER_ID`. Fetches `/api/dashboard/admin` (GET,
 — email header + job count, then each user's jobs as a table (link,
 status chip, submitted date, completed date).
 
+### Billing (`#billing-section`, added 2026-10-12)
+
+Pay as you go: **$2.99 CAD buys 25 automated applications**, jobs do not
+expire. New nav button **Billing** (after Inbox). The page shows jobs
+remaining, the card on file (brand + last 4), an **Auto-reload** switch
+("adds 25 jobs for $2.99 CAD when you have fewer than 10 left"), **Top Up**
+and **Update card** buttons, and a payment history table. **Top Up** opens
+`#topup-modal` (25 jobs, $2.99 CAD, an auto-reload checkbox, "Continue to
+payment") which sends the browser to Stripe Checkout. Mocked up and approved
+before it was built.
+
+The usage badge on Submission now reads "N Jobs Remaining" with an
+Auto-reload on/off label top right, a bar (full at 25 or more) and a **Top
+Up** button that opens the Billing page. Under 10 left the badge border and
+number turn accent blue and a note appears; at 0 the note says to top up and
+Submit is disabled. Unlimited users see "Jobs submitted" and no button.
+
+Returning from Stripe lands on `/dashboard/?billing=success|cancel|card`;
+`handleBillingReturn()` opens Billing, polls a few seconds for the webhook to
+add the jobs (it compares `limit` against the value saved in
+`sessionStorage` before checkout), then clears the query string.
+
+**Money flow.** Browser calls `POST /api/dashboard/billing/checkout`, goes to
+Stripe, Stripe calls `POST /api/stripe-webhook` (`checkout.session.completed`),
+which adds 25 to `users.job_limit` exactly once per PaymentIntent
+(`stripe_payments.id` is the PaymentIntent id, `INSERT OR IGNORE` plus an
+`UPDATE ... WHERE changes() > 0` in one D1 batch). Ticking auto-reload sets
+`setup_future_usage=off_session`, so the webhook also saves the card
+(`stripe_payment_method`, `card_brand`, `card_last4`) and turns
+`users.auto_reload` on. After a job submission (`POST /api/dashboard/jobs`),
+`maybeAutoReload()` charges the saved card $2.99 for another pack if the user
+is left under 10 jobs; on a declined card it turns auto-reload off and stores
+`auto_reload_error`, which the Billing page shows. Constants (25 jobs, 299
+cents, 10 threshold) live in `functions/api/dashboard/_billing.js`.
+
+**New accounts start with 0 jobs** (no free trial): the middleware inserts
+`job_limit = 0` for new users. Existing users with no `job_limit` keep the
+old default of 50. Admin Add jobs / Reset usage / Make unlimited still work.
+
+Env (Cloudflare Pages secrets): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
+Until set, checkout returns 503 and Billing shows "Payments are not set up
+yet." The D1 migration is `migrations/2026-10-12-billing.sql`; before it has
+run, billing reads fall back to "no card, auto-reload off, no history".
+
 ## Backend (`functions/api/dashboard/`)
 
 All routes behind `_middleware.js`, which verifies the Clerk session JWT
@@ -562,6 +606,10 @@ available at all).
 | `dashboard/resume.js` | GET | Streams the signed-in user's own resume PDF back (used for eventual worker/ATS-attach fetches, not linked from the UI today) |
 | `dashboard/resume.js` | DELETE | Deletes the signed-in user's resume object(s) from R2 |
 | `dashboard/admin.js` | GET | 403 unless `userId === env.ADMIN_USER_ID`; otherwise every user + their jobs |
+| `dashboard/billing.js` | GET | Jobs remaining, card on file, auto-reload state, last 25 payments, pack price |
+| `dashboard/billing/checkout.js` | POST | `{ auto_reload }` starts a Stripe Checkout for one pack; `{ update_card: true }` starts a card-only Checkout. Returns `{ url }` |
+| `dashboard/billing/auto-reload.js` | POST | `{ enabled }` switches auto-reload; turning on needs a saved card |
+| `stripe-webhook.js` | POST | Public, verified by `Stripe-Signature`. Credits jobs and saves cards on `checkout.session.completed` |
 
 ## Resume storage (R2)
 

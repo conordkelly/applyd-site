@@ -549,7 +549,7 @@ remaining, the card on file (brand + last 4), an **Auto-reload** switch
 ("adds 25 jobs for $2.99 CAD when you have fewer than 10 left"), **Top Up**
 and **Update card** buttons, and a payment history table. **Top Up** opens
 `#topup-modal` (25 jobs, $2.99 CAD, an auto-reload checkbox, "Continue to
-payment") which sends the browser to Stripe Checkout. Mocked up and approved
+payment") which sends the browser to Stripe Checkout. The "Powered by" line uses the Stripe logo as an embedded PNG data URI. Mocked up and approved
 before it was built.
 
 The usage badge on Submission now reads "N Jobs Remaining" with an

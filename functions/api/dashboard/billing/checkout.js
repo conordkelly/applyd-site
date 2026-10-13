@@ -51,6 +51,7 @@ export async function onRequestPost(context) {
     }
     params = {
       mode: "setup",
+      payment_method_types: ["card"],
       currency: CURRENCY,
       customer: row.stripe_customer_id,
       client_reference_id: data.userId,
@@ -69,10 +70,20 @@ export async function onRequestPost(context) {
           price_data: {
             currency: CURRENCY,
             unit_amount: PACK_PRICE_CENTS,
-            product_data: { name: PACK_JOBS + " automated applications" },
+            product_data: {
+              name: "Applyd - " + PACK_JOBS + " automated applications",
+              description:
+                "We fill out and submit your applications on Workday, Ashby, Greenhouse and Lever. Your jobs do not expire.",
+            },
           },
         },
       ],
+      // Card only (Apple Pay and Google Pay count as card). Keeps Klarna and
+      // Link out, since the card has to be reusable for auto-reload.
+      payment_method_types: ["card"],
+      custom_text: {
+        submit: { message: "Your " + PACK_JOBS + " jobs are added to your account right after payment." },
+      },
       success_url: origin + "/dashboard/?billing=success",
       cancel_url: origin + "/dashboard/?billing=cancel",
       metadata: { user_id: data.userId, auto_reload: auto ? "1" : "0" },

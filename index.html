@@ -1,6 +1,7 @@
 <title>Applyd: Never Complete Another Job Application</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='40' fill='%23071223'/%3E%3Cpath d='M40 172 L100 32 L160 172' stroke='%23EDEFF3' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M70 118 L90 138 L124 96' stroke='%234C8DFF' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
 <!-- Same Clerk instance as /dashboard (shared session cookie, same domain)
@@ -88,6 +89,7 @@
 }
 
 :root {
+  color-scheme: light;
   --bg: #F2F4F7;
   --surface: #FFFFFF;
   --surface-2: #E8ECF1;
@@ -100,38 +102,6 @@
   --hairline: rgba(18,21,27,0.10);
   --hairline-strong: rgba(18,21,27,0.20);
   --glow: rgba(29,95,209,0.08);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0A0C10;
-    --surface: #12151B;
-    --surface-2: #191D25;
-    --text: #EDEFF3;
-    --text-2: #98A0AC;
-    --text-3: #5B6270;
-    --accent: #4C8DFF;
-    --accent-ink: #071223;
-    --signal: #6DBF8B;
-    --hairline: rgba(237,239,243,0.09);
-    --hairline-strong: rgba(237,239,243,0.18);
-    --glow: rgba(76,141,255,0.16);
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg: #0A0C10;
-  --surface: #12151B;
-  --surface-2: #191D25;
-  --text: #EDEFF3;
-  --text-2: #98A0AC;
-  --text-3: #5B6270;
-  --accent: #4C8DFF;
-  --accent-ink: #071223;
-  --signal: #6DBF8B;
-  --hairline: rgba(237,239,243,0.09);
-  --hairline-strong: rgba(237,239,243,0.18);
-  --glow: rgba(76,141,255,0.16);
 }
 
 :root[data-theme="light"] {
@@ -1087,10 +1057,8 @@ footer.site .footer-email:hover { color: var(--accent); }
       return;
     }
     // Same brand colors/fonts as /dashboard so the account menu matches.
-    var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
-    var t = dark
-      ? { bg: "#12151B", text: "#EDEFF3", text2: "#98A0AC", border: "rgba(237,239,243,0.18)", accent: "#4C8DFF", ink: "#071223" }
-      : { bg: "#FFFFFF", text: "#12151B", text2: "#525964", border: "rgba(18,21,27,0.20)", accent: "#1D5FD1", ink: "#F5F9FF" };
+    // The site is light mode only.
+    var t = { bg: "#FFFFFF", text: "#12151B", text2: "#525964", border: "rgba(18,21,27,0.20)", accent: "#1D5FD1", ink: "#F5F9FF" };
     window.Clerk.load({
       appearance: {
         variables: {

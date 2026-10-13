@@ -1,6 +1,7 @@
 <title>Dashboard — Applyd</title>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="color-scheme" content="light">
 <meta http-equiv="Cache-Control" content="no-store">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Crect width='200' height='200' rx='40' fill='%23071223'/%3E%3Cpath d='M40 172 L100 32 L160 172' stroke='%23EDEFF3' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M70 118 L90 138 L124 96' stroke='%234C8DFF' stroke-width='18' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
 
@@ -87,6 +88,7 @@
 
 
 :root {
+  color-scheme: light;
   --bg: #F2F4F7;
   --surface: #FFFFFF;
   --surface-2: #E8ECF1;
@@ -101,42 +103,6 @@
   --danger-line: #F2B8B2;
   --hairline: rgba(18,21,27,0.10);
   --hairline-strong: rgba(18,21,27,0.20);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --bg: #0A0C10;
-    --surface: #12151B;
-    --surface-2: #191D25;
-    --text: #EDEFF3;
-    --text-2: #98A0AC;
-    --text-3: #5B6270;
-    --accent: #4C8DFF;
-    --accent-ink: #071223;
-    --signal: #6DBF8B;
-    --danger: #FF8A80;
-    --danger-bg: #2A1514;
-    --danger-line: #6B2B27;
-    --hairline: rgba(237,239,243,0.09);
-    --hairline-strong: rgba(237,239,243,0.18);
-  }
-}
-
-:root[data-theme="dark"] {
-  --bg: #0A0C10;
-  --surface: #12151B;
-  --surface-2: #191D25;
-  --text: #EDEFF3;
-  --text-2: #98A0AC;
-  --text-3: #5B6270;
-  --accent: #4C8DFF;
-  --accent-ink: #071223;
-  --signal: #6DBF8B;
-  --danger: #FF8A80;
-  --danger-bg: #2A1514;
-  --danger-line: #6B2B27;
-  --hairline: rgba(237,239,243,0.09);
-  --hairline-strong: rgba(237,239,243,0.18);
 }
 
 * { box-sizing: border-box; }
@@ -4449,21 +4415,9 @@ table.list td.shot-cell {
       }
     };
 
-    // Brand the Clerk widget to match the rest of the dashboard — same
-    // design tokens as :root above, picked for light/dark the same way the
-    // CSS does (explicit data-theme wins, else prefers-color-scheme).
-    // Mockup reviewed and approved 2026-10-01 (light version); dark follows
-    // the same mapping so it doesn't reintroduce the "stark white card on a
-    // black page" bug that prompted this in the first place.
-    function clerkIsDarkTheme() {
-      var attr = document.documentElement.getAttribute('data-theme');
-      if (attr === 'light') return false;
-      if (attr === 'dark') return true;
-      return !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    }
-    var clerkTokens = clerkIsDarkTheme()
-      ? { bg: '#12151B', text: '#EDEFF3', text2: '#98A0AC', hairline: 'rgba(237,239,243,0.18)', inputBorder: 'rgba(237,239,243,0.38)', accent: '#4C8DFF', accentInk: '#071223' }
-      : { bg: '#FFFFFF', text: '#12151B', text2: '#525964', hairline: 'rgba(18,21,27,0.20)', inputBorder: 'rgba(18,21,27,0.38)', accent: '#1D5FD1', accentInk: '#F5F9FF' };
+    // Brand the Clerk widget to match the rest of the dashboard: same
+    // design tokens as :root above. The site is light mode only.
+    var clerkTokens = { bg: '#FFFFFF', text: '#12151B', text2: '#525964', hairline: 'rgba(18,21,27,0.20)', inputBorder: 'rgba(18,21,27,0.38)', accent: '#1D5FD1', accentInk: '#F5F9FF' };
     var clerkAppearance = {
       variables: {
         colorPrimary: clerkTokens.accent,

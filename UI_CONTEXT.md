@@ -162,21 +162,29 @@ sign-in and account creation in one embedded flow.
 
 ## Design tokens (`dashboard/index.html`)
 
-Theme-aware: light is the default `:root`, dark applies via
-`prefers-color-scheme` and via `[data-theme="dark"]`.
+**Light mode only (2026-10-12).** Dark mode was removed from `index.html`,
+`dashboard/index.html` and `agencies-landing-archive.html`: the
+`prefers-color-scheme: dark` and `[data-theme="dark"]` token blocks are gone,
+`:root` sets `color-scheme: light`, each page has
+`<meta name="color-scheme" content="light">`, and the Clerk widget always
+uses the light tokens. The site looks the same for everyone regardless of
+their device's dark setting. To bring dark mode back, restore the dark token
+blocks (see git history before this change) and the dark branch of the Clerk
+theme code.
 
-| Token | Light | Dark |
-|---|---|---|
-| `--bg` | `#F2F4F7` | `#0A0C10` |
-| `--surface` | `#FFFFFF` | `#12151B` |
-| `--text` | `#12151B` | `#EDEFF3` |
-| `--text-2` | `#525964` | `#98A0AC` |
-| `--text-3` | `#868D98` | `#5B6270` |
-| `--accent` | `#1D5FD1` | `#4C8DFF` |
-| `--accent-ink` | `#F5F9FF` | `#071223` |
-| `--signal` | `#2F8F5B` | `#6DBF8B` |
-| `--hairline` | `rgba(18,21,27,.10)` | `rgba(237,239,243,.09)` |
-| `--hairline-strong` | `rgba(18,21,27,.20)` | `rgba(237,239,243,.18)` |
+| Token | Value |
+|---|---|
+| `--bg` | `#F2F4F7` |
+| `--surface` | `#FFFFFF` |
+| `--text` | `#12151B` |
+| `--text-2` | `#525964` |
+| `--text-3` | `#868D98` |
+| `--accent` | `#1D5FD1` |
+| `--accent-ink` | `#F5F9FF` |
+| `--signal` | `#2F8F5B` |
+| `--danger` | `#B42318` (with `--danger-bg` `#FDECEA`, `--danger-line` `#F2B8B2`) |
+| `--hairline` | `rgba(18,21,27,.10)` |
+| `--hairline-strong` | `rgba(18,21,27,.20)` |
 
 Fonts: **Big Shoulders Display** (headings, wordmark), **Hanken Grotesk**
 (body text), **JetBrains Mono** (labels, nav, buttons, tabular data —
@@ -569,7 +577,7 @@ Submit is disabled. Unlimited users see "Jobs submitted" and no button.
 
 If a declined card turned auto-reload off (`users.auto_reload_error` set), the
 Billing page shows a red alert box (`#billing-alert`, tokens `--danger`,
-`--danger-bg`, `--danger-line`, defined for light and dark) headed "Auto-reload
+`--danger-bg`, `--danger-line`) headed "Auto-reload
 is off". It clears when the user turns auto-reload back on. Billing error
 messages (`.bill-msg.err`) use the same red.
 

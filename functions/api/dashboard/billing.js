@@ -1,12 +1,15 @@
 // GET /api/dashboard/billing
-// Everything the Billing page needs: jobs left, card on file, auto-reload
-// state, and payment history.
-import { getAllotment } from "./_job_limit.js";
+// Everything the Billing page needs: plan, applications left (split into plan
+// and top-up), card on file, which plans to offer and at what price, and
+// payment history.
 import {
+  accountSummary,
   getBillingRow,
-  PACK_JOBS,
-  PACK_PRICE_CENTS,
-  RELOAD_BELOW,
+  launchState,
+  isPaidPlan,
+  planPriceCents,
+  PLANS,
+  TOPUP,
 } from "./_billing.js";
 import { stripeConfigured } from "../_stripe.js";
 
@@ -19,8 +22,12 @@ function json(data, status) {
 
 export async function onRequestGet(context) {
   const { env, data } = context;
-  const allot = await getAllotment(env, data.userId);
+  const acct = await accountSummary(env, data.userId);
   const row = await getBillingRow(env, data.userId);
+  const launch = await launchState(env, row);
+  // Someone already on a launch price keeps it on any plan; new subscribers
+  // get it while spots last.
+  const launchPricing = acct.plan_launch || launch.available;
 
   let history = [];
   try {
@@ -39,20 +46,28 @@ export async function onRequestGet(context) {
     history = []; // table not created yet
   }
 
+  const plans = Object.keys(PLANS).map((id) => ({
+    id,
+    name: PLANS[id].name,
+    apps: PLANS[id].apps,
+    price_cents: planPriceCents(id, launchPricing),
+    regular_cents: PLANS[id].regular_cents,
+    launch: launchPricing,
+  }));
+
   return json({
     configured: stripeConfigured(env),
-    unlimited: allot.unlimited,
-    used: allot.used,
-    limit: allot.limit,
-    remaining: allot.unlimited ? null : Math.max(0, allot.limit - allot.used),
-    auto_reload: !!(row && row.auto_reload),
-    auto_reload_error: (row && row.auto_reload_error) || null,
+    ready: !!row,
+    ...acct,
+    has_subscription: isPaidPlan(acct.plan),
+    plan_price_cents: isPaidPlan(acct.plan) ? planPriceCents(acct.plan, acct.plan_launch) : null,
+    plan_regular_cents: isPaidPlan(acct.plan) ? PLANS[acct.plan].regular_cents : null,
     card:
       row && row.stripe_payment_method
         ? { brand: row.card_brand || "", last4: row.card_last4 || "" }
         : null,
-    pack: { jobs: PACK_JOBS, price_cents: PACK_PRICE_CENTS, currency: "CAD" },
-    reload_below: RELOAD_BELOW,
+    plans,
+    topup: { apps: TOPUP.apps, price_cents: TOPUP.cents, currency: "CAD" },
     history,
   });
 }

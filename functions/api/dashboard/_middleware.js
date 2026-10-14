@@ -90,23 +90,32 @@ export async function onRequest(context) {
   const email = payload.email || payload.email_address || "";
 
   // First request from this user ever: create their row.
-  // New accounts start with 0 jobs (no free trial); they top up on the
-  // Billing page. Existing rows are untouched by the conflict clause, so
-  // older users keep their allotment. Falls back to the old insert if the
-  // job_limit column is missing.
+  // New accounts get a free trial: 3 applications, good for 48 hours (then
+  // they choose a plan on the Billing page). Existing rows are untouched by
+  // the conflict clause, so older users keep what they have. Falls back to
+  // the older inserts if the plan or job_limit columns are missing.
+  const onConflict = " ON CONFLICT(id) DO UPDATE SET email = excluded.email WHERE excluded.email != ''";
   try {
     await env.DB.prepare(
-      "INSERT INTO users (id, email, job_limit) VALUES (?, ?, 0) ON CONFLICT(id) DO UPDATE SET email = excluded.email WHERE excluded.email != ''"
+      "INSERT INTO users (id, email, job_limit, plan, plan_apps, trial_expires_at) VALUES (?, ?, 3, 'trial', 3, datetime('now', '+48 hours'))" + onConflict
     )
       .bind(userId, email)
       .run();
   } catch (e) {
-    if (!/job_limit/i.test(String(e && e.message ? e.message : e))) throw e;
-    await env.DB.prepare(
-      "INSERT INTO users (id, email) VALUES (?, ?) ON CONFLICT(id) DO UPDATE SET email = excluded.email WHERE excluded.email != ''"
-    )
-      .bind(userId, email)
-      .run();
+    const msg = String(e && e.message ? e.message : e);
+    if (!/plan|trial|job_limit/i.test(msg)) throw e;
+    try {
+      await env.DB.prepare(
+        "INSERT INTO users (id, email, job_limit) VALUES (?, ?, 0)" + onConflict
+      )
+        .bind(userId, email)
+        .run();
+    } catch (e2) {
+      if (!/job_limit/i.test(String(e2 && e2.message ? e2.message : e2))) throw e2;
+      await env.DB.prepare("INSERT INTO users (id, email) VALUES (?, ?)" + onConflict)
+        .bind(userId, email)
+        .run();
+    }
   }
 
   context.data = { userId, email };

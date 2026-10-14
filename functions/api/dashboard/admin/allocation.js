@@ -35,6 +35,11 @@ export async function onRequestPost(context) {
       }
       const cur = await getAllotment(env, userId);
       if (cur.unlimited) return json({ error: "That user is already unlimited" }, 400);
+      if (cur.trialExpired) {
+        // An ended trial would swallow the applications, so end the trial first.
+        await env.DB.prepare("UPDATE users SET plan = NULL, plan_apps = 0, trial_expires_at = NULL WHERE id = ?")
+          .bind(userId).run();
+      }
       await env.DB.prepare("UPDATE users SET job_limit = ? WHERE id = ?")
         .bind(cur.limit + amount, userId).run();
     } else if (action === "limit") {

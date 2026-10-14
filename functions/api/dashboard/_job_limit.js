@@ -21,6 +21,20 @@ export async function getAllotment(env, userId) {
   } catch (e) {
     // columns not added yet — defaults
   }
+  // Free trial: the 3 trial applications are only good until trial_expires_at.
+  // After that nothing is left, so the limit collapses to whatever was used.
+  let trialExpired = false;
+  try {
+    const t = await env.DB.prepare(
+      "SELECT plan, trial_expires_at FROM users WHERE id = ?"
+    ).bind(userId).first();
+    if (t && t.plan === "trial" && t.trial_expires_at && limit >= 0) {
+      const when = Date.parse(String(t.trial_expires_at).replace(" ", "T") + "Z");
+      if (Number.isFinite(when) && when < Date.now()) trialExpired = true;
+    }
+  } catch (e) {
+    // plan columns not added yet
+  }
   let n;
   const where = "user_id = ? AND rejected_at IS NULL" + (resetAt ? " AND created_at > ?" : "");
   const args = resetAt ? [userId, resetAt] : [userId];
@@ -29,5 +43,7 @@ export async function getAllotment(env, userId) {
   } catch (e) {
     n = await env.DB.prepare("SELECT COUNT(*) AS n FROM jobs WHERE user_id = ?").bind(userId).first();
   }
-  return { used: (n && n.n) || 0, limit: limit < 0 ? null : limit, unlimited: limit < 0, resetAt };
+  const used = (n && n.n) || 0;
+  if (trialExpired) limit = used;
+  return { used, limit: limit < 0 ? null : limit, unlimited: limit < 0, resetAt, trialExpired };
 }

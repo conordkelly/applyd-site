@@ -392,6 +392,16 @@ body {
 .usage-auto.on { color: var(--signal); }
 .usage-topup { display: block; width: 100%; margin-top: 12px; font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent-ink); background: var(--accent); border: none; border-radius: 6px; padding: 8px 11px; cursor: pointer; }
 .usage-topup[hidden] { display: none; }
+.usage-topup.ghost { background: transparent; color: var(--text); border: 1px solid var(--hairline-strong); }
+.usage-small { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: var(--text-2); margin: 8px 0 0; }
+.usage-small[hidden] { display: none; }
+.usage-btns { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin-top: 12px; }
+.usage-btns .usage-topup { margin-top: 0; }
+.usage-badge.limit .usage-auto { color: var(--accent); }
+.trial-pill { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: 0.04em; color: var(--accent); background: rgba(29,95,209,0.08); border-radius: 4px; padding: 4px 9px; margin: 0 0 12px; }
+.trial-pill[hidden] { display: none; }
+.admin-stats { display: flex; flex-wrap: wrap; gap: 20px; font-size: 13px; color: var(--text-2); margin: 0 0 16px; }
+.admin-stats b { color: var(--text); font-family: 'JetBrains Mono', monospace; }
 .usage-num { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 30px; line-height: 1; color: var(--text); }
 .usage-label { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
 .usage-bar { height: 4px; background: var(--hairline); border-radius: 2px; margin-top: 10px; overflow: hidden; }
@@ -418,14 +428,8 @@ body {
 .bill-card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 8px; padding: 18px; max-width: 560px; margin-bottom: 16px; }
 .bill-kv { display: flex; justify-content: space-between; gap: 12px; padding: 9px 0; border-top: 1px solid var(--hairline); font-size: 14px; }
 .bill-kv:first-child { border-top: none; padding-top: 0; }
-.bill-kv span:first-child { color: var(--text-2); }
-.bill-kv span:last-child { text-align: right; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
-.bill-toggle { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; border-top: 1px solid var(--hairline); }
-.bill-toggle small { display: block; color: var(--text-2); font-size: 12px; margin-top: 2px; }
-.bill-sw { width: 40px; height: 22px; border-radius: 11px; background: var(--hairline-strong); position: relative; border: none; cursor: pointer; flex: none; padding: 0; }
-.bill-sw::after { content: ""; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: var(--surface); transition: left 0.15s; }
-.bill-sw[aria-checked="true"] { background: var(--accent); }
-.bill-sw[aria-checked="true"]::after { left: 21px; background: var(--accent-ink); }
+.bill-kv > span:first-child { color: var(--text-2); }
+.bill-kv > span:last-child { text-align: right; font-family: 'JetBrains Mono', monospace; font-variant-numeric: tabular-nums; }
 .bill-actions { margin-top: 16px; display: flex; gap: 10px; flex-wrap: wrap; }
 .bill-btn { font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 12px; color: var(--accent-ink); background: var(--accent); border: none; border-radius: 6px; padding: 8px 12px; cursor: pointer; }
 .bill-btn.ghost { background: transparent; color: var(--text); border: 1px solid var(--hairline-strong); }
@@ -446,8 +450,29 @@ body {
 .bill-hist th:last-child, .bill-hist td:last-child { text-align: right; }
 .bill-hist .tag { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: var(--text-2); }
 .bill-empty { font-size: 13px; color: var(--text-2); margin: 0; }
-#topup-modal[hidden] { display: none; }
-#topup-modal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; }
+.bill-plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 760px; }
+.plan-card { background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 6px; }
+.plan-card .pname { font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
+.plan-card .pbig { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 44px; line-height: 1; }
+.plan-card .pbig small { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); margin-left: 6px; }
+.plan-card .pline { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.plan-card .pwas { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 16px; color: var(--text-3); text-decoration: line-through; }
+.plan-card .pnow { font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 28px; font-variant-numeric: tabular-nums; }
+.plan-card .pnow small { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.plan-card .psave { align-self: flex-start; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: var(--signal); border: 1px solid var(--signal); border-radius: 4px; padding: 2px 7px; margin-top: 4px; }
+.plan-card ul { margin: 12px 0 14px; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13.5px; color: var(--text-2); }
+.plan-card li::before { content: "\2713"; color: var(--signal); font-weight: 700; margin-right: 8px; }
+.plan-card .bill-btn { margin-top: auto; font-size: 14px; padding: 11px 18px; }
+.bill-fine { font-size: 12.5px; color: var(--text-2); line-height: 1.5; max-width: 62ch; margin: 14px 0 20px; }
+.bill-info { max-width: 560px; margin: 0 0 16px; padding: 12px 16px; background: var(--surface); border: 1px solid var(--accent); border-radius: 8px; font-size: 13.5px; line-height: 1.5; }
+.bill-info[hidden] { display: none; }
+.pill-launch { display: inline-block; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.04em; color: var(--signal); border: 1px solid var(--signal); border-radius: 4px; padding: 2px 7px; margin-left: 8px; vertical-align: middle; }
+.bill-split { font-size: 12.5px; color: var(--text-2); line-height: 1.5; margin: 0; padding: 0 0 8px; text-align: right; }
+.bill-kv .was { color: var(--text-3); text-decoration: line-through; margin-left: 6px; }
+#billing-plans[hidden], #billing-plan[hidden], #billing-history-card[hidden], .bill-kv[hidden], .bill-split[hidden] { display: none; }
+@media (max-width: 760px) { .bill-plans { grid-template-columns: 1fr; } }
+#topup-modal[hidden], #plan-modal[hidden] { display: none; }
+#topup-modal, #plan-modal { position: fixed; inset: 0; z-index: 60; display: flex; align-items: center; justify-content: center; padding: 16px; }
 .topup-panel { position: relative; width: 100%; max-width: 420px; background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 10px; padding: 24px; }
 .topup-panel h3 { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 26px; text-transform: uppercase; margin: 0 0 4px; }
 .topup-panel p { font-size: 14px; color: var(--text-2); margin: 0 0 16px; line-height: 1.5; }
@@ -456,9 +481,6 @@ body {
 .topup-price .n small { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); margin-left: 6px; }
 .topup-price .p { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 20px; }
 .topup-price .p small { font-size: 11px; color: var(--text-2); letter-spacing: 0.04em; }
-.topup-chk { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; line-height: 1.45; margin-bottom: 18px; cursor: pointer; }
-.topup-chk input { margin-top: 3px; width: 16px; height: 16px; accent-color: var(--accent); }
-.topup-chk small { display: block; color: var(--text-2); font-size: 12px; margin-top: 2px; }
 .topup-go { width: 100%; font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 14px; color: var(--accent-ink); background: var(--accent); border: none; border-radius: 6px; padding: 12px 22px; cursor: pointer; }
 .topup-go:disabled { opacity: 0.6; cursor: not-allowed; }
 .topup-fine { display: flex; align-items: center; justify-content: center; gap: 6px; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: 0.03em; color: var(--text-3); text-align: center; margin: 12px 0 0 !important; }
@@ -1286,6 +1308,7 @@ table.list td.shot-cell {
       <div class="onboarding-banner" id="onboarding-banner" style="display:none;">
         <button type="button" class="onboarding-dismiss" id="onboarding-dismiss" aria-label="Dismiss">×</button>
         <h3 class="onboarding-headline">Welcome to Applyd.</h3>
+        <p class="trial-pill" id="trial-pill" hidden>3 free applications. Use them within 48 hours of signing up.</p>
         <p class="onboarding-subtext">Finish these steps and we'll start applying for you.</p>
         <div class="onboarding-checklist" id="onboarding-checklist"></div>
       </div>
@@ -1299,9 +1322,10 @@ table.list td.shot-cell {
 
       <section class="tab-panel active" id="panel-submission">
         <div class="usage-badge" id="job-usage" hidden>
-          <div class="usage-top"><span class="usage-num" id="job-usage-num"></span><span class="usage-label" id="job-usage-label">Jobs Remaining</span><span class="usage-auto" id="job-usage-auto"></span></div>
+          <div class="usage-top"><span class="usage-num" id="job-usage-num"></span><span class="usage-label" id="job-usage-label">Applications Remaining</span><span class="usage-auto" id="job-usage-auto"></span></div>
           <div class="usage-bar"><i id="job-usage-fill"></i></div>
-          <button type="button" class="usage-topup" id="job-usage-topup">Top Up</button>
+          <p class="usage-small" id="job-usage-small" hidden></p>
+          <div class="usage-btns" id="job-usage-btns"></div>
         </div>
         <div class="panel-head">
           <h2>Jobs Submission</h2>
@@ -1371,13 +1395,23 @@ table.list td.shot-cell {
       <div class="report-backdrop" id="topup-backdrop"></div>
       <div class="topup-panel" role="dialog" aria-modal="true" aria-labelledby="topup-title">
         <h3 id="topup-title">Top Up</h3>
-        <p>You pay on Stripe's secure page. Applyd never sees your card.</p>
-        <div class="topup-price"><div class="n">25<small>jobs</small></div><div class="p">$2.99 <small>CAD</small></div></div>
-        <label class="topup-chk" for="topup-auto"><input type="checkbox" id="topup-auto" checked><span>Auto-reload when I have fewer than 10 jobs left<small>Charges $2.99 CAD for 25 more jobs. Turn it off any time under Billing.</small></span></label>
+        <p>You pay on Stripe's secure page. Applyd never sees your card. Top-up applications never expire, and they are used after your plan applications.</p>
+        <div class="topup-price"><div class="n">10<small>applications</small></div><div class="p">$6.99 <small>CAD</small></div></div>
         <p class="topup-err" id="topup-err" hidden></p>
         <button type="button" class="topup-go" id="topup-go">Continue to payment</button>
         <p class="topup-fine">Powered by <img class="topup-stripe" alt="Stripe" src="data:image/png;base64,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"></p>
         <button type="button" class="topup-close" id="topup-close">Cancel</button>
+      </div>
+    </div>
+
+    <div id="plan-modal" hidden>
+      <div class="report-backdrop" id="plan-backdrop"></div>
+      <div class="topup-panel" role="dialog" aria-modal="true" aria-labelledby="plan-title">
+        <h3 id="plan-title">Change plan</h3>
+        <p id="plan-text"></p>
+        <p class="topup-err" id="plan-err" hidden></p>
+        <button type="button" class="topup-go" id="plan-go">Switch plan</button>
+        <button type="button" class="topup-close" id="plan-close">Cancel</button>
       </div>
     </div>
 
@@ -1692,21 +1726,34 @@ table.list td.shot-cell {
     <div id="billing-section" style="display:none;">
       <div class="panel-head">
         <h2>Billing</h2>
-        <p>Pay as you go. $2.99 CAD buys 25 automated applications. Your jobs do not expire.</p>
-        <div class="bill-alert" id="billing-alert" role="alert" hidden><div class="ic">!</div><div><b>Auto-reload is off</b><span>Your card could not be charged. Update your card, then turn auto-reload back on.</span></div></div>
+        <p id="billing-sub" hidden></p>
+        <div class="bill-alert" id="billing-alert" role="alert" hidden><div class="ic">!</div><div><b>Your payment failed</b><span id="billing-alert-text"></span></div></div>
+        <div class="bill-info" id="billing-info" hidden></div>
         <p class="bill-msg" id="billing-msg" hidden></p>
       </div>
-      <div class="bill-card">
-        <div class="bill-kv"><span>Jobs remaining</span><span id="billing-remaining">-</span></div>
-        <div class="bill-kv"><span>Card on file</span><span id="billing-card">-</span></div>
-        <div class="bill-toggle">
-          <div>Auto-reload<small>Adds 25 jobs for $2.99 CAD when you have fewer than 10 left.</small></div>
-          <button type="button" class="bill-sw" id="billing-auto" role="switch" aria-checked="false" aria-label="Auto-reload"></button>
+      <div id="billing-plans" hidden>
+        <p class="bill-msg" id="billing-note" hidden></p>
+        <div class="bill-plans" id="billing-plan-cards"></div>
+        <p class="bill-fine" id="billing-fine"></p>
+      </div>
+      <div id="billing-plan" hidden>
+        <div class="bill-card">
+          <div class="bill-kv"><span>Plan</span><span id="bp-plan">-</span></div>
+          <div class="bill-kv"><span>Price</span><span id="bp-price">-</span></div>
+          <div class="bill-kv"><span>Applications remaining</span><span id="bp-remaining">-</span></div>
+          <p class="bill-split" id="bp-split"></p>
+          <div class="bill-kv"><span id="bp-end-label">Renews</span><span id="bp-end">-</span></div>
+          <div class="bill-kv" id="bp-pending-row" hidden><span>Next plan</span><span id="bp-pending">-</span></div>
+          <div class="bill-kv"><span>Card on file</span><span id="bp-card">-</span></div>
+          <div class="bill-actions">
+            <button type="button" class="bill-btn" id="bp-topup">Top Up</button>
+            <button type="button" class="bill-btn ghost" id="bp-change">Change plan</button>
+            <button type="button" class="bill-btn ghost" id="bp-update-card">Update card</button>
+            <button type="button" class="bill-btn ghost" id="bp-cancel">Cancel subscription</button>
+            <button type="button" class="bill-btn" id="bp-resume" hidden>Resume subscription</button>
+          </div>
         </div>
-        <div class="bill-actions">
-          <button type="button" class="bill-btn" id="billing-topup">Top Up</button>
-          <button type="button" class="bill-btn ghost" id="billing-update-card" hidden>Update card</button>
-        </div>
+        <p class="bill-fine" id="bp-fine"></p>
       </div>
       <div class="bill-card" id="billing-history-card">
         <table class="bill-hist">
@@ -3171,7 +3218,7 @@ table.list td.shot-cell {
     var gaps = profileCompletenessGaps(collectProfileForm());
     if (!gaps.length) {
       btn.disabled = jobsAtLimit();
-      btn.title = jobsAtLimit() ? 'You have used all of your jobs' : '';
+      btn.title = jobsAtLimit() ? 'You are out of applications' : '';
       if (note.dataset.gate === '1') {
         note.style.display = 'none';
         note.textContent = '';
@@ -3655,68 +3702,125 @@ table.list td.shot-cell {
     return !!(jobUsage && !jobUsage.unlimited && jobUsage.used >= jobUsage.limit);
   }
 
+  function money(cents) { return '$' + (cents / 100).toFixed(2); }
+
+  function localDateOnly(iso) {
+    var f = iso ? formatLocalDateTime(iso) : null;
+    return f ? f.date : '';
+  }
+
+  function hoursText(iso) {
+    var ms = new Date(iso).getTime() - Date.now();
+    var h = isNaN(ms) || ms <= 0 ? 0 : Math.ceil(ms / 3600000);
+    return h <= 1 ? 'less than an hour' : h + ' hours';
+  }
+
+  function isPaidPlan(plan) { return plan === 'starter' || plan === 'plus'; }
+
   function renderJobUsage() {
+    var u = jobUsage;
     var badge = document.getElementById('job-usage');
     var msg = document.getElementById('job-usage-msg');
-    if (!badge || !jobUsage) return;
+    if (!badge || !u) return;
     var num = document.getElementById('job-usage-num');
     var label = document.getElementById('job-usage-label');
     var fill = document.getElementById('job-usage-fill');
-    var auto = document.getElementById('job-usage-auto');
-    var topup = document.getElementById('job-usage-topup');
+    var tag = document.getElementById('job-usage-auto');
+    var small = document.getElementById('job-usage-small');
+    var btns = document.getElementById('job-usage-btns');
+    var pill = document.getElementById('trial-pill');
     badge.hidden = false;
-    if (jobUsage.unlimited) {
-      num.textContent = String(jobUsage.used);
-      label.textContent = 'Jobs submitted';
-      fill.style.width = '0';
-      auto.textContent = '';
-      topup.hidden = true;
-      badge.classList.remove('limit');
-      msg.hidden = true;
+
+    var trialActive = u.plan === 'trial' && !u.trial_expired && !u.unlimited;
+    if (pill) pill.hidden = !trialActive;
+
+    var note = '', alert = false, bar = 0, tagText = '', tagOn = false, smallText = '', buttons = [];
+    if (u.unlimited) {
+      num.textContent = String(u.used);
+      label.textContent = 'Applications submitted';
     } else {
-      var remaining = Math.max(0, jobUsage.limit - jobUsage.used);
-      var low = remaining < 10;
+      var remaining = u.remaining;
       num.textContent = String(remaining);
-      label.textContent = 'Jobs Remaining';
-      // Bar is full at one pack (25) or more, empty at 0.
-      fill.style.width = Math.min(100, Math.round(remaining / 25 * 100)) + '%';
-      auto.textContent = jobUsage.auto_reload ? 'Auto-reload on' : 'Auto-reload off';
-      auto.classList.toggle('on', !!jobUsage.auto_reload);
-      topup.hidden = false;
-      badge.classList.toggle('limit', low);
-      if (remaining <= 0) {
-        msg.textContent = 'You are out of jobs. Top up with 25 jobs for $2.99 CAD to keep applying.';
-        msg.hidden = false;
-      } else if (low) {
-        msg.textContent = jobUsage.auto_reload
-          ? 'Only ' + remaining + ' jobs left. Auto-reload will add 25 more for $2.99 CAD when you next submit.'
-          : 'Only ' + remaining + ' jobs left. Top up to keep applying without a break.';
-        msg.hidden = false;
+      if (trialActive) {
+        label.textContent = 'Free Applications';
+        tagText = 'Free trial'; tagOn = true;
+        bar = Math.round(remaining / 3 * 100);
+        smallText = remaining > 0 ? 'Use them in the next ' + hoursText(u.trial_expires_at) : '';
+        buttons = [['Choose a plan', 'plans', '']];
+        if (remaining <= 0) { alert = true; note = 'You have used your free applications. Choose a plan to keep applying.'; }
+      } else if (u.plan === 'trial') {
+        label.textContent = 'Applications Left';
+        tagText = 'Trial ended'; alert = true;
+        note = 'Your free trial has ended. Choose a plan to keep applying.';
+        buttons = [['Choose a plan', 'plans', '']];
+      } else if (isPaidPlan(u.plan)) {
+        label.textContent = 'Applications Remaining';
+        tagText = u.plan_name; tagOn = true;
+        bar = Math.min(100, Math.round(remaining / Math.max(u.plan_apps, 1) * 100));
+        var renew = localDateOnly(u.plan_period_end);
+        var more = u.plan === 'starter' ? [['Upgrade to Plus', 'plans', 'ghost'], ['Top Up', 'topup', '']] : [['Top Up', 'topup', '']];
+        if (remaining <= 0) {
+          alert = true;
+          note = 'You are out of applications. Top up with 10 for $6.99 CAD, ' + (u.plan === 'starter' ? 'upgrade to Plus, ' : '') +
+            (u.plan_status === 'canceling' ? 'or choose a plan again after ' + renew + '.' : 'or wait for your plan to renew' + (renew ? ' on ' + renew : '') + '.');
+          buttons = more;
+        } else if (remaining <= 3) {
+          alert = true;
+          note = 'Only ' + remaining + ' application' + (remaining === 1 ? '' : 's') + ' left. Top up now' + (renew && u.plan_status !== 'canceling' ? ', or your plan resets on ' + renew : '') + '.';
+          buttons = [['Top Up', 'topup', '']];
+        } else {
+          buttons = [['Top Up', 'topup', '']];
+        }
       } else {
-        msg.hidden = true;
+        label.textContent = 'Applications Remaining';
+        tagText = 'No plan';
+        bar = Math.min(100, Math.round(remaining / 15 * 100));
+        if (remaining <= 0) { alert = true; note = 'You are out of applications. Choose a plan to keep applying.'; }
+        buttons = [['Choose a plan', 'plans', '']];
       }
     }
+    fill.style.width = bar + '%';
+    tag.textContent = tagText;
+    tag.classList.toggle('on', tagOn);
+    small.textContent = smallText;
+    small.hidden = !smallText;
+    btns.innerHTML = buttons.map(function (b) {
+      return '<button type="button" class="usage-topup' + (b[2] ? ' ' + b[2] : '') + '" data-act="' + b[1] + '">' + b[0] + '</button>';
+    }).join('');
+    badge.classList.toggle('limit', alert);
+    msg.textContent = note;
+    msg.hidden = !note;
     updateJobSubmitGate();
   }
 
-  document.getElementById('job-usage-topup').addEventListener('click', function () {
-    showBillingView();
-    window.scrollTo(0, 0);
+  document.getElementById('job-usage-btns').addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('button[data-act]') : null;
+    if (!btn) return;
+    if (btn.getAttribute('data-act') === 'topup') {
+      openTopup();
+    } else {
+      showBillingView();
+      window.scrollTo(0, 0);
+    }
   });
 
-  // ---- Billing (pay as you go, Stripe Checkout) ----
+  // ---- Billing (monthly plans and top-ups, Stripe Checkout) ----
   var billingData = null;
   var billingEls = {
+    sub: document.getElementById('billing-sub'),
     msg: document.getElementById('billing-msg'),
+    note: document.getElementById('billing-note'),
     alert: document.getElementById('billing-alert'),
-    remaining: document.getElementById('billing-remaining'),
-    card: document.getElementById('billing-card'),
-    auto: document.getElementById('billing-auto'),
-    topup: document.getElementById('billing-topup'),
-    updateCard: document.getElementById('billing-update-card'),
+    alertText: document.getElementById('billing-alert-text'),
+    info: document.getElementById('billing-info'),
+    plans: document.getElementById('billing-plans'),
+    planCards: document.getElementById('billing-plan-cards'),
+    fine: document.getElementById('billing-fine'),
+    plan: document.getElementById('billing-plan'),
     history: document.getElementById('billing-history'),
     historyEmpty: document.getElementById('billing-history-empty')
   };
+  function $b(id) { return document.getElementById(id); }
 
   function setBillingMsg(text, kind) {
     billingEls.msg.textContent = text || '';
@@ -3724,37 +3828,108 @@ table.list td.shot-cell {
     billingEls.msg.hidden = !text;
   }
 
+  function planNameForApps(n) { return n === 15 ? 'Starter' : n === 40 ? 'Plus' : ''; }
+
   function renderBilling() {
     var b = billingData;
     if (!b) return;
-    billingEls.remaining.textContent = b.unlimited ? 'Unlimited' : String(b.remaining);
-    billingEls.card.textContent = b.card
-      ? ((b.card.brand ? b.card.brand.charAt(0).toUpperCase() + b.card.brand.slice(1) + ' ' : '') + 'ending ' + b.card.last4)
-      : 'None yet';
-    billingEls.auto.setAttribute('aria-checked', b.auto_reload ? 'true' : 'false');
-    billingEls.updateCard.hidden = !b.card;
-    billingEls.topup.disabled = !b.configured;
-    billingEls.alert.hidden = !b.auto_reload_error;
-    if (!b.configured) {
-      setBillingMsg('Payments are not set up yet. Please check back soon.', 'err');
+    var paid = b.has_subscription;
+    var launch = !!b.plan_launch;
+    var endDate = localDateOnly(b.plan_period_end);
+
+    billingEls.alert.hidden = !(paid && b.plan_status === 'past_due');
+    billingEls.alertText.textContent = 'We could not charge your card for this month. Update your card to keep your plan' +
+      (launch ? ' and your launch price' : '') + '. We will try again soon.';
+    if (paid && b.plan_status === 'canceling') {
+      billingEls.info.innerHTML = 'Your plan ends on <b>' + escapeHtml(endDate) + '</b>. You can keep using your ' + b.plan_remaining +
+        ' plan applications until then.' + (launch ? ' Resume your subscription before that date to keep your launch price.' : '');
+      billingEls.info.hidden = false;
+    } else {
+      billingEls.info.hidden = true;
     }
+    if (!b.configured) setBillingMsg('Payments are not set up yet. Please check back soon.', 'err');
+    else if (!b.ready) setBillingMsg('Billing is still being set up. Please check back soon.', 'err');
+
+    billingEls.plans.hidden = paid;
+    billingEls.plan.hidden = !paid;
+
+    if (!paid) {
+      billingEls.sub.hidden = true;
+      var noteText = '';
+      if (b.plan === 'trial' && !b.trial_expired && !b.unlimited) {
+        noteText = 'You have ' + b.remaining + ' free application' + (b.remaining === 1 ? '' : 's') + ' left. Use them in the next ' + hoursText(b.trial_expires_at) + '.';
+      } else if (!b.unlimited && b.remaining > 0 && b.plan !== 'trial') {
+        noteText = 'You have ' + b.remaining + ' application' + (b.remaining === 1 ? '' : 's') + ' remaining.';
+      }
+      billingEls.note.textContent = noteText;
+      billingEls.note.className = 'bill-msg ok';
+      billingEls.note.hidden = !noteText;
+      var anyLaunch = (b.plans || []).some(function (p) { return p.launch; });
+      billingEls.planCards.innerHTML = (b.plans || []).map(function (p) {
+        var save = p.launch ? p.regular_cents - p.price_cents : 0;
+        return '<div class="plan-card"><div class="pname">' + escapeHtml(p.name) + '</div>' +
+          '<div class="pbig">' + p.apps + '<small>applications / month</small></div>' +
+          '<div class="pline">' + (p.launch ? '<span class="pwas">' + money(p.regular_cents) + '</span>' : '') +
+          '<span class="pnow">' + money(p.price_cents) + '<small> / month</small></span></div>' +
+          (save > 0 ? '<div class="psave">Save ' + money(save) + ' every month</div>' : '') +
+          '<ul><li>Cancel any time</li>' + (p.launch ? '<li>Launch price locked while subscribed</li>' : '') + '</ul>' +
+          '<button type="button" class="bill-btn" data-plan="' + escapeHtml(p.id) + '"' + (b.configured && b.ready ? '' : ' disabled') + '>Subscribe for ' + money(p.price_cents) + '</button></div>';
+      }).join('');
+      billingEls.fine.textContent = 'Prices in CAD. You pay on Stripe\'s secure page and Applyd never sees your card.' +
+        (anyLaunch ? ' If you cancel and come back later, the regular price applies.' : '') +
+        ' Plan applications reset every month. You can add top-up applications any time, and those never expire.';
+    } else {
+      billingEls.sub.textContent = 'You are on the ' + b.plan_name + ' plan. Plan applications reset on each renewal date. Top-up applications never expire.';
+      billingEls.sub.hidden = false;
+      $b('bp-plan').innerHTML = escapeHtml(b.plan_name) + (launch ? '<span class="pill-launch">Launch price</span>' : '');
+      $b('bp-price').innerHTML = money(b.plan_price_cents) + ' / month' + (launch ? '<span class="was">' + money(b.plan_regular_cents) + '</span>' : '');
+      $b('bp-remaining').textContent = b.unlimited ? 'Unlimited' : String(b.remaining);
+      var split = '';
+      if (!b.unlimited) {
+        split = b.plan_remaining + ' from your plan, ' + (b.plan_status === 'canceling' ? 'until ' : 'resets ') + escapeHtml(endDate);
+        if (b.topup_remaining > 0) split += '<br>' + b.topup_remaining + ' top-up, never expire';
+      }
+      $b('bp-split').innerHTML = split;
+      $b('bp-split').hidden = !split;
+      $b('bp-end-label').textContent = b.plan_status === 'canceling' ? 'Ends' : 'Renews';
+      $b('bp-end').textContent = endDate || '-';
+      $b('bp-pending-row').hidden = !b.plan_pending;
+      if (b.plan_pending) {
+        var pend = (b.plans || []).filter(function (p) { return p.id === b.plan_pending; })[0];
+        $b('bp-pending').textContent = (pend ? pend.name : b.plan_pending) + ' from ' + endDate;
+      }
+      $b('bp-card').textContent = b.card
+        ? ((b.card.brand ? b.card.brand.charAt(0).toUpperCase() + b.card.brand.slice(1) + ' ' : '') + 'ending ' + b.card.last4)
+        : 'None yet';
+      var canceling = b.plan_status === 'canceling';
+      $b('bp-change').hidden = canceling;
+      $b('bp-cancel').hidden = canceling;
+      $b('bp-resume').hidden = !canceling;
+      $b('bp-update-card').hidden = !b.card;
+      $b('bp-topup').disabled = !b.configured;
+      $b('bp-fine').textContent = canceling
+        ? ''
+        : 'Cancelling keeps your plan applications until the renewal date.' + (launch ? ' If you cancel, you lose the launch price.' : '');
+    }
+
     billingEls.history.innerHTML = '';
-    billingEls.historyEmpty.hidden = !!(b.history && b.history.length);
+    var hasHistory = !!(b.history && b.history.length);
+    billingEls.historyEmpty.hidden = hasHistory;
+    $b('billing-history-card').hidden = !hasHistory;
     (b.history || []).forEach(function (h) {
       var when = formatLocalDateTime(h.created_at);
       var tr = document.createElement('tr');
       var d = document.createElement('td');
       d.textContent = when ? when.date : '';
       var desc = document.createElement('td');
-      desc.textContent = h.jobs + ' jobs ';
-      if (h.kind === 'auto') {
-        var tag = document.createElement('span');
-        tag.className = 'tag';
-        tag.textContent = 'auto-reload';
-        desc.appendChild(tag);
-      }
+      var pn = planNameForApps(h.jobs);
+      if (h.kind === 'plan') desc.textContent = (pn ? pn + ', ' : '') + h.jobs + ' applications';
+      else if (h.kind === 'renewal') desc.textContent = (pn ? pn + ' renewal, ' : 'Renewal, ') + h.jobs + ' applications';
+      else if (h.kind === 'auto') desc.textContent = h.jobs + ' jobs (auto-reload)';
+      else if (h.jobs === 25) desc.textContent = '25 jobs';
+      else desc.textContent = 'Top-up, ' + h.jobs + ' applications';
       var amt = document.createElement('td');
-      amt.textContent = '$' + (h.amount_cents / 100).toFixed(2);
+      amt.textContent = money(h.amount_cents);
       tr.appendChild(d);
       tr.appendChild(desc);
       tr.appendChild(amt);
@@ -3771,12 +3946,12 @@ table.list td.shot-cell {
     }
   }
 
+  // ---- Top Up dialog ----
   var topupModal = document.getElementById('topup-modal');
   var topupGo = document.getElementById('topup-go');
   var topupErr = document.getElementById('topup-err');
 
-  function openTopup(autoChecked) {
-    document.getElementById('topup-auto').checked = autoChecked;
+  function openTopup() {
     topupErr.hidden = true;
     topupGo.disabled = false;
     topupGo.textContent = 'Continue to payment';
@@ -3793,10 +3968,11 @@ table.list td.shot-cell {
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      // Remember where the allotment stood so the return trip can tell when
-      // the webhook has added the jobs.
+      // Remember where things stood so the return trip can tell when the
+      // webhook has added the applications or started the plan.
       try {
-        if (billingData && billingData.limit != null) sessionStorage.setItem('applyd_bill_limit', String(billingData.limit));
+        var base = billingData || jobUsage;
+        if (base) sessionStorage.setItem('applyd_bill_base', JSON.stringify({ remaining: base.remaining, plan: base.plan || null }));
       } catch (e) {}
       window.location.href = res.url;
     } catch (e) {
@@ -3806,46 +3982,109 @@ table.list td.shot-cell {
     }
   }
 
-  billingEls.topup.addEventListener('click', function () {
-    // Pre-tick auto-reload unless they already have a card and turned it off.
-    var keepOff = !!(billingData && billingData.card && !billingData.auto_reload);
-    openTopup(!keepOff);
-  });
   topupGo.addEventListener('click', function () {
-    startCheckout({ auto_reload: document.getElementById('topup-auto').checked }, topupGo, 'Continue to payment', function (m) {
+    startCheckout({ kind: 'topup' }, topupGo, 'Continue to payment', function (m) {
       topupErr.textContent = m;
       topupErr.hidden = false;
     });
   });
   document.getElementById('topup-close').addEventListener('click', closeTopup);
   document.getElementById('topup-backdrop').addEventListener('click', closeTopup);
-  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && !topupModal.hidden) closeTopup(); });
+  $b('bp-topup').addEventListener('click', openTopup);
 
-  billingEls.updateCard.addEventListener('click', function () {
-    startCheckout({ update_card: true }, billingEls.updateCard, 'Update card', function (m) {
+  billingEls.planCards.addEventListener('click', function (e) {
+    var btn = e.target.closest ? e.target.closest('button[data-plan]') : null;
+    if (!btn) return;
+    startCheckout({ kind: 'plan', plan: btn.getAttribute('data-plan') }, btn, btn.textContent, function (m) {
       setBillingMsg(m, 'err');
     });
   });
 
-  billingEls.auto.addEventListener('click', async function () {
-    if (!billingData) return;
-    var turningOn = !billingData.auto_reload;
-    if (turningOn && !billingData.card) { openTopup(true); return; }
+  $b('bp-update-card').addEventListener('click', function () {
+    startCheckout({ kind: 'card' }, $b('bp-update-card'), 'Update card', function (m) {
+      setBillingMsg(m, 'err');
+    });
+  });
+
+  // ---- Change / cancel / resume ----
+  async function postSubscription(payload) {
+    return apiFetch('/api/dashboard/billing/subscription', { method: 'POST', body: JSON.stringify(payload) });
+  }
+
+  var planModal = document.getElementById('plan-modal');
+  var planGo = document.getElementById('plan-go');
+  var planErr = document.getElementById('plan-err');
+  var planTarget = null;
+  function closePlanModal() { planModal.hidden = true; }
+
+  $b('bp-change').addEventListener('click', function () {
+    var b = billingData;
+    if (!b) return;
+    var other = b.plan === 'starter' ? 'plus' : 'starter';
+    planTarget = b.plan_pending ? b.plan : other;
+    var tp = (b.plans || []).filter(function (p) { return p.id === planTarget; })[0];
+    var name = tp ? tp.name : planTarget;
+    document.getElementById('plan-title').textContent = planTarget === b.plan ? 'Keep ' + name : 'Switch to ' + name;
+    document.getElementById('plan-text').textContent = planTarget === b.plan
+      ? 'Stay on ' + name + ' and cancel your planned switch.'
+      : name + (tp ? ' is ' + tp.apps + ' applications a month for ' + money(tp.price_cents) + ' CAD.' : '.') +
+        ' It starts on your next renewal, ' + localDateOnly(b.plan_period_end) + '. Until then you keep your current plan.';
+    planGo.textContent = planTarget === b.plan ? 'Keep ' + name : 'Switch to ' + name;
+    planGo.disabled = false;
+    planErr.hidden = true;
+    planModal.hidden = false;
+    planGo.focus();
+  });
+  planGo.addEventListener('click', async function () {
+    planGo.disabled = true;
     try {
-      await apiFetch('/api/dashboard/billing/auto-reload', {
-        method: 'POST',
-        body: JSON.stringify({ enabled: turningOn })
-      });
-      setBillingMsg(turningOn ? 'Auto-reload is on.' : 'Auto-reload is off.', 'ok');
+      await postSubscription({ action: 'change', plan: planTarget });
+      closePlanModal();
+      setBillingMsg('Plan change saved.', 'ok');
+      await loadBilling();
+    } catch (e) {
+      planErr.textContent = (e && e.message) || 'Could not change your plan.';
+      planErr.hidden = false;
+      planGo.disabled = false;
+    }
+  });
+  document.getElementById('plan-close').addEventListener('click', closePlanModal);
+  document.getElementById('plan-backdrop').addEventListener('click', closePlanModal);
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    if (!topupModal.hidden) closeTopup();
+    if (!planModal.hidden) closePlanModal();
+  });
+
+  $b('bp-cancel').addEventListener('click', async function () {
+    var b = billingData;
+    if (!b) return;
+    var msg = 'Cancel your subscription? You keep your plan applications until ' + localDateOnly(b.plan_period_end) + '.' +
+      (b.plan_launch ? ' You will lose your launch price.' : '');
+    if (!window.confirm(msg)) return;
+    try {
+      await postSubscription({ action: 'cancel' });
+      setBillingMsg('', '');
       await loadBilling();
       loadJobs();
     } catch (e) {
-      setBillingMsg((e && e.message) || 'Could not change auto-reload.', 'err');
+      setBillingMsg((e && e.message) || 'Could not cancel.', 'err');
+    }
+  });
+  $b('bp-resume').addEventListener('click', async function () {
+    try {
+      await postSubscription({ action: 'resume' });
+      setBillingMsg('Your subscription will keep renewing.', 'ok');
+      await loadBilling();
+      loadJobs();
+    } catch (e) {
+      setBillingMsg((e && e.message) || 'Could not resume.', 'err');
     }
   });
 
   // Back from Stripe: /dashboard/?billing=success|cancel|card. The webhook
-  // adds the jobs, which can land a moment after the redirect, so poll briefly.
+  // starts the plan or adds the applications, which can land a moment after
+  // the redirect, so poll briefly.
   async function handleBillingReturn() {
     var params = new URLSearchParams(window.location.search);
     var state = params.get('billing');
@@ -3856,23 +4095,24 @@ table.list td.shot-cell {
       setBillingMsg('Checkout canceled. You were not charged.', '');
       return;
     }
-    var baseline = null;
-    try { baseline = parseInt(sessionStorage.getItem('applyd_bill_limit'), 10); } catch (e) {}
-    if (isNaN(baseline)) baseline = null;
-    setBillingMsg(state === 'success' ? 'Payment received. Adding your jobs...' : 'Saving your new card...', 'ok');
+    var base = null;
+    try { base = JSON.parse(sessionStorage.getItem('applyd_bill_base')); } catch (e) {}
+    setBillingMsg(state === 'success' ? 'Payment received. Setting up your applications...' : 'Saving your new card...', 'ok');
     var done = false;
     for (var i = 0; i < 10 && !done; i++) {
       await loadBilling();
+      var b = billingData;
       if (state === 'card') { done = i >= 1; }
-      else if (billingData && (billingData.unlimited || (baseline !== null && billingData.limit > baseline))) { done = true; }
-      else if (baseline === null && i >= 2) { done = true; }
+      else if (b && b.unlimited) { done = true; }
+      else if (b && base && ((b.plan || null) !== base.plan || b.remaining > base.remaining)) { done = true; }
+      else if (!base && i >= 2) { done = true; }
       if (!done) await new Promise(function (r) { setTimeout(r, 2000); });
     }
-    try { sessionStorage.removeItem('applyd_bill_limit'); } catch (e) {}
+    try { sessionStorage.removeItem('applyd_bill_base'); } catch (e) {}
     loadJobs();
     if (state === 'card') setBillingMsg('Card updated.', 'ok');
-    else if (done) setBillingMsg('Payment received. Your jobs are added.', 'ok');
-    else setBillingMsg('Payment received. Your jobs can take a minute to appear. Refresh this page shortly.', 'ok');
+    else if (done) setBillingMsg('Payment received. Your applications are ready.', 'ok');
+    else setBillingMsg('Payment received. Your applications can take a minute to appear. Refresh this page shortly.', 'ok');
   }
 
   async function loadJobs() {
@@ -4162,17 +4402,36 @@ table.list td.shot-cell {
         container.innerHTML = '<div class="empty-state">No users yet.</div>';
         return;
       }
-      container.innerHTML = data.users.map(function (u) {
+      var st = data.stats || {};
+      var stats = '<div class="admin-stats"><span>Launch spots used: <b>' + (st.launch_spots_used || 0) + ' of ' + (st.launch_spots || 15) +
+        '</b></span><span>Active subscribers: <b>' + (st.active_subscribers || 0) + '</b></span><span>Free trials running: <b>' + (st.trials_running || 0) + '</b></span></div>';
+      container.innerHTML = stats + data.users.map(function (u) {
+        var us = u.usage || {};
+        var planText = 'None', dateText = '';
+        if (isPaidPlan(us.plan)) {
+          planText = us.plan_name + (us.plan_launch ? ', launch price' : '') +
+            (us.plan_status === 'canceling' ? ', ending' : us.plan_status === 'past_due' ? ', payment failed' : '');
+          var pe = localDateOnly(us.plan_period_end);
+          dateText = pe ? (us.plan_status === 'canceling' ? 'Ends: ' : 'Renews: ') + pe : '';
+        } else if (us.plan === 'trial') {
+          planText = 'Free trial' + (us.trial_expired ? ', ended' : '');
+          var te = us.trial_expires_at ? formatLocalDateTime(us.trial_expires_at) : null;
+          dateText = te ? (us.trial_expired ? 'Ended: ' : 'Expires: ') + te.date + ', ' + te.time : '';
+        }
+        var left = us.unlimited
+          ? 'Allotment: <b>' + us.used + ' / unlimited</b>'
+          : 'Remaining: <b>' + us.remaining + '</b>' + (us.plan_apps > 0 ? ' (' + us.plan_remaining + ' plan, ' + us.topup_remaining + ' top-up)' : '');
         return '<div class="user-group">' +
           '<div class="user-group-head"><span class="email">' + escapeHtml(u.email || u.id) + '</span>' +
-          '<span class="count">' + u.jobs.length + ' job(s)</span></div>' +
+          '<span class="count">' + u.jobs.length + ' application(s) submitted</span></div>' +
+          '<div class="alloc-row"><span>Plan: <b>' + escapeHtml(planText) + '</b></span>' + (dateText ? '<span>' + escapeHtml(dateText) + '</span>' : '') + '</div>' +
           '<div class="alloc-row" data-uid="' + escapeHtml(u.id) + '">' +
-          '<span>Allotment: <b>' + (u.usage ? (u.usage.unlimited ? u.usage.used + ' / unlimited' : u.usage.used + ' / ' + u.usage.limit) : '?') + '</b></span>' +
-          '<input type="number" min="1" max="10000" value="25" class="alloc-amt" aria-label="Number of jobs">' +
-          (u.usage && u.usage.unlimited
+          '<span>' + left + '</span>' +
+          '<input type="number" min="1" max="10000" value="25" class="alloc-amt" aria-label="Number of applications">' +
+          (us.unlimited
             ? '<button type="button" class="alloc-btn" data-act="limit">Make limited</button>' +
               '<button type="button" class="alloc-btn" data-act="reset">Reset usage</button>'
-            : '<button type="button" class="alloc-btn" data-act="add">Add jobs</button>' +
+            : '<button type="button" class="alloc-btn" data-act="add">Add applications</button>' +
               '<button type="button" class="alloc-btn" data-act="reset">Reset usage</button>' +
               '<button type="button" class="alloc-btn" data-act="unlimited">Make unlimited</button>') +
           '</div>' +
@@ -4348,9 +4607,7 @@ table.list td.shot-cell {
         body: JSON.stringify({ links: links })
       });
       loadJobs();
-      note.textContent = 'Submitted ' + res.submitted + ' role(s) — moved to Jobs Processing.' +
-        (res.auto_reload === 'reloaded' ? ' Auto-reload added 25 more jobs.' : '') +
-        (res.auto_reload === 'failed' ? ' Auto-reload could not charge your card and is now off. Update your card on the Billing page.' : '');
+      note.textContent = 'Submitted ' + res.submitted + ' role(s) — moved to Jobs Processing.';
       note.className = 'submit-note ok';
       note.style.display = 'block';
       delete note.dataset.gate;

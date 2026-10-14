@@ -1,6 +1,5 @@
 import { profileCompletenessGaps } from "./_profile_completeness.js";
-import { getAllotment } from "./_job_limit.js";
-import { getAutoReload, maybeAutoReload } from "./_billing.js";
+import { accountSummary } from "./_billing.js";
 import { sendEmail, buildJobSubmissionEmail } from "../_email.js";
 
 const USER_COMPLETE_DELAY_MINUTES = 2;
@@ -79,8 +78,7 @@ export async function onRequestGet(context) {
     .map(withShot);
   const unable_to_process = results.filter(isRejected).map(withShot);
 
-  const usage = await getAllotment(env, data.userId);
-  usage.auto_reload = await getAutoReload(env, data.userId);
+  const usage = await accountSummary(env, data.userId);
   return json({ processing, completed, unable_to_process, usage });
 }
 
@@ -150,13 +148,18 @@ export async function onRequestPost(context) {
     );
   }
 
-  const { used, limit: jobLimit, unlimited } = await getAllotment(env, data.userId);
-  const remaining = unlimited ? Infinity : jobLimit - used;
+  const acct = await accountSummary(env, data.userId);
+  const { used, limit: jobLimit, unlimited } = acct;
+  const remaining = unlimited ? Infinity : Math.max(0, jobLimit - used);
   if (remaining <= 0) {
+    const hasPlan = acct.plan === "starter" || acct.plan === "plus";
     return json(
       {
-        error:
-          "You're out of jobs. Top up on the Billing page to keep applying.",
+        error: acct.trial_expired
+          ? "Your free trial has ended. Choose a plan on the Billing page to keep applying."
+          : hasPlan
+          ? "You're out of applications. Top up or upgrade on the Billing page."
+          : "You're out of applications. Choose a plan on the Billing page to keep applying.",
         used,
         limit: jobLimit,
       },
@@ -168,7 +171,7 @@ export async function onRequestPost(context) {
       {
         error:
           "You have " + remaining +
-          " jobs left, but tried to submit " + cleaned.length +
+          " applications left, but tried to submit " + cleaned.length +
           ". Remove some links, or top up on the Billing page.",
         used,
         limit: jobLimit,
@@ -181,10 +184,6 @@ export async function onRequestPost(context) {
     "INSERT INTO jobs (user_id, job_url, status) VALUES (?, ?, 'processing')"
   );
   await env.DB.batch(cleaned.map((url) => stmt.bind(data.userId, url)));
-
-  // Pay-as-you-go: if this submission left them under 10 jobs and they have
-  // auto-reload on, charge the saved card for another pack. Never throws.
-  const reload = await maybeAutoReload(env, data.userId);
 
   // Notify the Applyd inbox. Runs after the response so a mail failure
   // never affects the user's submission.
@@ -210,7 +209,7 @@ export async function onRequestPost(context) {
   })();
   if (typeof waitUntil === "function") waitUntil(notify);
 
-  return json({ ok: true, submitted: cleaned.length, auto_reload: reload });
+  return json({ ok: true, submitted: cleaned.length });
 }
 
 function json(data, status) {

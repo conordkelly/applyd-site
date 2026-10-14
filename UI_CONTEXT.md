@@ -549,64 +549,99 @@ Visible only to `ADMIN_USER_ID`. Fetches `/api/dashboard/admin` (GET,
 — email header + job count, then each user's jobs as a table (link,
 status chip, submitted date, completed date).
 
-Each user card has an allotment row: the allotment (`used / limit`, or
-`used / unlimited`), a number box, and buttons for that user's state.
-Limited users get **Add jobs**, **Reset usage** and **Make unlimited**.
-Unlimited users get **Make limited** (sets how many jobs they have left to the
-number in the box; `POST /api/dashboard/admin/allocation` action `limit`) and
-**Reset usage**. Make unlimited and Reset usage each ask their own confirm
-question (Make unlimited used to ask the reset question by mistake). Added
-2026-10-12; mocked up and approved first.
+A stats line sits above the users (launch spots used of 15, active subscribers,
+free trials running). Each user card has a plan row (plan, launch price flag,
+renewal or trial expiry) and an allotment row: remaining applications with the
+plan and top-up split, a number box, and buttons for that user's state.
+Limited users get **Add applications**, **Reset usage** and **Make unlimited**.
+Unlimited users get **Make limited** (sets how many applications they have left
+to the number in the box; `POST /api/dashboard/admin/allocation` action `limit`)
+and **Reset usage**. Make unlimited and Reset usage each ask their own confirm
+question. Adding applications to a user whose trial has ended also ends the
+trial so the applications work.
 
-### Billing (`#billing-section`, added 2026-10-12)
+### Billing (`#billing-section`, plans added 2026-10-14)
 
-Pay as you go: **$2.99 CAD buys 25 automated applications**, jobs do not
-expire. New nav button **Billing** (after Inbox). The page shows jobs
-remaining, the card on file (brand + last 4), an **Auto-reload** switch
-("adds 25 jobs for $2.99 CAD when you have fewer than 10 left"), **Top Up**
-and **Update card** buttons, and a payment history table. **Top Up** opens
-`#topup-modal` (25 jobs, $2.99 CAD, an auto-reload checkbox, "Continue to
-payment") which sends the browser to Stripe Checkout. The "Powered by" line uses the Stripe logo as an embedded PNG data URI. Mocked up and approved
-before it was built.
+Monthly plans, mocked up and approved before it was built. **Starter** is 15
+applications a month, **Plus** is 40. Regular prices $9.99 and $29.99 CAD;
+**launch prices $6.99 and $16.99** go to the first 15 people to subscribe
+(`LAUNCH_SPOTS` in `_billing.js`) and stay locked in while they stay
+subscribed (the launch price is set on the Stripe subscription's price).
+Plan applications reset at each renewal and unused ones are lost. **Top-up
+packs** are 10 applications for $6.99 CAD, bought by subscribers, never expire
+and are used after the plan's applications. Auto-reload and the old $2.99 pack
+are gone (old payments still show in history as "25 jobs").
 
-The usage badge on Submission now reads "N Jobs Remaining" with an
-Auto-reload on/off label top right, a bar (full at 25 or more) and a **Top
-Up** button that opens the Billing page. Under 10 left the badge border and
-number turn accent blue and a note appears; at 0 the note says to top up and
-Submit is disabled. Unlimited users see "Jobs submitted" and no button.
+New nav button **Billing** (after Inbox). Views:
+- **No plan** (new users, ended trials, cancelled): two plan cards with the
+  regular price crossed out beside the launch price, a green "Save $X every
+  month" tag, "Cancel any time" and "Launch price locked while subscribed"
+  bullets, and a Subscribe button. Once the 15 launch spots are gone (or the
+  user already used one) the cards show regular prices only. A line above the
+  cards shows free trial applications left or applications remaining.
+- **Subscribed**: plan (with a green "Launch price" tag), price (regular price
+  crossed out for launch), applications remaining as one total with a split
+  ("11 from your plan, resets Nov 12/2026" and "15 top-up, never expire"),
+  renewal date, any planned plan change, card on file, and buttons **Top Up**,
+  **Change plan**, **Update card**, **Cancel subscription**.
+- **Cancelling** (cancelled but not ended): blue info box with the end date,
+  "Ends" row, **Resume subscription** instead of Change/Cancel.
+- **Payment failed** (`past_due`): red alert box (`#billing-alert`, tokens
+  `--danger`, `--danger-bg`, `--danger-line`) telling them to update their card.
+- Payment history table (hidden when empty).
 
-If a declined card turned auto-reload off (`users.auto_reload_error` set), the
-Billing page shows a red alert box (`#billing-alert`, tokens `--danger`,
-`--danger-bg`, `--danger-line`) headed "Auto-reload
-is off". It clears when the user turns auto-reload back on. Billing error
-messages (`.bill-msg.err`) use the same red.
+**Top Up dialog** (`#topup-modal`): 10 applications, $6.99 CAD, "never expire"
+line, Continue to payment (Stripe), "Powered by" the Stripe logo (embedded PNG).
+**Change plan** (`#plan-modal`) switches the plan from the next renewal; no
+proration, the old plan runs to the end of the period.
+
+**Usage badge** (top right of Submission) is one total number with a tag:
+- Subscribed: "N Applications Remaining", plan name tag, bar (full at the
+  plan's size), **Top Up** button. At 3 or fewer, blue border and a note; at 0 a
+  note with **Upgrade to Plus** (Starter only) and **Top Up**, and Submit is
+  disabled. Top Up opens the Top Up dialog; the other buttons open Billing.
+- Free trial: "N Free Applications", "Free trial" tag, "Use them in the next N
+  hours", **Choose a plan**. The welcome banner also shows a pill, "3 free
+  applications. Use them within 48 hours of signing up."
+- Trial ended: 0, "Trial ended" tag, note, **Choose a plan**.
+- No plan (older users with leftover applications): "No plan" tag, Choose a plan.
+- Unlimited: "Applications submitted", no buttons.
 
 Returning from Stripe lands on `/dashboard/?billing=success|cancel|card`;
-`handleBillingReturn()` opens Billing, polls a few seconds for the webhook to
-add the jobs (it compares `limit` against the value saved in
+`handleBillingReturn()` opens Billing, polls a few seconds for the webhook (it
+compares remaining applications and plan against values saved in
 `sessionStorage` before checkout), then clears the query string.
 
-**Money flow.** Browser calls `POST /api/dashboard/billing/checkout`, goes to
-Stripe, Stripe calls `POST /api/stripe-webhook` (`checkout.session.completed`),
-which adds 25 to `users.job_limit` exactly once per PaymentIntent
-(`stripe_payments.id` is the PaymentIntent id, `INSERT OR IGNORE` plus an
-`UPDATE ... WHERE changes() > 0` in one D1 batch). Ticking auto-reload sets
-`setup_future_usage=off_session`, so the webhook also saves the card
-(`stripe_payment_method`, `card_brand`, `card_last4`) and turns
-`users.auto_reload` on. After a job submission (`POST /api/dashboard/jobs`),
-`maybeAutoReload()` charges the saved card $2.99 for another pack if the user
-is left under 10 jobs; on a declined card it turns auto-reload off and stores
-`auto_reload_error`, which the Billing page shows. Constants (25 jobs, 299
-cents, 10 threshold) live in `functions/api/dashboard/_billing.js`.
+**How balances work.** `users.job_limit` and `job_reset_at` still count
+(remaining = limit minus jobs used since the reset). Plan applications are
+used first: plan remaining = max(0, `plan_apps` - used), top-up remaining =
+max(0, limit - max(used, `plan_apps`)). At each new period
+(`applyPlanCycle`): reset usage and set limit = plan size + top-up remaining.
+When a subscription ends (`endPlan`): limit = top-up remaining, plan and
+launch price removed. Unlimited users stay unlimited. A user who subscribes
+while holding the old default 50 keeps their unused ones as top-up. Every
+credit is keyed on a Stripe id (`stripe_payments.id`: invoice or
+PaymentIntent) with `INSERT OR IGNORE` plus `UPDATE ... WHERE changes() > 0`
+in one D1 batch, so webhook retries never double-credit.
 
-**New accounts start with 0 jobs** (no free trial): the middleware inserts
-`job_limit = 0` for new users. Existing users with no `job_limit` keep the
-old default of 50. Admin Add jobs / Reset usage / Make unlimited still work.
+**Free trial.** New accounts get `plan='trial'`, 3 applications and
+`trial_expires_at` 48 hours after their first request (set in
+`dashboard/_middleware.js`). `getAllotment()` treats an expired trial as 0
+remaining. One trial per email comes from Clerk (unique emails); nothing blocks
+a second email. Sign-ups are still closed (`SIGNUPS_OPEN`).
+
+**Money flow.** `POST /api/dashboard/billing/checkout` (`kind` plan, topup or
+card) goes to Stripe Checkout (card only, inline prices, no products to create
+in Stripe). Stripe calls `POST /api/stripe-webhook`. Cancel, resume and plan
+change use the Stripe API directly (`billing/subscription.js`); there is no
+customer portal to set up.
 
 Env (Cloudflare Pages secrets): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
-Until set, checkout returns 503 and Billing shows "Payments are not set up
-yet." The D1 migration is `migrations/2026-10-12-billing.sql`; before it has
-run, billing reads fall back to "no card, auto-reload off, no history".
+The webhook destination needs these events: `checkout.session.completed`,
+`invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`,
+`customer.subscription.deleted`. Migrations: `2026-10-12-billing.sql` and
+`2026-10-14-plans.sql`; before they run, billing reads fall back to "no plan"
+and billing endpoints answer 503.
 
 ## Backend (`functions/api/dashboard/`)
 
@@ -629,10 +664,10 @@ available at all).
 | `dashboard/resume.js` | GET | Streams the signed-in user's own resume PDF back (used for eventual worker/ATS-attach fetches, not linked from the UI today) |
 | `dashboard/resume.js` | DELETE | Deletes the signed-in user's resume object(s) from R2 |
 | `dashboard/admin.js` | GET | 403 unless `userId === env.ADMIN_USER_ID`; otherwise every user + their jobs |
-| `dashboard/billing.js` | GET | Jobs remaining, card on file, auto-reload state, last 25 payments, pack price |
-| `dashboard/billing/checkout.js` | POST | `{ auto_reload }` starts a Stripe Checkout for one pack; `{ update_card: true }` starts a card-only Checkout. Returns `{ url }` |
-| `dashboard/billing/auto-reload.js` | POST | `{ enabled }` switches auto-reload; turning on needs a saved card |
-| `stripe-webhook.js` | POST | Public, verified by `Stripe-Signature`. Credits jobs and saves cards on `checkout.session.completed` |
+| `dashboard/billing.js` | GET | Plan, applications left (plan and top-up split), card on file, plans to offer with launch or regular prices, last 25 payments |
+| `dashboard/billing/checkout.js` | POST | `{ kind: "plan", plan }` subscribe; `{ kind: "topup" }` 10-application pack (needs a plan); `{ kind: "card" }` card-only Checkout. Returns `{ url }` |
+| `dashboard/billing/subscription.js` | POST | `{ action: "cancel" \| "resume" }`, or `{ action: "change", plan }` (applies at next renewal) |
+| `stripe-webhook.js` | POST | Public, verified by `Stripe-Signature`. Starts or renews plans, credits top-ups, saves cards, tracks failures, cancels and endings |
 
 ## Resume storage (R2)
 

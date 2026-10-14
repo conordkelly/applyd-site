@@ -1,12 +1,18 @@
 // POST /api/dashboard/billing/checkout
-//   { auto_reload: true|false }   buy one pack on Stripe Checkout; when
-//                                 auto_reload is true the card is saved for
-//                                 later off-session charges
-//   { update_card: true }         Stripe Checkout in setup mode to replace
-//                                 the saved card (no charge)
+//   { kind: "plan", plan: "starter"|"plus" }  subscribe on Stripe Checkout
+//   { kind: "topup" }                        one-time top-up pack (needs a plan)
+//   { kind: "card" }                         card-only Checkout to replace the saved card
 // Returns { url } to send the browser to. Credit happens in the webhook
 // (functions/api/stripe-webhook.js), never here.
-import { getBillingRow, PACK_JOBS, PACK_PRICE_CENTS, CURRENCY } from "../_billing.js";
+import {
+  getBillingRow,
+  launchState,
+  isPaidPlan,
+  planPriceCents,
+  CURRENCY,
+  PLANS,
+  TOPUP,
+} from "../_billing.js";
 import { stripeConfigured, stripeRequest } from "../../_stripe.js";
 
 function json(data, status) {
@@ -38,16 +44,12 @@ export async function onRequestPost(context) {
   }
 
   const origin = new URL(request.url).origin;
-  const customerParams = row.stripe_customer_id
-    ? { customer: row.stripe_customer_id }
-    : data.email
-    ? { customer_creation: "always", customer_email: data.email }
-    : { customer_creation: "always" };
-
+  const kind = body.kind || (body.update_card ? "card" : "");
   let params;
-  if (body.update_card) {
+
+  if (kind === "card") {
     if (!row.stripe_customer_id) {
-      return json({ error: "No card on file yet. Top up first." }, 400);
+      return json({ error: "No card on file yet." }, 400);
     }
     params = {
       mode: "setup",
@@ -59,8 +61,52 @@ export async function onRequestPost(context) {
       cancel_url: origin + "/dashboard/?billing=cancel",
       metadata: { user_id: data.userId, kind: "update_card" },
     };
-  } else {
-    const auto = body.auto_reload === true;
+  } else if (kind === "plan") {
+    const plan = PLANS[body.plan];
+    if (!plan) return json({ error: "Pick a plan." }, 400);
+    if (isPaidPlan(row.plan) && row.plan_status !== "canceled") {
+      return json({ error: "You already have a plan. Use Change plan on the Billing page." }, 400);
+    }
+    const launch = (await launchState(env, row)).available;
+    params = {
+      mode: "subscription",
+      client_reference_id: data.userId,
+      line_items: [
+        {
+          quantity: 1,
+          price_data: {
+            currency: CURRENCY,
+            unit_amount: planPriceCents(plan.id, launch),
+            recurring: { interval: "month" },
+            product_data: {
+              name: "Applyd " + plan.name,
+              description:
+                plan.apps +
+                " automated applications every month, filled out and submitted for you on Workday, Ashby, Greenhouse and Lever.",
+            },
+          },
+        },
+      ],
+      payment_method_types: ["card"],
+      custom_text: {
+        submit: {
+          message:
+            "Renews monthly until you cancel. Your " + plan.apps + " applications are added right after payment.",
+        },
+      },
+      success_url: origin + "/dashboard/?billing=success",
+      cancel_url: origin + "/dashboard/?billing=cancel",
+      metadata: { user_id: data.userId, kind: "plan", plan: plan.id, launch: launch ? "1" : "0" },
+      subscription_data: {
+        metadata: { user_id: data.userId, plan: plan.id, launch: launch ? "1" : "0" },
+      },
+    };
+    if (row.stripe_customer_id) params.customer = row.stripe_customer_id;
+    else if (data.email) params.customer_email = data.email;
+  } else if (kind === "topup") {
+    if (!isPaidPlan(row.plan)) {
+      return json({ error: "Choose a plan first." }, 400);
+    }
     params = {
       mode: "payment",
       client_reference_id: data.userId,
@@ -69,30 +115,30 @@ export async function onRequestPost(context) {
           quantity: 1,
           price_data: {
             currency: CURRENCY,
-            unit_amount: PACK_PRICE_CENTS,
+            unit_amount: TOPUP.cents,
             product_data: {
-              name: "Applyd - " + PACK_JOBS + " automated applications",
+              name: "Applyd - " + TOPUP.apps + " top-up applications",
               description:
-                "We fill out and submit your applications on Workday, Ashby, Greenhouse and Lever. Your jobs do not expire.",
+                "Extra applications that never expire. They are used after your monthly plan applications.",
             },
           },
         },
       ],
-      // Card only (Apple Pay and Google Pay count as card). Keeps Klarna and
-      // Link out, since the card has to be reusable for auto-reload.
       payment_method_types: ["card"],
       custom_text: {
-        submit: { message: "Your " + PACK_JOBS + " jobs are added to your account right after payment." },
+        submit: { message: "Your " + TOPUP.apps + " applications are added to your account right after payment." },
       },
       success_url: origin + "/dashboard/?billing=success",
       cancel_url: origin + "/dashboard/?billing=cancel",
-      metadata: { user_id: data.userId, auto_reload: auto ? "1" : "0" },
+      metadata: { user_id: data.userId, kind: "topup", jobs: String(TOPUP.apps) },
       payment_intent_data: {
-        metadata: { user_id: data.userId, kind: "topup" },
+        metadata: { user_id: data.userId, kind: "topup", jobs: String(TOPUP.apps) },
       },
     };
-    Object.assign(params, customerParams);
-    if (auto) params.payment_intent_data.setup_future_usage = "off_session";
+    if (row.stripe_customer_id) params.customer = row.stripe_customer_id;
+    else params.customer_creation = "always";
+  } else {
+    return json({ error: "Unknown request." }, 400);
   }
 
   const r = await stripeRequest(env, "POST", "/v1/checkout/sessions", params);

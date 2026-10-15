@@ -428,7 +428,7 @@ desktop (`.field-grid`, collapses to one column under 520px):
    like them (e.g. "rem"), never as a default list. Real city results still
    start at 2 characters.
    Workday-style month + year dropdowns or an "I currently work here"
-   checkbox that disables the end date, and a repeatable bullet list
+   checkbox that disables the end date (the checkbox sits right under the start and end dates, above Location), and a repeatable bullet list
    (`+ Add bullet` / per-bullet `Remove`). A brand-new profile
    (`experience_roles` never saved) starts with one blank "Role 1" card
    already showing rather than zero — an explicitly saved empty array

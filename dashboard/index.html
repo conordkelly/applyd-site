@@ -1130,7 +1130,8 @@ table.list td.shot-cell {
   gap: 7px;
   font-size: 12px;
   color: var(--text-2);
-  margin-top: 6px;
+  grid-column: 1 / -1;
+  margin-top: -8px;
 }
 
 .role-month-year {
@@ -2724,13 +2725,6 @@ table.list td.shot-cell {
     if (role.present) endField.style.display = 'none';
     grid.appendChild(endField);
 
-    grid.appendChild(makeRoleLocationField('Location*', role.location, function (v) {
-      role.location = v;
-      updateJobSubmitGate();
-    }));
-
-    card.appendChild(grid);
-
     var presentRow = document.createElement('label');
     presentRow.className = 'role-present-row';
     var presentCheckbox = document.createElement('input');
@@ -2749,7 +2743,14 @@ table.list td.shot-cell {
     });
     presentRow.appendChild(presentCheckbox);
     presentRow.appendChild(document.createTextNode('I currently work here'));
-    card.appendChild(presentRow);
+    grid.appendChild(presentRow);
+
+    grid.appendChild(makeRoleLocationField('Location*', role.location, function (v) {
+      role.location = v;
+      updateJobSubmitGate();
+    }));
+
+    card.appendChild(grid);
 
     var bulletsLabel = document.createElement('div');
     bulletsLabel.className = 'bullets-label';

@@ -90,14 +90,14 @@ export async function onRequest(context) {
   const email = payload.email || payload.email_address || "";
 
   // First request from this user ever: create their row.
-  // New accounts get a free trial: 3 applications, good for 48 hours (then
+  // New accounts get a free trial: 5 applications, good for 7 days (then
   // they choose a plan on the Billing page). Existing rows are untouched by
   // the conflict clause, so older users keep what they have. Falls back to
   // the older inserts if the plan or job_limit columns are missing.
   const onConflict = " ON CONFLICT(id) DO UPDATE SET email = excluded.email WHERE excluded.email != ''";
   try {
     await env.DB.prepare(
-      "INSERT INTO users (id, email, job_limit, plan, plan_apps, trial_expires_at) VALUES (?, ?, 3, 'trial', 3, datetime('now', '+48 hours'))" + onConflict
+      "INSERT INTO users (id, email, job_limit, plan, plan_apps, trial_expires_at) VALUES (?, ?, 5, 'trial', 5, datetime('now', '+7 days'))" + onConflict
     )
       .bind(userId, email)
       .run();

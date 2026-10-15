@@ -21,7 +21,7 @@ export async function getAllotment(env, userId) {
   } catch (e) {
     // columns not added yet — defaults
   }
-  // Free trial: the 3 trial applications are only good until trial_expires_at.
+  // Free trial: the trial applications are only good until trial_expires_at.
   // After that nothing is left, so the limit collapses to whatever was used.
   let trialExpired = false;
   try {

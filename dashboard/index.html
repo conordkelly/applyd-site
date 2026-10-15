@@ -1309,7 +1309,7 @@ table.list td.shot-cell {
       <div class="onboarding-banner" id="onboarding-banner" style="display:none;">
         <button type="button" class="onboarding-dismiss" id="onboarding-dismiss" aria-label="Dismiss">×</button>
         <h3 class="onboarding-headline">Welcome to Applyd.</h3>
-        <p class="trial-pill" id="trial-pill" hidden>3 free applications. Use them within 48 hours of signing up.</p>
+        <p class="trial-pill" id="trial-pill" hidden>5 free applications. Use them within 7 days of signing up.</p>
         <p class="onboarding-subtext">Finish these steps and we'll start applying for you.</p>
         <div class="onboarding-checklist" id="onboarding-checklist"></div>
       </div>
@@ -3713,7 +3713,7 @@ table.list td.shot-cell {
   function hoursText(iso) {
     var ms = new Date(iso).getTime() - Date.now();
     var h = isNaN(ms) || ms <= 0 ? 0 : Math.ceil(ms / 3600000);
-    return h <= 1 ? 'less than an hour' : h + ' hours';
+    return h <= 1 ? 'less than an hour' : h >= 48 ? Math.ceil(h / 24) + ' days' : h + ' hours';
   }
 
   function isPaidPlan(plan) { return plan === 'starter' || plan === 'plus'; }

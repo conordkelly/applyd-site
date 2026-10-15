@@ -601,8 +601,8 @@ proration, the old plan runs to the end of the period.
   note with **Upgrade to Plus** (Starter only) and **Top Up**, and Submit is
   disabled. Top Up opens the Top Up dialog; the other buttons open Billing.
 - Free trial: "N Free Applications", "Free trial" tag, "Use them in the next N
-  hours", **Choose a plan**. The welcome banner also shows a pill, "3 free
-  applications. Use them within 48 hours of signing up."
+  days/hours", **Choose a plan**. The welcome banner also shows a pill, "5 free
+  applications. Use them within 7 days of signing up."
 - Trial ended: 0, "Trial ended" tag, note, **Choose a plan**.
 - No plan (older users with leftover applications): "No plan" tag, Choose a plan.
 - Unlimited: "Applications submitted", no buttons.
@@ -624,8 +624,8 @@ credit is keyed on a Stripe id (`stripe_payments.id`: invoice or
 PaymentIntent) with `INSERT OR IGNORE` plus `UPDATE ... WHERE changes() > 0`
 in one D1 batch, so webhook retries never double-credit.
 
-**Free trial.** New accounts get `plan='trial'`, 3 applications and
-`trial_expires_at` 48 hours after their first request (set in
+**Free trial.** New accounts get `plan='trial'`, 5 applications and
+`trial_expires_at` 7 days after their first request (set in
 `dashboard/_middleware.js`). `getAllotment()` treats an expired trial as 0
 remaining. One trial per email comes from Clerk (unique emails); nothing blocks
 a second email. Sign-ups are still closed (`SIGNUPS_OPEN`).

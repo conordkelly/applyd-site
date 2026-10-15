@@ -29,7 +29,7 @@ export const PLANS = {
   plus: { id: "plus", name: "Plus", apps: 40, launch_cents: 1699, regular_cents: 2999 },
 };
 export const TOPUP = { apps: 10, cents: 699 };
-export const TRIAL_APPS = 3;
+export const TRIAL_APPS = 5;
 
 export function planFromApps(n) {
   n = Number(n);

@@ -590,7 +590,7 @@ a { color: inherit; }
 /* ---------- demo ---------- */
 
 .demo {
-  padding: 80px 0 0;
+  padding: 76px 0 70px;
   border-top: 1px solid var(--hairline-strong);
 }
 
@@ -658,7 +658,8 @@ a { color: inherit; }
 /* ---------- how it works ---------- */
 
 .how {
-  padding: 80px 0 70px;
+  padding: 76px 0 70px;
+  border-top: 1px solid var(--hairline-strong);
 }
 
 .how .section-head {
@@ -768,7 +769,10 @@ html { scroll-behavior: smooth; }
 }
 
 .top-link:hover { color: var(--text); border-bottom-color: var(--accent); }
+.topbar { flex-wrap: wrap; gap: 14px 24px; }
+.topbar-right { flex-wrap: wrap; justify-content: flex-end; }
 
+.demo, .how { scroll-margin-top: 16px; }
 .pricing, .faq-section { padding: 76px 0 70px; border-top: 1px solid var(--hairline-strong); scroll-margin-top: 16px; }
 .pricing .section-head, .faq-section .section-head {
   display: flex;
@@ -862,7 +866,7 @@ html { scroll-behavior: smooth; }
 @media (max-width: 760px) { .pf-plans { grid-template-columns: 1fr; } }
 @media (max-width: 520px) {
   .topbar { flex-wrap: wrap; gap: 14px; }
-  .topbar-right { gap: 14px; flex-wrap: wrap; }
+  .topbar-right { gap: 10px 16px; flex-wrap: wrap; justify-content: flex-start; }
 }
 
 @media (max-width: 860px) {
@@ -898,6 +902,8 @@ html { scroll-behavior: smooth; }
       </div>
     </div>
     <div class="topbar-right">
+      <a class="top-link" href="#demo">See It In Action</a>
+      <a class="top-link" href="#how">How It Works</a>
       <a class="top-link" href="#pricing">Pricing</a>
       <a class="top-link" href="#faq">FAQ</a>
       <a class="create-account-link" id="nav-create-account" href="/dashboard">Create Account</a>
@@ -951,7 +957,7 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <section class="demo">
+  <section class="demo" id="demo">
     <div class="section-head">
       <h2>See it in action</h2>
       <div class="eyebrow">Product walkthrough, coming soon</div>
@@ -966,7 +972,7 @@ html { scroll-behavior: smooth; }
     </div>
   </section>
 
-  <section class="how">
+  <section class="how" id="how">
     <div class="section-head">
       <h2>How it works</h2>
       <div class="eyebrow">Three steps, then it runs itself</div>

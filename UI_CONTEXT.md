@@ -61,13 +61,13 @@ inline `<script>`) would always see `undefined`. No server-side session
 check, so a signed-in visitor briefly sees the signed-out nav before this
 runs.
 
-**Header links, Pricing and FAQ (added 2026-10-20).** The topbar has two
-text links, **Pricing** and **FAQ** (`.top-link`, mono uppercase), left of
-Create Account / Sign In; they smooth-scroll to `#pricing` and `#faq`. Both
+**Header links, Pricing and FAQ (added 2026-10-20).** The topbar has four
+text links, **See It In Action**, **How It Works**, **Pricing** and **FAQ** (`.top-link`, mono uppercase), left of
+Create Account / Sign In; they smooth-scroll to `#demo`, `#how`, `#pricing` and `#faq`. The header wraps onto a second line on narrower screens. Both
 sections sit between How it works and the closing line. **Pricing**: a "Try it
 free" strip (5 applications, 7 days, no card) and the two plan cards (Starter
 15 for $6.99, Plus 40 for $16.99, regular prices crossed out, green save tags),
-then a top-up line; all buttons go to `/dashboard`. Pricing and FAQ headers are just the title (no eyebrow line), and each section has the same top divider and spacing as the other sections. Prices are written in the
+then a top-up line; all buttons go to `/dashboard`. Pricing and FAQ headers are just the title (no eyebrow line), and every section from See it in action down to the closing line has the same top divider and the same padding (76px above, 70px below; the closing line has 36px below). Prices are written in the
 HTML, not read from the server. The page calls the public `GET /api/pricing`
 (`launch_available`); when the 15 launch spots are gone it adds `.pf-regular`
 to `#pricing`, which hides the crossed-out prices, save tags and "Launch price

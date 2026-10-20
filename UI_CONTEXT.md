@@ -72,9 +72,9 @@ HTML, not read from the server. The page calls the public `GET /api/pricing`
 (`launch_available`); when the 15 launch spots are gone it adds `.pf-regular`
 to `#pricing`, which hides the crossed-out prices, save tags and "Launch price
 locked" bullets and shows the regular prices. If the call fails it keeps the
-launch prices. **FAQ**: eight `<details>` questions (job sites, how it works,
+launch prices. **FAQ**: nine `<details>` questions (job sites, how it works,
 free trial, unused applications, cancelling, failed applications, employer
-replies, card details); the first starts open. If plan sizes, prices or trial
+replies, card details, when applications get submitted); the first starts open. If plan sizes, prices or trial
 terms change, update this section by hand as well as `_billing.js`.
 
 **Positioning:** individuals are the primary audience at the root domain,

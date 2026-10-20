@@ -67,7 +67,7 @@ Create Account / Sign In; they smooth-scroll to `#pricing` and `#faq`. Both
 sections sit between How it works and the closing line. **Pricing**: a "Try it
 free" strip (5 applications, 7 days, no card) and the two plan cards (Starter
 15 for $6.99, Plus 40 for $16.99, regular prices crossed out, green save tags),
-then a top-up line; all buttons go to `/dashboard`. Prices are written in the
+then a top-up line; all buttons go to `/dashboard`. Pricing and FAQ headers are just the title (no eyebrow line), and each section has the same top divider and spacing as the other sections. Prices are written in the
 HTML, not read from the server. The page calls the public `GET /api/pricing`
 (`launch_available`); when the 15 launch spots are gone it adds `.pf-regular`
 to `#pricing`, which hides the crossed-out prices, save tags and "Launch price

@@ -61,9 +61,9 @@ inline `<script>`) would always see `undefined`. No server-side session
 check, so a signed-in visitor briefly sees the signed-out nav before this
 runs.
 
-**Header links, Pricing and FAQ (added 2026-10-20).** The topbar has four
-text links, **See It In Action**, **How It Works**, **Pricing** and **FAQ** (`.top-link`, mono uppercase), left of
-Create Account / Sign In; they smooth-scroll to `#demo`, `#how`, `#pricing` and `#faq`. The header wraps onto a second line on narrower screens. Both
+**Header links, Pricing and FAQ (added 2026-10-20).** The topbar has two
+text links, **Pricing** and **FAQ** (`.top-link`, mono uppercase), left of
+Create Account / Sign In; they smooth-scroll to `#pricing` and `#faq`. (Links to See It In Action and How It Works were tried and removed; those sections keep their `#demo` and `#how` ids.) The header can wrap onto a second line on narrow screens. Both
 sections sit between How it works and the closing line. **Pricing**: a "Try it
 free" strip (5 applications, 7 days, no card) and the two plan cards (Starter
 15 for $6.99, Plus 40 for $16.99, regular prices crossed out, green save tags),

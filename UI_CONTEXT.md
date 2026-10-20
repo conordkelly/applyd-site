@@ -61,6 +61,22 @@ inline `<script>`) would always see `undefined`. No server-side session
 check, so a signed-in visitor briefly sees the signed-out nav before this
 runs.
 
+**Header links, Pricing and FAQ (added 2026-10-20).** The topbar has two
+text links, **Pricing** and **FAQ** (`.top-link`, mono uppercase), left of
+Create Account / Sign In; they smooth-scroll to `#pricing` and `#faq`. Both
+sections sit between How it works and the closing line. **Pricing**: a "Try it
+free" strip (5 applications, 7 days, no card) and the two plan cards (Starter
+15 for $6.99, Plus 40 for $16.99, regular prices crossed out, green save tags),
+then a top-up line; all buttons go to `/dashboard`. Prices are written in the
+HTML, not read from the server. The page calls the public `GET /api/pricing`
+(`launch_available`); when the 15 launch spots are gone it adds `.pf-regular`
+to `#pricing`, which hides the crossed-out prices, save tags and "Launch price
+locked" bullets and shows the regular prices. If the call fails it keeps the
+launch prices. **FAQ**: eight `<details>` questions (job sites, how it works,
+free trial, unused applications, cancelling, failed applications, employer
+replies, card details); the first starts open. If plan sizes, prices or trial
+terms change, update this section by hand as well as `_billing.js`.
+
 **Positioning:** individuals are the primary audience at the root domain,
 not agencies. This was a deliberate call, not just a copy change — the
 actual product (the dashboard) is a single-user tool with no roster view,

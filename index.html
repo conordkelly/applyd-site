@@ -750,6 +750,120 @@ footer.site {
 footer.site .footer-email { color: inherit; text-decoration: none; }
 footer.site .footer-email:hover { color: var(--accent); }
 
+/* ---------- header links, pricing, FAQ ---------- */
+
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+.top-link {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 500;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-2);
+  text-decoration: none;
+  padding: 6px 0;
+  border-bottom: 2px solid transparent;
+}
+
+.top-link:hover { color: var(--text); border-bottom-color: var(--accent); }
+
+.pricing, .faq-section { padding: 80px 0 0; scroll-margin-top: 16px; }
+.pricing .section-head, .faq-section .section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 32px;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.pricing h2, .faq-section h2 {
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-weight: 700;
+  font-size: 34px;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.pf-trial {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+  max-width: 760px;
+  margin-bottom: 20px;
+  padding: 14px 18px;
+  background: var(--surface);
+  border: 1px solid var(--hairline-strong);
+  border-radius: 8px;
+}
+.pf-trial b { font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 15px; }
+.pf-trial span { display: block; font-size: 13.5px; color: var(--text-2); margin-top: 2px; }
+
+.pf-btn {
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--accent-ink);
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  padding: 11px 18px;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  transition: filter 0.15s ease;
+}
+.pf-btn:hover { filter: brightness(1.08); }
+.pf-btn.ghost { background: transparent; color: var(--text); border-color: var(--hairline-strong); }
+.pf-btn.ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; }
+
+.pf-plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 760px; }
+.pf-plan { background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 6px; }
+.pf-name { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
+.pf-big { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 44px; line-height: 1; }
+.pf-big small { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); margin-left: 6px; }
+.pf-priceline { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
+.pf-was { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 16px; color: var(--text-3); text-decoration: line-through; }
+.pf-now { font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 28px; font-variant-numeric: tabular-nums; }
+.pf-now small { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.pf-save { align-self: flex-start; font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 11px; letter-spacing: 0.04em; color: var(--signal); border: 1px solid var(--signal); border-radius: 4px; padding: 2px 7px; margin-top: 4px; }
+.pf-list { margin: 12px 0 14px; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13.5px; color: var(--text-2); }
+.pf-list li::before { content: "\2713"; color: var(--signal); font-weight: 700; margin-right: 8px; }
+.pf-plan .pf-btn { margin-top: auto; }
+.pf-fine { font-size: 13px; color: var(--text-2); line-height: 1.5; max-width: 62ch; margin: 16px 0 0; }
+.pf-regular-only { display: none; }
+.pricing.pf-regular .pf-launch-only { display: none; }
+.pricing.pf-regular .pf-regular-only { display: inline; }
+
+.faq-list { max-width: 760px; border-top: 1px solid var(--hairline-strong); }
+.faq-list details { border-bottom: 1px solid var(--hairline-strong); }
+.faq-list summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 0;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+}
+.faq-list summary::-webkit-details-marker { display: none; }
+.faq-list summary::after { content: "+"; font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 20px; color: var(--accent); flex: none; }
+.faq-list details[open] summary::after { content: "\2212"; }
+.faq-list summary:focus-visible, .pf-btn:focus-visible, .top-link:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.faq-list details p { margin: 0 0 18px; font-size: 14.5px; line-height: 1.6; color: var(--text-2); max-width: 62ch; }
+
+@media (max-width: 760px) { .pf-plans { grid-template-columns: 1fr; } }
+@media (max-width: 520px) {
+  .topbar { flex-wrap: wrap; gap: 14px; }
+  .topbar-right { gap: 14px; flex-wrap: wrap; }
+}
+
 @media (max-width: 860px) {
   .hero { grid-template-columns: 1fr; }
   .spine { display: none; }
@@ -783,6 +897,8 @@ footer.site .footer-email:hover { color: var(--accent); }
       </div>
     </div>
     <div class="topbar-right">
+      <a class="top-link" href="#pricing">Pricing</a>
+      <a class="top-link" href="#faq">FAQ</a>
       <a class="create-account-link" id="nav-create-account" href="/dashboard">Create Account</a>
       <a class="sign-in-link" id="nav-sign-in" href="/dashboard">Sign In</a>
       <a class="sign-in-link" id="nav-my-account" href="/dashboard" style="display:none;">My Account</a>
@@ -870,6 +986,59 @@ footer.site .footer-email:hover { color: var(--accent); }
         <h3>Walk away</h3>
         <p>Applyd submits your application and you get on with your day.</p>
       </div>
+    </div>
+  </section>
+
+  <section class="pricing" id="pricing">
+    <div class="section-head">
+      <h2>Pricing</h2>
+      <div class="eyebrow">Monthly plans. Cancel any time</div>
+    </div>
+    <div class="pf-trial">
+      <div><b>Try it free</b><span>5 free applications, good for 7 days. No card needed.</span></div>
+      <a class="pf-btn ghost" href="/dashboard">Start free</a>
+    </div>
+    <div class="pf-plans">
+      <div class="pf-plan">
+        <div class="pf-name">Starter</div>
+        <div class="pf-big">15<small>applications / month</small></div>
+        <div class="pf-priceline">
+          <span class="pf-was pf-launch-only">$9.99</span>
+          <span class="pf-now"><span class="pf-launch-only">$6.99</span><span class="pf-regular-only">$9.99</span><small> / month</small></span>
+        </div>
+        <div class="pf-save pf-launch-only">Save $3.00 every month</div>
+        <ul class="pf-list"><li>Cancel any time</li><li class="pf-launch-only">Launch price locked while subscribed</li></ul>
+        <a class="pf-btn" href="/dashboard">Get Starter</a>
+      </div>
+      <div class="pf-plan">
+        <div class="pf-name">Plus</div>
+        <div class="pf-big">40<small>applications / month</small></div>
+        <div class="pf-priceline">
+          <span class="pf-was pf-launch-only">$29.99</span>
+          <span class="pf-now"><span class="pf-launch-only">$16.99</span><span class="pf-regular-only">$29.99</span><small> / month</small></span>
+        </div>
+        <div class="pf-save pf-launch-only">Save $13.00 every month</div>
+        <ul class="pf-list"><li>Cancel any time</li><li class="pf-launch-only">Launch price locked while subscribed</li></ul>
+        <a class="pf-btn" href="/dashboard">Get Plus</a>
+      </div>
+    </div>
+    <p class="pf-fine">Prices in CAD. Need more in a month? Top up with 10 applications for $6.99. Top-up applications never expire.</p>
+  </section>
+
+  <section class="faq-section" id="faq">
+    <div class="section-head">
+      <h2>FAQ</h2>
+      <div class="eyebrow">Questions people ask</div>
+    </div>
+    <div class="faq-list">
+      <details open><summary>Which job sites does Applyd work with?</summary><p>Workday, Ashby, Greenhouse and Lever. Check the link for the platform name, like myworkdayjobs.com, ashbyhq.com, greenhouse.io or lever.co.</p></details>
+      <details><summary>How does it work?</summary><p>You add your details and resume once. Then you paste a link to any job on a supported site, and Applyd fills out and submits the application for you.</p></details>
+      <details><summary>What does the free trial include?</summary><p>5 free applications. Use them within 7 days of signing up. You do not need a card.</p></details>
+      <details><summary>What happens to applications I don't use?</summary><p>Plan applications reset each month, so unused ones do not carry over. Top-up applications never expire and are used after your plan applications.</p></details>
+      <details><summary>Can I cancel any time?</summary><p>Yes. Cancel from the Billing page. You keep your plan applications until your renewal date.</p></details>
+      <details><summary>What if an application can't be completed?</summary><p>It moves to Unable to Process with the reason, and it does not use up one of your applications.</p></details>
+      <details><summary>Do I get replies from employers?</summary><p>Each account gets its own Applyd email address for employer replies. Your Inbox shows them, and they can be forwarded to your personal email.</p></details>
+      <details><summary>Do you see my card details?</summary><p>No. Payments are handled by Stripe on their secure page, and Applyd never sees your card.</p></details>
     </div>
   </section>
 
@@ -1021,6 +1190,15 @@ footer.site .footer-email:hover { color: var(--accent); }
       }, delay);
     })();
   }
+
+  // Pricing: show launch prices while launch spots last; /api/pricing says
+  // when they are gone (then regular prices only). Fails open to launch prices.
+  fetch("/api/pricing").then(function (r) { return r.json(); }).then(function (d) {
+    if (d && d.launch_available === false) {
+      var el = document.getElementById("pricing");
+      if (el) el.classList.add("pf-regular");
+    }
+  }).catch(function () {});
 
   function updateClock() {
     clockEl.textContent = timeNow();

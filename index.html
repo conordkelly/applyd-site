@@ -242,6 +242,25 @@ a { color: inherit; }
 
 .create-account-link:hover { border-color: var(--accent); color: var(--accent); }
 
+.hero-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  font-family: 'Hanken Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: 16px;
+  color: var(--accent-ink);
+  text-decoration: none;
+  background: var(--accent);
+  border-radius: 8px;
+  padding: 15px 28px;
+  box-shadow: 0 6px 18px rgba(29,95,209,0.28);
+  transition: filter 0.15s ease;
+}
+
+.hero-cta:hover { filter: brightness(1.08); }
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -916,6 +935,7 @@ html { scroll-behavior: smooth; }
       <div class="eyebrow">Paste a job link. We apply for you.</div>
       <h1>Never Complete Another<br><span class="accent-word">Job Application</span></h1>
       <p class="lede">Stop wasting hours applying to jobs. Give Applyd your info once, send us the jobs you want to apply to, and relax. We fill out and submit the application for you, with a human reviewing every submission before it goes out.</p>
+      <a class="hero-cta" href="/dashboard">Start your free trial <span aria-hidden="true">&rarr;</span></a>
     </div>
 
     <div class="spine"></div>

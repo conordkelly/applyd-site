@@ -124,8 +124,20 @@ export async function ensureApplyEmail(env, opts) {
   let profile = opts.profile && typeof opts.profile === "object" ? opts.profile : {};
   await ensureApplyEmailTables(env.DB);
 
-  const firstName = opts.firstName || profile.first_name;
-  const lastName = opts.lastName || profile.last_name;
+  // The address is built from the names the user signed up with (saved by
+  // welcome.js), not from My Info, so later edits there can't change it.
+  // Accounts with no saved signup name fall back to the My Info name.
+  const signupFirst = String(profile.signup_first_name || "").trim();
+  const signupLast = String(profile.signup_last_name || "").trim();
+  const hasSignupName = !!(
+    normalizeEmailLocalPart(signupFirst) || normalizeEmailLocalPart(signupLast)
+  );
+  const firstName = hasSignupName
+    ? signupFirst
+    : opts.firstName || profile.first_name;
+  const lastName = hasSignupName
+    ? signupLast
+    : opts.lastName || profile.last_name;
   const canUpgrade = !!(
     normalizeEmailLocalPart(firstName) && normalizeEmailLocalPart(lastName)
   );

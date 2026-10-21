@@ -69,6 +69,15 @@ export async function onRequestPost(context) {
     }
   }
 
+  // Remember the names the user signed up with; the apply address is built
+  // from these, not from whatever they later enter in My Info.
+  if (clerkFirst && !String(profile.signup_first_name || "").trim()) {
+    profile.signup_first_name = clerkFirst;
+  }
+  if (clerkLast && !String(profile.signup_last_name || "").trim()) {
+    profile.signup_last_name = clerkLast;
+  }
+
   const ensured = await ensureApplyEmail(env, {
     userId,
     profile,

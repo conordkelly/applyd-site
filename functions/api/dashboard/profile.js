@@ -88,6 +88,13 @@ export async function onRequestPost(context) {
   if (!profile.apply_email_assigned_at && existing.apply_email_assigned_at) {
     profile.apply_email_assigned_at = existing.apply_email_assigned_at;
   }
+  // Signup names drive the apply address; keep them across My Info saves.
+  if (!String(profile.signup_first_name || "").trim() && existing.signup_first_name) {
+    profile.signup_first_name = existing.signup_first_name;
+  }
+  if (!String(profile.signup_last_name || "").trim() && existing.signup_last_name) {
+    profile.signup_last_name = existing.signup_last_name;
+  }
 
   // Preserve existing ATS passwords across My Info saves.
   let existingCreds = {};

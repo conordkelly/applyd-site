@@ -962,3 +962,7 @@ dependencies. Mocked up and approved before it was built.
 **Spam help (2026-10-01).** My Info > Apply email now has a collapsible "Keep these emails out of spam" (`details.spam-help`) with Gmail/Outlook whitelist steps; `.spam-addr` spans are filled with the user's apply address in `renderApplyEmailSettings`. Reason: forwards from the new everydaymail.ca domain land in spam.
 
 **Landing forms removed (2026-10-01).** The hero and closing email/waitlist forms (and their JS) are gone from `index.html`; signed-out visitors now see the same page as signed-in ones, with Create Account / Sign In in the nav as the only call to action. `/api/subscribe` still exists but nothing calls it.
+
+**Hero lede copy (2026-10-20).** First sentence of the hero lede on `index.html` changed from "Stop wasting hours on job application forms." to "Stop wasting hours applying to jobs." Rest of the lede unchanged.
+
+**Applyd Email labels + address source (2026-10-21).** My Info section heading is now "Applyd Email" and its field label "Applyd Address" (was "Apply email" / "Your apply address"; only those two strings changed). The address (`firstname.lastname@everydaymail.ca`) is now built from the names the user signed up with: `welcome.js` saves them once as `profile.signup_first_name` / `signup_last_name`, `profile.js` keeps them across My Info saves, and `ensureApplyEmail` in `_apply_email.js` prefers them over My Info names (falls back to My Info if none saved). Existing addresses are never changed. Local edit, not deployed.

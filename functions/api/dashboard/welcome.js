@@ -87,8 +87,9 @@ export async function onRequestPost(context) {
   profile = ensured.profile;
 
   const firstName =
-    (profile.first_name && String(profile.first_name).trim()) ||
+    (profile.signup_first_name && String(profile.signup_first_name).trim()) ||
     clerkFirst ||
+    (profile.first_name && String(profile.first_name).trim()) ||
     (profile.canonical &&
       profile.canonical.identity &&
       profile.canonical.identity.first_name) ||
@@ -111,7 +112,12 @@ export async function onRequestPost(context) {
     )
       .bind(userId, JSON.stringify(profile))
       .run();
-    return json({ ok: true, skipped: true, reason: result.reason || "skipped" });
+    return json({
+      ok: true,
+      skipped: true,
+      reason: result.reason || "skipped",
+      applyEmail: profile.apply_email || null,
+    });
   }
 
   if (!result.ok) {
@@ -137,9 +143,9 @@ export async function onRequestPost(context) {
       const msg = buildSignupNoticeEmail({
         kind: "account",
         name: (
-          String(profile.first_name || firstName || "").trim() +
+          String(profile.signup_first_name || firstName || "").trim() +
           " " +
-          String(profile.last_name || clerkLast || "").trim()
+          String(profile.signup_last_name || clerkLast || profile.last_name || "").trim()
         ).trim(),
         email,
         applyEmail: profile.apply_email || "",

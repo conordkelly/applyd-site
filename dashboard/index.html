@@ -3317,6 +3317,12 @@ table.list td.shot-cell {
       note.className = 'submit-note ok';
       note.style.display = 'block';
       updateJobSubmitGate();
+        // The first profile load may have shown a placeholder address before
+        // the signup name was saved; show the real one the welcome email used.
+        if (res && res.applyEmail && res.applyEmail !== applyEmailState.applyEmail) {
+          applyEmailState.applyEmail = res.applyEmail;
+          renderApplyEmailSettings();
+        }
       renderOnboardingChecklist();
     } catch (err) {
       note.textContent = 'Something went wrong — try again in a moment.';

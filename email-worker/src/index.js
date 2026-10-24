@@ -185,7 +185,7 @@ function extractBodies(raw) {
   if (split.length > 1) {
     const enc = headerValue(split[0], "content-transfer-encoding");
     return {
-      text: decodeTransfer(split.slice(1).join("\n\n"), enc).trim(),
+      text: decodeTransfer(split.slice(1).join("\n\n"), enc, charsetOf(split[0])).trim(),
       html: "",
     };
   }
@@ -213,14 +213,31 @@ function extractMimePart(raw, mime) {
   const bound = body.search(/\r?\n--/);
   if (bound >= 0) body = body.slice(0, bound);
   const enc = headerValue(partHeaders, "content-transfer-encoding");
-  return decodeTransfer(body, enc).trim();
+  return decodeTransfer(body, enc, charsetOf(partHeaders)).trim();
 }
 
-function decodeTransfer(body, enc) {
+function charsetOf(headers) {
+  const m = String(headers || "").match(/charset\s*=\s*"?([^";\s]+)/i);
+  return m ? m[1] : "utf-8";
+}
+
+// Bytes -> text using the part's charset (default UTF-8). Doing this per byte
+// (String.fromCharCode) turned each byte of a UTF-8 character into its own
+// character, which showed up as "â€™" for an apostrophe and "Â" before spaces.
+function bytesToText(bytes, charset) {
+  try {
+    return new TextDecoder(charset || "utf-8").decode(bytes);
+  } catch {
+    return new TextDecoder("utf-8").decode(bytes);
+  }
+}
+
+function decodeTransfer(body, enc, charset) {
   const e = String(enc || "").trim().toLowerCase();
   if (e === "base64") {
     try {
-      return atob(String(body || "").replace(/\s+/g, ""));
+      const bin = atob(String(body || "").replace(/\s+/g, ""));
+      return bytesToText(Uint8Array.from(bin, (c) => c.charCodeAt(0)), charset);
     } catch {
       return String(body || "");
     }
@@ -228,17 +245,22 @@ function decodeTransfer(body, enc) {
   // Soft line-wraps (`=\n`) mean quoted-printable even if the header
   // was missed — leaving them in shows as random "=" in Gmail.
   if (e === "quoted-printable" || /=\r?\n/.test(String(body || ""))) {
-    return decodeQuotedPrintable(body);
+    return decodeQuotedPrintable(body, charset);
   }
   return String(body || "");
 }
 
-function decodeQuotedPrintable(body) {
-  return String(body || "")
-    .replace(/=\r?\n/g, "")
-    .replace(/=([0-9A-Fa-f]{2})/g, (_, h) =>
-      String.fromCharCode(parseInt(h, 16))
-    );
+function decodeQuotedPrintable(body, charset) {
+  const bytes = [];
+  for (const piece of String(body || "").replace(/=\r?\n/g, "").split(/(=[0-9A-Fa-f]{2})/)) {
+    if (/^=[0-9A-Fa-f]{2}$/.test(piece)) {
+      bytes.push(parseInt(piece.slice(1), 16));
+    } else {
+      // Text that is already real characters (not QP-escaped) goes in as UTF-8.
+      for (const b of new TextEncoder().encode(piece)) bytes.push(b);
+    }
+  }
+  return bytesToText(Uint8Array.from(bytes), charset);
 }
 
 function stripHtml(html) {

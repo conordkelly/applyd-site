@@ -843,23 +843,16 @@ html { scroll-behavior: smooth; }
 .pf-btn.ghost { background: transparent; color: var(--text); border-color: var(--hairline-strong); }
 .pf-btn.ghost:hover { border-color: var(--accent); color: var(--accent); filter: none; }
 
-.pf-plans { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; max-width: 760px; }
-.pf-plan { background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 6px; }
-.pf-name { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 11px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); }
-.pf-big { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 44px; line-height: 1; }
-.pf-big small { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); margin-left: 6px; }
-.pf-priceline { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-top: 6px; }
-.pf-was { font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 16px; color: var(--text-3); text-decoration: line-through; }
-.pf-now { font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 28px; font-variant-numeric: tabular-nums; }
-.pf-now small { font-size: 13px; font-weight: 500; color: var(--text-2); }
-.pf-save { align-self: flex-start; font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 11px; letter-spacing: 0.04em; color: var(--signal); border: 1px solid var(--signal); border-radius: 4px; padding: 2px 7px; margin-top: 4px; }
-.pf-list { margin: 12px 0 14px; padding: 0; list-style: none; display: grid; gap: 6px; font-size: 13.5px; color: var(--text-2); }
-.pf-list li::before { content: "\2713"; color: var(--signal); font-weight: 700; margin-right: 8px; }
-.pf-plan .pf-btn { margin-top: auto; }
+.pf-packs { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; max-width: 820px; }
+.pf-pack { background: var(--surface); border: 1px solid var(--hairline-strong); border-radius: 10px; padding: 22px; display: flex; flex-direction: column; gap: 8px; }
+.pf-n { font-family: 'Big Shoulders Display', sans-serif; font-weight: 700; font-size: 52px; line-height: 1; }
+.pf-n small { display: block; font-family: 'JetBrains Mono', monospace; font-weight: 500; font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-2); margin-top: 6px; }
+.pf-price { font-family: 'Hanken Grotesk', sans-serif; font-weight: 700; font-size: 28px; font-variant-numeric: tabular-nums; margin: 6px 0 10px; }
+.pf-price small { font-size: 13px; font-weight: 500; color: var(--text-2); }
+.pf-pack .pf-btn { margin-top: auto; }
 .pf-fine { font-size: 13px; color: var(--text-2); line-height: 1.5; max-width: 62ch; margin: 16px 0 0; }
-.pf-regular-only { display: none; }
-.pricing.pf-regular .pf-launch-only { display: none; }
-.pricing.pf-regular .pf-regular-only { display: inline; }
+.ref-band { background: rgba(29, 95, 209, 0.08); border: 1px solid var(--accent); border-radius: 8px; padding: 10px 16px; margin: 14px 0 0; font-size: 13.5px; }
+.ref-band[hidden] { display: none; }
 
 .faq-list { max-width: 760px; border-top: 1px solid var(--hairline-strong); }
 .faq-list details { border-bottom: 1px solid var(--hairline-strong); }
@@ -882,7 +875,7 @@ html { scroll-behavior: smooth; }
 .faq-list details p a { color: var(--accent); }
 .faq-list details p { margin: 0 0 18px; font-size: 14.5px; line-height: 1.6; color: var(--text-2); max-width: 62ch; }
 
-@media (max-width: 760px) { .pf-plans { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .pf-packs { grid-template-columns: 1fr; } }
 @media (max-width: 520px) {
   .topbar { flex-wrap: wrap; gap: 14px; }
   .topbar-right { gap: 10px 16px; flex-wrap: wrap; justify-content: flex-start; }
@@ -929,6 +922,8 @@ html { scroll-behavior: smooth; }
       <div id="nav-user-button" style="display:none;"></div>
     </div>
   </header>
+
+  <div class="ref-band" id="ref-band" hidden><b>Referral code <span id="ref-band-code"></span> added.</b> You'll get 5 extra free applications when you sign up.</div>
 
   <section class="hero">
     <div class="hero-copy">
@@ -1019,34 +1014,15 @@ html { scroll-behavior: smooth; }
       <h2>Pricing</h2>
     </div>
     <div class="pf-trial">
-      <div><b>Try it free</b><span>5 free applications, good for 7 days. No card needed.</span></div>
+      <div><b>Try it free</b><span>5 free applications, good for 7 days. No card needed. Have a referral code? Get 5 more that never expire.</span></div>
       <a class="pf-btn ghost" href="/dashboard">Start free</a>
     </div>
-    <div class="pf-plans">
-      <div class="pf-plan">
-        <div class="pf-name">Starter</div>
-        <div class="pf-big">15<small>applications / month</small></div>
-        <div class="pf-priceline">
-          <span class="pf-was pf-launch-only">$9.99</span>
-          <span class="pf-now"><span class="pf-launch-only">$6.99</span><span class="pf-regular-only">$9.99</span><small> / month</small></span>
-        </div>
-        <div class="pf-save pf-launch-only">Save $3.00 every month</div>
-        <ul class="pf-list"><li>Cancel any time</li><li class="pf-launch-only">Launch price locked while subscribed</li></ul>
-        <a class="pf-btn" href="/dashboard">Get Starter</a>
-      </div>
-      <div class="pf-plan">
-        <div class="pf-name">Plus</div>
-        <div class="pf-big">40<small>applications / month</small></div>
-        <div class="pf-priceline">
-          <span class="pf-was pf-launch-only">$29.99</span>
-          <span class="pf-now"><span class="pf-launch-only">$16.99</span><span class="pf-regular-only">$29.99</span><small> / month</small></span>
-        </div>
-        <div class="pf-save pf-launch-only">Save $13.00 every month</div>
-        <ul class="pf-list"><li>Cancel any time</li><li class="pf-launch-only">Launch price locked while subscribed</li></ul>
-        <a class="pf-btn" href="/dashboard">Get Plus</a>
-      </div>
+    <div class="pf-packs">
+      <div class="pf-pack"><div class="pf-n">10<small>applications</small></div><div class="pf-price">$4.99 <small>CAD</small></div><a class="pf-btn" href="/dashboard">Buy 10</a></div>
+      <div class="pf-pack"><div class="pf-n">25<small>applications</small></div><div class="pf-price">$10.99 <small>CAD</small></div><a class="pf-btn" href="/dashboard">Buy 25</a></div>
+      <div class="pf-pack"><div class="pf-n">50<small>applications</small></div><div class="pf-price">$19.99 <small>CAD</small></div><a class="pf-btn" href="/dashboard">Buy 50</a></div>
     </div>
-    <p class="pf-fine">Prices in CAD. Need more in a month? Top up with 10 applications for $6.99. Top-up applications never expire.</p>
+    <p class="pf-fine">Prices in CAD. No subscription. Buy when you need more, or turn on auto-reload. Applications never expire while Applyd is operating.</p>
   </section>
 
   <section class="faq-section" id="faq">
@@ -1056,9 +1032,9 @@ html { scroll-behavior: smooth; }
     <div class="faq-list">
       <details open><summary>Which job sites does Applyd work with?</summary><p>Workday, Ashby, Greenhouse and Lever. Check the link for the platform name, like myworkdayjobs.com, ashbyhq.com, greenhouse.io or lever.co. More platforms coming soon.</p></details>
       <details><summary>How does it work?</summary><p>You add your details and resume once. Then you paste a link to any job on a supported site, and Applyd fills out and submits the application for you. You receive a submission screenshot and confirmation directly to your email.</p></details>
-      <details><summary>What does the free trial include?</summary><p>5 free applications. Use them within 7 days of signing up. You do not need a card.</p></details>
-      <details><summary>What happens to applications I don't use?</summary><p>Plan applications reset each month, so unused ones do not carry over. Top-up applications never expire and are used after your plan applications.</p></details>
-      <details><summary>Can I cancel any time?</summary><p>Yes. Cancel from the Billing page. You keep your plan applications until your renewal date.</p></details>
+      <details><summary>What does the free trial include?</summary><p>5 free applications. Use them within 7 days of signing up. No card needed.</p></details>
+      <details><summary>Do my applications expire?</summary><p>No. Your applications never expire while Applyd is operating.</p></details>
+      <details><summary>Do I have to subscribe?</summary><p>No. There is no monthly plan. You buy applications when you need them, and reload whenever you run out. You can also turn on auto-reload, which reloads 10, 25 or 50 applications (your choice) when you have fewer than 5 left, and turn it off any time.</p></details>
       <details><summary>What if an application can't be completed?</summary><p>It moves to Unable to Process with the reason, and it does not use up one of your applications.</p></details>
       <details><summary>How do I see application confirmations and get replies from employers?</summary><p>Each account gets its own Applyd email address for employer replies. Your Inbox shows them, and they can be forwarded to your personal email.</p></details>
       <details><summary>Do you see my card details?</summary><p>No. Payments are handled by Stripe on their secure page, and Applyd never sees your card.</p></details>
@@ -1217,14 +1193,22 @@ html { scroll-behavior: smooth; }
     })();
   }
 
-  // Pricing: show launch prices while launch spots last; /api/pricing says
-  // when they are gone (then regular prices only). Fails open to launch prices.
-  fetch("/api/pricing").then(function (r) { return r.json(); }).then(function (d) {
-    if (d && d.launch_available === false) {
-      var el = document.getElementById("pricing");
-      if (el) el.classList.add("pf-regular");
-    }
-  }).catch(function () {});
+  // Referral link: applydjobs.com/?ref=APPLYDWILL. A real code is remembered
+  // (it is applied when the new account first opens the dashboard) and the
+  // blue note shows; a made-up code shows nothing.
+  (function () {
+    var raw = "";
+    try { raw = new URLSearchParams(window.location.search).get("ref") || ""; } catch (e) {}
+    var code = raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 32);
+    if (!code) return;
+    fetch("/api/referral-check?code=" + encodeURIComponent(code)).then(function (r) { return r.json(); }).then(function (d) {
+      if (!d || !d.valid) return;
+      try { localStorage.setItem("applyd_ref", d.code); } catch (e) {}
+      var band = document.getElementById("ref-band");
+      var label = document.getElementById("ref-band-code");
+      if (band && label) { label.textContent = d.code; band.hidden = false; }
+    }).catch(function () {});
+  })();
 
   function updateClock() {
     clockEl.textContent = timeNow();

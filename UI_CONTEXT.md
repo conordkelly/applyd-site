@@ -61,22 +61,38 @@ inline `<script>`) would always see `undefined`. No server-side session
 check, so a signed-in visitor briefly sees the signed-out nav before this
 runs.
 
-**Header links, Pricing and FAQ (added 2026-10-20).** The topbar has two
-text links, **Pricing** and **FAQ** (`.top-link`, mono uppercase), left of
-Create Account / Sign In; they smooth-scroll to `#pricing` and `#faq`. (Links to See It In Action and How It Works were tried and removed; those sections keep their `#demo` and `#how` ids.) The header can wrap onto a second line on narrow screens. Both
-sections sit between How it works and the closing line. **Pricing**: a "Try it
-free" strip (5 applications, 7 days, no card) and the two plan cards (Starter
-15 for $6.99, Plus 40 for $16.99, regular prices crossed out, green save tags),
-then a top-up line; all buttons go to `/dashboard`. Pricing and FAQ headers are just the title (no eyebrow line), and every section from See it in action down to the closing line has the same top divider and the same padding (76px above, 70px below; the closing line has 36px below). Prices are written in the
-HTML, not read from the server. The page calls the public `GET /api/pricing`
-(`launch_available`); when the 15 launch spots are gone it adds `.pf-regular`
-to `#pricing`, which hides the crossed-out prices, save tags and "Launch price
-locked" bullets and shows the regular prices. If the call fails it keeps the
-launch prices. **FAQ**: eleven `<details>` questions (job sites, how it works,
-free trial, unused applications, cancelling, failed applications, employer
-replies, card details, when applications get submitted, errors, and an "Additional Questions?" item with the
-info@applydjobs.com address as a mailto link); the first starts open. If plan sizes, prices or trial
-terms change, update this section by hand as well as `_billing.js`.
+**Header links, Pricing and FAQ (added 2026-10-20, Pricing changed to packs
+2026-10-24).** The topbar has two text links, **Pricing** and **FAQ**
+(`.top-link`, mono uppercase), left of Create Account / Sign In; they
+smooth-scroll to `#pricing` and `#faq`. (Links to See It In Action and How It
+Works were tried and removed; those sections keep their `#demo` and `#how`
+ids.) The header can wrap onto a second line on narrow screens. Both sections
+sit between How it works and the closing line, and every section from See it
+in action down to the closing line has the same top divider and padding (76px
+above, 70px below; the closing line has 36px below). Headers are just the
+title, no eyebrow line.
+
+**Pricing**: a "Try it free" strip ("5 free applications, good for 7 days. No
+card needed. Have a referral code? Get 5 more that never expire.") and three
+pack cards, **Buy 10** ($4.99), **Buy 25** ($10.99), **Buy 50** ($19.99),
+then "Prices in CAD. No subscription. Buy when you need more, or turn on
+auto-reload. Applications never expire while Applyd is operating." All
+buttons go to `/dashboard`. Prices are written in the HTML; keep them in step
+with `PACKS` in `functions/api/dashboard/_billing.js`.
+
+**Referral link.** `applydjobs.com/?ref=APPLYDWILL`: the page calls the public
+`GET /api/referral-check?code=`, and for a real code stores it in
+`localStorage` (`applyd_ref`) and shows a blue note under the header,
+"Referral code APPLYDWILL added. You'll get 5 extra free applications when
+you sign up." A made-up code shows nothing. The dashboard applies the stored
+code the first time a new account loads it (it also reads `?ref=` itself).
+
+**FAQ**: eleven `<details>` questions (job sites, how it works, free trial,
+"Do my applications expire?", "Do I have to subscribe?", failed applications,
+employer replies, card details, when applications get submitted, errors, and
+an "Additional Questions?" item with info@applydjobs.com as a mailto link);
+the first starts open. If pack prices or trial terms change, update this
+section by hand as well as `_billing.js`.
 
 **Positioning:** individuals are the primary audience at the root domain,
 not agencies. This was a deliberate call, not just a copy change — the
@@ -566,99 +582,112 @@ Visible only to `ADMIN_USER_ID`. Fetches `/api/dashboard/admin` (GET,
 — email header + job count, then each user's jobs as a table (link,
 status chip, submitted date, completed date).
 
-A stats line sits above the users (launch spots used of 15, active subscribers,
-free trials running). Each user card has a plan row (plan, launch price flag,
-renewal or trial expiry) and an allotment row: remaining applications with the
-plan and top-up split, a number box, and buttons for that user's state.
-Limited users get **Add applications**, **Reset usage** and **Make unlimited**.
-Unlimited users get **Make limited** (sets how many applications they have left
-to the number in the box; `POST /api/dashboard/admin/allocation` action `limit`)
-and **Reset usage**. Make unlimited and Reset usage each ask their own confirm
-question. Adding applications to a user whose trial has ended also ends the
-trial so the applications work.
+A stats line sits above the users (free trials running, referral sign-ups,
+referred users who have bought). Under it, a **Referrals** table lists every
+referred user: the code, their email, the date they used the code, and their
+first purchase (applications, amount and date, or "Not yet"). A **Referral
+codes** table lists each code, its owner, sign-ups and how many of them have
+bought. This is tracking only: the site does not calculate or send referral
+payouts (those are handled by hand outside the site). Each user card has a
+trial row (trial status and expiry, the referral code they used, auto-reload
+size if on) and an allotment row: remaining applications (with how many are
+free trial ones), a number box, and buttons for that user's state. Limited
+users get **Add applications**, **Reset usage** and **Make unlimited**.
+Unlimited users get **Make limited** (sets how many applications they have
+left to the number in the box; `POST /api/dashboard/admin/allocation` action
+`limit`) and **Reset usage**. Make unlimited and Reset usage each ask their own
+confirm question. Adding applications to a user whose trial has ended also ends
+the trial so the applications work.
 
-### Billing (`#billing-section`, plans added 2026-10-14)
+### Billing (`#billing-section`, packs added 2026-10-24)
 
-Monthly plans, mocked up and approved before it was built. **Starter** is 15
-applications a month, **Plus** is 40. Regular prices $9.99 and $29.99 CAD;
-**launch prices $6.99 and $16.99** go to the first 15 people to subscribe
-(`LAUNCH_SPOTS` in `_billing.js`) and stay locked in while they stay
-subscribed (the launch price is set on the Stripe subscription's price).
-Plan applications reset at each renewal and unused ones are lost. **Top-up
-packs** are 10 applications for $6.99 CAD, bought by subscribers, never expire
-and are used after the plan's applications. Auto-reload and the old $2.99 pack
-are gone (old payments still show in history as "25 jobs").
+Applications are bought in one-time packs, mocked up and approved before it
+was built: **10 for $4.99**, **25 for $10.99**, **50 for $19.99** (CAD). They
+never expire while Applyd is operating (the Billing small print says only
+that; the plan to email users and give them 30 days if Applyd ever closes is
+not stated anywhere on the site). The
+earlier monthly plans (Starter 15 / Plus 40 with launch pricing, top-ups,
+cancel/resume/change) were built and pushed 2026-10-14, then replaced; no one
+was subscribed. The leftover plan columns on `users` are unused (the trial
+still uses `plan`, `plan_apps`, `trial_expires_at`).
 
-New nav button **Billing** (after Inbox). Views:
-- **No plan** (new users, ended trials, cancelled): two plan cards with the
-  regular price crossed out beside the launch price, a green "Save $X every
-  month" tag, "Cancel any time" and "Launch price locked while subscribed"
-  bullets, and a Subscribe button. Once the 15 launch spots are gone (or the
-  user already used one) the cards show regular prices only. A line above the
-  cards shows free trial applications left or applications remaining.
-- **Subscribed**: plan (with a green "Launch price" tag), price (regular price
-  crossed out for launch), applications remaining as one total with a split
-  ("11 from your plan, resets Nov 12/2026" and "15 top-up, never expire"),
-  renewal date, any planned plan change, card on file, and buttons **Top Up**,
-  **Change plan**, **Update card**, **Cancel subscription**.
-- **Cancelling** (cancelled but not ended): blue info box with the end date,
-  "Ends" row, **Resume subscription** instead of Change/Cancel.
-- **Payment failed** (`past_due`): red alert box (`#billing-alert`, tokens
-  `--danger`, `--danger-bg`, `--danger-line`) telling them to update their card.
-- Payment history table (hidden when empty).
+**Billing page.** Title, "Buy applications when you need them. Reload whenever
+you run out.", three pack cards each with a **Buy N** button, then a card with
+applications remaining, card on file, an **Auto-reload** switch with a dropdown
+(10, 25 or 50 applications; the trigger is always "fewer than 5 left"), and
+**Update card**. Below: the small print, and a payment history table (hidden
+when empty; auto-reload rows are tagged). A red alert, "Auto-reload is off.
+Your card could not be charged...", shows when a declined card turned
+auto-reload off (`users.auto_reload_error`). Turning the switch on with no
+saved card asks the user to buy a pack with auto-reload ticked first.
 
-**Top Up dialog** (`#topup-modal`): 10 applications, $6.99 CAD, "never expire"
-line, Continue to payment (Stripe), "Powered by" the Stripe logo (embedded PNG).
-**Change plan** (`#plan-modal`) switches the plan from the next renewal; no
-proration, the old plan runs to the end of the period.
+**Buy dialog** (`#topup-modal`): the pack and price, "Your applications never
+expire while Applyd is operating", an auto-reload checkbox with the reload-size
+dropdown, **Continue to payment** (Stripe, card only, no description line, the
+Stripe logo under it).
 
-**Usage badge** (top right of Submission) is one total number with a tag:
-- Subscribed: "N Applications Remaining", plan name tag, bar (full at the
-  plan's size), **Top Up** button. At 3 or fewer, blue border and a note; at 0 a
-  note with **Upgrade to Plus** (Starter only) and **Top Up**, and Submit is
-  disabled. Top Up opens the Top Up dialog; the other buttons open Billing.
-- Free trial: "N Free Applications", "Free trial" tag, "Use them in the next N
-  days/hours", **Choose a plan**. The welcome banner also shows a pill, "5 free
-  applications. Use them within 7 days of signing up."
-- Trial ended: 0, "Trial ended" tag, note, **Choose a plan**.
-- No plan (older users with leftover applications): "No plan" tag, Choose a plan.
-- Unlimited: "Applications submitted", no buttons.
+**Usage badge** (top right of Submission): one total, "N Applications
+Remaining", with "Auto-reload on/off" top right, a bar (full at 25 or more),
+and a **Top Up** button that opens Billing. Under 5 left: blue border and a
+note (with "Auto-reload will add N more when you next submit" if it is on).
+At 0: a note ("You are out of applications. Top up to keep applying." or "Your
+free trial has ended. Top up to keep applying.") and Submit is disabled. A
+small line shows "N free applications expire in X hours" while the trial has
+some. Unlimited: "Applications submitted", no button.
+
+**Free trial and referral codes.** New accounts get 5 applications that expire
+7 days after their first request (`plan='trial'`, `plan_apps`,
+`trial_expires_at`; set in `dashboard/_middleware.js`). When the trial ends
+only its unused applications vanish, so bought and bonus applications stay:
+`effectiveLimit()` in `_job_limit.js` = limit - max(0, trial size - used) once
+expired. A referral code adds 5 bonus applications that never expire. The
+welcome banner shows a trial note ("5 free applications. Use them within 7
+days of signing up.") and a referral box ("Have a referral code? Enter it to
+get 5 more free applications that never expire." with **Apply code**); after a
+code it reads "5 free applications to use within 7 days, plus 5 bonus
+applications that never expire." and "Code X applied...". A code comes from
+the landing link (stored in `localStorage` as `applyd_ref`, applied silently on
+first load) or the box. Rules (`applyReferral` in `_billing.js`): once per
+account, new (trial) accounts only, before any purchase; the code table is
+`REFERRAL_CODES` there (APPLYDWILL, APPLYDAIDEN, APPLYDHUGH, APPLYDCONOR, each
+with an owner name). `ownerEmail` can be filled in to stop an owner using their
+own code. Using a code records `users.referred_by_code` and `referred_at`.
+
+**Referral tracking.** Nothing is paid out by the site. Admin shows, per
+referred user, when they used the code (`referred_at`) and their first purchase
+(the earliest `stripe_payments` row for them: applications, amount, date).
+
+**How balances work.** `users.job_limit` and `job_reset_at` count (remaining =
+limit minus jobs used since the reset). Buying a pack, or the referral bonus,
+adds to `job_limit`. Every credit is keyed on the Stripe PaymentIntent id
+(`stripe_payments.id`) with `INSERT OR IGNORE` plus `UPDATE ... WHERE changes()
+> 0` in one D1 batch, so webhook retries never double-credit. Unlimited users
+stay unlimited; older users with no `job_limit` start from the old default of
+50.
+
+**Auto-reload.** After a job submission (`POST /api/dashboard/jobs`),
+`maybeAutoReload()` charges the saved card off-session for the chosen pack
+when the user has fewer than 5 applications left; on a decline it turns
+auto-reload off and stores `auto_reload_error`. The card is saved when a pack
+is bought with auto-reload ticked (`setup_future_usage=off_session`).
+
+**Money flow.** `POST /api/dashboard/billing/checkout` (`kind` pack or card)
+goes to Stripe Checkout (card only, inline prices, nothing to create in
+Stripe). Stripe calls `POST /api/stripe-webhook`, which handles only
+`checkout.session.completed` (a paid pack, or a card update); all other
+events, including the old subscription ones still registered on the
+destination, are acknowledged and ignored.
 
 Returning from Stripe lands on `/dashboard/?billing=success|cancel|card`;
 `handleBillingReturn()` opens Billing, polls a few seconds for the webhook (it
-compares remaining applications and plan against values saved in
-`sessionStorage` before checkout), then clears the query string.
-
-**How balances work.** `users.job_limit` and `job_reset_at` still count
-(remaining = limit minus jobs used since the reset). Plan applications are
-used first: plan remaining = max(0, `plan_apps` - used), top-up remaining =
-max(0, limit - max(used, `plan_apps`)). At each new period
-(`applyPlanCycle`): reset usage and set limit = plan size + top-up remaining.
-When a subscription ends (`endPlan`): limit = top-up remaining, plan and
-launch price removed. Unlimited users stay unlimited. A user who subscribes
-while holding the old default 50 keeps their unused ones as top-up. Every
-credit is keyed on a Stripe id (`stripe_payments.id`: invoice or
-PaymentIntent) with `INSERT OR IGNORE` plus `UPDATE ... WHERE changes() > 0`
-in one D1 batch, so webhook retries never double-credit.
-
-**Free trial.** New accounts get `plan='trial'`, 5 applications and
-`trial_expires_at` 7 days after their first request (set in
-`dashboard/_middleware.js`). `getAllotment()` treats an expired trial as 0
-remaining. One trial per email comes from Clerk (unique emails); nothing blocks
-a second email. Sign-ups are still closed (`SIGNUPS_OPEN`).
-
-**Money flow.** `POST /api/dashboard/billing/checkout` (`kind` plan, topup or
-card) goes to Stripe Checkout (card only, inline prices, no products to create
-in Stripe). Stripe calls `POST /api/stripe-webhook`. Cancel, resume and plan
-change use the Stripe API directly (`billing/subscription.js`); there is no
-customer portal to set up.
+compares remaining applications against the value saved in `sessionStorage`
+before checkout), then clears the query string.
 
 Env (Cloudflare Pages secrets): `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`.
-The webhook destination needs these events: `checkout.session.completed`,
-`invoice.paid`, `invoice.payment_failed`, `customer.subscription.updated`,
-`customer.subscription.deleted`. Migrations: `2026-10-12-billing.sql` and
-`2026-10-14-plans.sql`; before they run, billing reads fall back to "no plan"
-and billing endpoints answer 503.
+Migrations: `2026-10-12-billing.sql`, `2026-10-14-plans.sql` and
+`2026-10-24-packs.sql` (`auto_reload_jobs`, `referred_by_code`,
+`referred_at`). Before they run, billing reads fall back to "no card,
+auto-reload off, no referral" and billing endpoints answer 503.
 
 ## Backend (`functions/api/dashboard/`)
 
@@ -681,10 +710,12 @@ available at all).
 | `dashboard/resume.js` | GET | Streams the signed-in user's own resume PDF back (used for eventual worker/ATS-attach fetches, not linked from the UI today) |
 | `dashboard/resume.js` | DELETE | Deletes the signed-in user's resume object(s) from R2 |
 | `dashboard/admin.js` | GET | 403 unless `userId === env.ADMIN_USER_ID`; otherwise every user + their jobs |
-| `dashboard/billing.js` | GET | Plan, applications left (plan and top-up split), card on file, plans to offer with launch or regular prices, last 25 payments |
-| `dashboard/billing/checkout.js` | POST | `{ kind: "plan", plan }` subscribe; `{ kind: "topup" }` 10-application pack (needs a plan); `{ kind: "card" }` card-only Checkout. Returns `{ url }` |
-| `dashboard/billing/subscription.js` | POST | `{ action: "cancel" \| "resume" }`, or `{ action: "change", plan }` (applies at next renewal) |
-| `stripe-webhook.js` | POST | Public, verified by `Stripe-Signature`. Starts or renews plans, credits top-ups, saves cards, tracks failures, cancels and endings |
+| `dashboard/billing.js` | GET | Applications left, card on file, the three packs, auto-reload settings, last 25 payments |
+| `dashboard/billing/checkout.js` | POST | `{ kind: "pack", jobs, auto_reload, reload_jobs }` buy a pack; `{ kind: "card" }` card-only Checkout. Returns `{ url }` |
+| `dashboard/billing/auto-reload.js` | POST | `{ enabled, jobs }` switch auto-reload and pick the reload pack (10, 25 or 50); turning on needs a saved card |
+| `dashboard/referral.js` | POST | `{ code }` apply a referral code to the signed-in new account |
+| `referral-check.js` | GET | Public. `?code=` says whether a referral code is real (for the landing page note) |
+| `stripe-webhook.js` | POST | Public, verified by `Stripe-Signature`. Credits a paid pack, saves cards and the auto-reload choice, saves a replaced card |
 
 ## Resume storage (R2)
 

@@ -1,16 +1,7 @@
 // GET /api/dashboard/billing
-// Everything the Billing page needs: plan, applications left (split into plan
-// and top-up), card on file, which plans to offer and at what price, and
-// payment history.
-import {
-  accountSummary,
-  getBillingRow,
-  launchState,
-  isPaidPlan,
-  planPriceCents,
-  PLANS,
-  TOPUP,
-} from "./_billing.js";
+// Everything the Billing page needs: applications left, card on file, the
+// packs for sale, auto-reload settings, and payment history.
+import { accountSummary, getBillingRow, PACKS, AUTO_RELOAD_BELOW } from "./_billing.js";
 import { stripeConfigured } from "../_stripe.js";
 
 function json(data, status) {
@@ -24,10 +15,6 @@ export async function onRequestGet(context) {
   const { env, data } = context;
   const acct = await accountSummary(env, data.userId);
   const row = await getBillingRow(env, data.userId);
-  const launch = await launchState(env, row);
-  // Someone already on a launch price keeps it on any plan; new subscribers
-  // get it while spots last.
-  const launchPricing = acct.plan_launch || launch.available;
 
   let history = [];
   try {
@@ -46,28 +33,16 @@ export async function onRequestGet(context) {
     history = []; // table not created yet
   }
 
-  const plans = Object.keys(PLANS).map((id) => ({
-    id,
-    name: PLANS[id].name,
-    apps: PLANS[id].apps,
-    price_cents: planPriceCents(id, launchPricing),
-    regular_cents: PLANS[id].regular_cents,
-    launch: launchPricing,
-  }));
-
   return json({
     configured: stripeConfigured(env),
     ready: !!row,
     ...acct,
-    has_subscription: isPaidPlan(acct.plan),
-    plan_price_cents: isPaidPlan(acct.plan) ? planPriceCents(acct.plan, acct.plan_launch) : null,
-    plan_regular_cents: isPaidPlan(acct.plan) ? PLANS[acct.plan].regular_cents : null,
     card:
       row && row.stripe_payment_method
         ? { brand: row.card_brand || "", last4: row.card_last4 || "" }
         : null,
-    plans,
-    topup: { apps: TOPUP.apps, price_cents: TOPUP.cents, currency: "CAD" },
+    packs: Object.keys(PACKS).map((k) => ({ jobs: PACKS[k].jobs, price_cents: PACKS[k].cents })),
+    reload_below: AUTO_RELOAD_BELOW,
     history,
   });
 }

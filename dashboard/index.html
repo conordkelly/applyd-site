@@ -956,6 +956,18 @@ table.list td.shot-cell {
   margin: 0;
 }
 
+/* Admin: each user collapses under their header (click, or Enter/Space). */
+.user-group.collapsible > .user-group-head { cursor: pointer; user-select: none; }
+.user-group.collapsible > .user-group-head:hover { background: var(--hairline); }
+.user-group.collapsible > .user-group-head .email::before { content: "\25BE"; display: inline-block; width: 1.3em; color: var(--text-3); }
+.user-group.collapsible.collapsed > .user-group-head .email::before { content: "\25B8"; }
+.user-group.collapsible.collapsed > .user-group-head { border-bottom: none; }
+.user-group.collapsed > .user-body { display: none; }
+.user-group-head:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.admin-fold { display: flex; gap: 8px; margin: 0 0 12px; }
+.admin-fold button { font: inherit; font-size: 12.5px; font-weight: 600; padding: 5px 10px; border: 1px solid var(--hairline-strong); background: var(--surface); color: var(--text); border-radius: 6px; cursor: pointer; }
+.admin-fold button:hover { border-color: var(--accent); color: var(--accent); }
+
 .user-group .empty-state {
   padding: 16px;
   font-size: 13px;
@@ -4358,7 +4370,8 @@ table.list td.shot-cell {
         '<div class="user-group"><div class="user-group-head"><span class="email">Referral codes</span><span class="count">' + rf.codes.length + ' codes</span></div>' +
         '<div style="padding:4px 14px 10px;overflow-x:auto;"><table class="bill-hist"><thead><tr><th>Code</th><th>Owner</th><th>Sign-ups</th><th>Bought</th></tr></thead><tbody>' + codeRows + '</tbody></table></div></div>';
 
-      container.innerHTML = stats + referralBlock + data.users.map(function (u) {
+      var foldBar = '<div class="admin-fold"><button type="button" id="admin-expand-all">Expand all users</button><button type="button" id="admin-collapse-all">Collapse all users</button></div>';
+      container.innerHTML = stats + referralBlock + foldBar + data.users.map(function (u) {
         var us = u.usage || {};
         var trialText = 'None', dateText = '';
         if (us.plan === 'trial') {
@@ -4369,9 +4382,12 @@ table.list td.shot-cell {
         var left = us.unlimited
           ? 'Allotment: <b>' + us.used + ' / unlimited</b>'
           : 'Remaining: <b>' + us.remaining + '</b>' + (us.trial_active && us.trial_remaining > 0 ? ' (' + us.trial_remaining + ' free trial)' : '');
-        return '<div class="user-group">' +
-          '<div class="user-group-head"><span class="email">' + escapeHtml(u.email || u.id) + '</span>' +
-          '<span class="count">' + u.jobs.length + ' application(s) submitted</span></div>' +
+        var isOpen = !!adminOpen[u.id];
+        var leftText = us.unlimited ? 'unlimited' : us.remaining + ' left';
+        return '<div class="user-group collapsible' + (isOpen ? '' : ' collapsed') + '" data-gid="' + escapeHtml(u.id) + '">' +
+          '<div class="user-group-head" role="button" tabindex="0" aria-expanded="' + (isOpen ? 'true' : 'false') + '"><span class="email">' + escapeHtml(u.email || u.id) + '</span>' +
+          '<span class="count">' + leftText + ' · ' + u.jobs.length + ' application(s) submitted</span></div>' +
+          '<div class="user-body">' +
           '<div class="alloc-row"><span>Trial: <b>' + escapeHtml(trialText) + '</b></span>' + (dateText ? '<span>' + escapeHtml(dateText) + '</span>' : '') +
           (us.referral_code ? '<span>Referral code: <b>' + escapeHtml(us.referral_code) + '</b></span>' : '') +
           (us.auto_reload ? '<span>Auto-reload: <b>' + us.auto_reload_jobs + '</b></span>' : '') + '</div>' +
@@ -4386,13 +4402,45 @@ table.list td.shot-cell {
               '<button type="button" class="alloc-btn" data-act="unlimited">Make unlimited</button>') +
           '</div>' +
           renderUserJobsTable(u.jobs) +
-          '</div>';
+          '</div></div>';
       }).join('');
     } catch (e) {
       container.innerHTML = '<div class="empty-state">Couldn\'t load — try again.</div>';
       console.error(e);
     }
   }
+
+  // Which users are expanded on the Admin page; kept across reloads of the list.
+  var adminOpen = {};
+
+  function setAdminOpen(group, open) {
+    group.classList.toggle('collapsed', !open);
+    var head = group.querySelector('.user-group-head');
+    if (head) head.setAttribute('aria-expanded', open ? 'true' : 'false');
+    adminOpen[group.getAttribute('data-gid')] = open;
+  }
+
+  document.getElementById('admin-content').addEventListener('click', function (e) {
+    var t = e.target;
+    if (!t.closest) return;
+    if (t.closest('#admin-expand-all')) {
+      document.querySelectorAll('#admin-content .user-group.collapsible').forEach(function (g) { setAdminOpen(g, true); });
+      return;
+    }
+    if (t.closest('#admin-collapse-all')) {
+      document.querySelectorAll('#admin-content .user-group.collapsible').forEach(function (g) { setAdminOpen(g, false); });
+      return;
+    }
+    var head = t.closest('.user-group.collapsible > .user-group-head');
+    if (head) setAdminOpen(head.parentNode, head.parentNode.classList.contains('collapsed'));
+  });
+  document.getElementById('admin-content').addEventListener('keydown', function (e) {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    var head = e.target.closest ? e.target.closest('.user-group.collapsible > .user-group-head') : null;
+    if (!head || e.target !== head) return;
+    e.preventDefault();
+    setAdminOpen(head.parentNode, head.parentNode.classList.contains('collapsed'));
+  });
 
   document.getElementById('admin-content').addEventListener('click', async function (e) {
     var btn = e.target.closest ? e.target.closest('.alloc-btn') : null;

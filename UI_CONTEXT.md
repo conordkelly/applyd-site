@@ -589,7 +589,12 @@ bought. This is tracking only: the site does not calculate or send referral
 payouts (those are handled by hand outside the site). Each user card has a
 trial row (trial status and expiry, the referral code they used, auto-reload
 size if on) and an allotment row: remaining applications (with how many are
-free trial ones), a number box, and buttons for that user's state. Limited
+free trial ones), a number box, and buttons for that user's state. Each user
+card collapses under its header (click it, or Enter/Space when focused); all
+start collapsed, the header shows "N left · N application(s) submitted", and
+**Expand all users** / **Collapse all users** sit above the cards. Which users
+are open is remembered until the page is reloaded (`adminOpen`), so adding
+applications to someone does not close their card. Limited
 users get **Add applications**, **Reset usage** and **Make unlimited**.
 Unlimited users get **Make limited** (sets how many applications they have
 left to the number in the box; `POST /api/dashboard/admin/allocation` action

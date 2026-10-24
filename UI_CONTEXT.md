@@ -72,8 +72,8 @@ in action down to the closing line has the same top divider and padding (76px
 above, 70px below; the closing line has 36px below). Headers are just the
 title, no eyebrow line.
 
-**Pricing**: a "Try it free" strip ("5 free applications, good for 7 days. No
-card needed. Have a referral code? Get 5 more that never expire.") and three
+**Pricing**: a "Try it free" strip ("5 free applications. Use within 7 days. No
+card needed.") and three
 pack cards, **Buy 10** ($4.99), **Buy 25** ($10.99), **Buy 50** ($19.99),
 then "Prices in CAD. No subscription. Buy when you need more, or turn on
 auto-reload. Applications never expire while Applyd is operating." All

@@ -601,9 +601,10 @@ the trial so the applications work.
 
 Applications are bought in one-time packs, mocked up and approved before it
 was built: **10 for $4.99**, **25 for $10.99**, **50 for $19.99** (CAD). They
-never expire while Applyd is operating (the Billing small print says only
-that; the plan to email users and give them 30 days if Applyd ever closes is
-not stated anywhere on the site). The
+do not expire (the FAQ says "Purchased applications do not expire."; the buy
+dialog says they never expire while Applyd is operating; the Billing small
+print is just "Prices in CAD."; the plan to email users and give them 30 days
+if Applyd ever closes is not stated anywhere on the site). The
 earlier monthly plans (Starter 15 / Plus 40 with launch pricing, top-ups,
 cancel/resume/change) were built and pushed 2026-10-14, then replaced; no one
 was subscribed. The leftover plan columns on `users` are unused (the trial

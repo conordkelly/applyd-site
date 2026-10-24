@@ -40,7 +40,13 @@ async function candidates(env) {
   return out;
 }
 
-export async function onRequestGet({ env }) {
+export async function onRequestGet({ request, env }) {
+  if (new URL(request.url).searchParams.get("all")) {
+    const users = await env.DB.prepare(
+      "SELECT u.id, u.email, u.created_at, u.job_limit, (SELECT COUNT(*) FROM jobs j WHERE j.user_id = u.id) AS jobs, (SELECT email FROM apply_email_addresses a WHERE a.user_id = u.id) AS apply_address FROM users u ORDER BY u.created_at DESC"
+    ).all();
+    return json({ users: users.results });
+  }
   return json({ matches: await candidates(env) });
 }
 

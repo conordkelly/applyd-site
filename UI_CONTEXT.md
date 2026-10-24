@@ -75,9 +75,7 @@ title, no eyebrow line.
 **Pricing**: a "Try it free" strip ("5 free applications. Use within 7 days. No
 card needed.") and three
 pack cards, **Buy 10** ($4.99), **Buy 25** ($10.99), **Buy 50** ($19.99),
-then "Prices in CAD. No subscription. Buy when you need more, or turn on
-auto-reload. Applications never expire while Applyd is operating." All
-buttons go to `/dashboard`. Prices are written in the HTML; keep them in step
+then "Prices in CAD. Tax not included." All buttons go to `/dashboard`. Prices are written in the HTML; keep them in step
 with `PACKS` in `functions/api/dashboard/_billing.js`.
 
 **Referral link.** `applydjobs.com/?ref=APPLYDWILL`: the page calls the public

@@ -3,6 +3,7 @@
 //   GET   lists matching users and what they own (read-only)
 //   POST  { ids: [...] } deletes only those ids, and only if they still match
 const PREFIXES = ["john.smith", "conor.kelly3", "test1.test2", "kelvin.adzikah", "conor.kelly2"];
+const ALLOWED_IDS = ["user_3L0xJplbZyScUNC5BuDc4ZR0tqI", "user_3L0st4gImrw91ASEyQpm2nEfT9j", "user_3KjgYC6j2sER6OOYYHzP2GVa0ZB", "user_3KFBuaZfJfW6msXTaX3C0slhQsU", "user_3JmbCklnM1L0wtJaf5XQDhzL9Yt", "user_3Ik0NIiJSvyv2gwwdVISFrQWSSd"];
 const EXACT = ["conor.kelly@hotmail.ca"];
 
 function json(data, status) {
@@ -54,7 +55,13 @@ export async function onRequestPost({ request, env }) {
   const body = await request.json().catch(() => ({}));
   const ids = Array.isArray(body.ids) ? body.ids.map(String) : [];
   if (!ids.length) return json({ error: "ids required" }, 400);
-  const allowed = new Map((await candidates(env)).map((u) => [u.id, u]));
+  const allowed = new Map();
+  for (const id of ALLOWED_IDS) {
+    const u = await env.DB.prepare("SELECT id, email, job_limit FROM users WHERE id = ?").bind(id).first();
+    if (!u) continue;
+    const p = await env.DB.prepare("SELECT COUNT(*) AS n FROM stripe_payments WHERE user_id = ?").bind(id).first();
+    allowed.set(id, { ...u, payments: p ? p.n : 0 });
+  }
   const done = [];
   const skipped = [];
   for (const id of ids) {

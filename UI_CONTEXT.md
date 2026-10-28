@@ -949,6 +949,16 @@ bound as the Email Routing catch-all on `everydaymail.ca`; it stores to D1
 and re-sends copies via Resend. Fill worker gets `canonical.contact.email` =
 apply address (`functions/api/worker/profile.js`).
 
+**Inbox email view (2026-10-28).** Opening a message (user Inbox and Admin → Mail)
+shows the email's HTML in a locked `<iframe class="inbox-frame">`
+(`sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"`,
+no scripts; `<base target="_blank">` so links open in a new tab), sized to its
+content by `fitInboxFrames`. Emails with no HTML part show plain text in
+`.inbox-body`. A text part under 10 characters (some senders send just "|") is
+ignored in favour of the HTML's text, which is also what the reply quote uses
+(`inboxPlainText`). Remote images load as they do in Gmail (no "Show images"
+step).
+
 **First-time tour (2026-09-25).** A 5-step guided tour for new users: a
 dimmed page with a spotlight on each area and a small card explaining it
 (My Info, My Jobs, the Submission/Processing/Completed tabs, Inbox, then a

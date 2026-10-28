@@ -902,6 +902,15 @@ table.list td.shot-cell {
   line-height: 1.5;
   margin-top: 12px;
 }
+.inbox-frame {
+  display: block;
+  width: 100%;
+  min-height: 200px;
+  margin-top: 12px;
+  border: 1px solid var(--hairline);
+  border-radius: 6px;
+  background: #fff;
+}
 .admin-user-pick {
   display: flex;
   flex-wrap: wrap;
@@ -4225,7 +4234,8 @@ table.list td.shot-cell {
         '<p class="inbox-msg-meta">From: ' + escapeHtml(m.from_address || '') +
         '<br>To: ' + escapeHtml(m.to_address || '') +
         '<br>' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 19)) + '</p>' +
-        '<div class="inbox-body">' + escapeHtml(m.body_text || stripHtmlClient(m.body_html || '') || '') + '</div>';
+        inboxBodyHtml(m);
+      fitInboxFrames(detail);
       document.getElementById('inbox-back').addEventListener('click', function () {
         detail.style.display = 'none';
         detail.innerHTML = '';
@@ -4248,7 +4258,43 @@ table.list td.shot-cell {
   function stripHtmlClient(html) {
     var d = document.createElement('div');
     d.innerHTML = html;
+    d.querySelectorAll('style, script, title').forEach(function (n) { n.remove(); });
     return (d.textContent || '').trim();
+  }
+
+  // Plain text of a message. Some senders put a stray "|" in the text part and
+  // the real content only in the HTML part, so a very short text falls back to the HTML.
+  function inboxPlainText(m) {
+    var t = String(m.body_text || '').trim();
+    if (t.length >= 10) return t;
+    return stripHtmlClient(m.body_html || '') || t;
+  }
+
+  // Message body for the inbox: the real email in a locked box (scripts blocked,
+  // links open in a new tab), or plain text when the email has no HTML part.
+  function inboxBodyHtml(m) {
+    var html = String(m.body_html || '');
+    if (!html.trim() || !stripHtmlClient(html)) {
+      return '<div class="inbox-body">' + escapeHtml(inboxPlainText(m)) + '</div>';
+    }
+    var doc = '<base target="_blank">' + html;
+    return '<iframe class="inbox-frame" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" srcdoc="' +
+      escapeHtml(doc).replace(/"/g, '&quot;') + '"></iframe>';
+  }
+
+  // Grow each email box to fit its content (allow-same-origin without allow-scripts
+  // lets us measure it; the email itself still cannot run code).
+  function fitInboxFrames(root) {
+    root.querySelectorAll('.inbox-frame').forEach(function (f) {
+      function fit() {
+        try {
+          var h = f.contentDocument && f.contentDocument.documentElement.scrollHeight;
+          if (h) f.style.height = Math.min(h + 4, 6000) + 'px';
+        } catch (e) { /* leave the default height */ }
+      }
+      f.addEventListener('load', fit);
+      fit();
+    });
   }
 
   function extractEmailAddress(fromHeader) {
@@ -4269,7 +4315,7 @@ table.list td.shot-cell {
   function quoteInboxMessage(m, maxChars) {
     var when = String(m.received_at || '').replace('T', ' ').slice(0, 19);
     var who = m.from_address || 'them';
-    var body = String(m.body_text || stripHtmlClient(m.body_html || '') || '').trim();
+    var body = inboxPlainText(m).trim();
     var cap = maxChars || 8000;
     if (body.length > cap) body = body.slice(0, cap) + '\n[...]';
     return '\n\nOn ' + (when || 'this date') + ', ' + who + ' wrote:\n\n' + body;
@@ -4556,7 +4602,8 @@ table.list td.shot-cell {
         '<p class="inbox-msg-meta">From: ' + escapeHtml(m.from_address || '') +
         '<br>To: ' + escapeHtml(m.to_address || '') +
         '<br>' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 19)) + '</p>' +
-        '<div class="inbox-body">' + escapeHtml(m.body_text || stripHtmlClient(m.body_html || '') || '') + '</div>';
+        inboxBodyHtml(m);
+      fitInboxFrames(pane);
       document.getElementById('admin-mail-back').addEventListener('click', function () {
         renderAdminUserMail(userId);
       });

@@ -905,7 +905,7 @@ table.list td.shot-cell {
 .inbox-frame {
   display: block;
   width: 100%;
-  min-height: 200px;
+  height: 60px;
   margin-top: 12px;
   border: 1px solid var(--hairline);
   border-radius: 6px;
@@ -4277,7 +4277,11 @@ table.list td.shot-cell {
     if (!html.trim() || !stripHtmlClient(html)) {
       return '<div class="inbox-body">' + escapeHtml(inboxPlainText(m)) + '</div>';
     }
-    var doc = '<base target="_blank">' + html;
+    // Defaults for emails that bring no styling of their own (the email's own CSS
+    // comes after and wins). Designed emails (tables) keep their own spacing.
+    var pad = /<table/i.test(html) ? '' : 'padding:16px 18px;';
+    var doc = '<base target="_blank"><style>html,body{margin:0}body{' + pad +
+      'font:14px/1.5 -apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;color:#12151B}</style>' + html;
     return '<iframe class="inbox-frame" sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox" srcdoc="' +
       escapeHtml(doc).replace(/"/g, '&quot;') + '"></iframe>';
   }
@@ -4288,6 +4292,8 @@ table.list td.shot-cell {
     root.querySelectorAll('.inbox-frame').forEach(function (f) {
       function fit() {
         try {
+          // Collapse first: otherwise the page can only ever measure as tall as the box already is.
+          f.style.height = '0px';
           var h = f.contentDocument && f.contentDocument.documentElement.scrollHeight;
           if (h) f.style.height = Math.min(h + 4, 6000) + 'px';
         } catch (e) { /* leave the default height */ }

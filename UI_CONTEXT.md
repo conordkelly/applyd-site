@@ -953,7 +953,10 @@ apply address (`functions/api/worker/profile.js`).
 shows the email's HTML in a locked `<iframe class="inbox-frame">`
 (`sandbox="allow-same-origin allow-popups allow-popups-to-escape-sandbox"`,
 no scripts; `<base target="_blank">` so links open in a new tab), sized to its
-content by `fitInboxFrames`. Emails with no HTML part show plain text in
+content by `fitInboxFrames` (collapses the box to 0 first so it can shrink).
+Emails without tables get a default sans-serif font and 16px/18px padding
+(injected before the email's own CSS, so the email still wins); designed emails
+(with tables) keep their own look. Emails with no HTML part show plain text in
 `.inbox-body`. A text part under 10 characters (some senders send just "|") is
 ignored in favour of the HTML's text, which is also what the reply quote uses
 (`inboxPlainText`). Remote images load as they do in Gmail (no "Show images"

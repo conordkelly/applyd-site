@@ -2,6 +2,7 @@
 // GET /api/dashboard/admin/mail?userId=&id= — one message for a user
 
 import { ensureApplyEmailTables } from "../../_apply_email.js";
+import { decodeMessageHeaders } from "../../_mime.js";
 
 function json(data, status) {
   return new Response(JSON.stringify(data), {
@@ -32,7 +33,7 @@ export async function onRequestGet(context) {
       .bind(id, userId)
       .first();
     if (!row) return json({ error: "Not found" }, 404);
-    return json({ message: row });
+    return json({ message: decodeMessageHeaders(row) });
   }
 
   if (userId) {
@@ -56,7 +57,7 @@ export async function onRequestGet(context) {
     return json({
       user: user || { id: userId },
       applyEmail: (addr && addr.email) || null,
-      messages: results || [],
+      messages: (results || []).map(decodeMessageHeaders),
     });
   }
 

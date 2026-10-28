@@ -6,6 +6,7 @@ import {
   ensureApplyEmail,
   ensureApplyEmailTables,
 } from "../_apply_email.js";
+import { decodeMessageHeaders } from "../_mime.js";
 
 function json(data, status) {
   return new Response(JSON.stringify(data), {
@@ -52,7 +53,7 @@ export async function onRequestGet(context) {
       .bind(id, data.userId)
       .first();
     if (!row) return json({ error: "Not found" }, 404);
-    return json({ message: row });
+    return json({ message: decodeMessageHeaders(row) });
   }
 
   const { results } = await env.DB.prepare(
@@ -76,7 +77,7 @@ export async function onRequestGet(context) {
   return json({
     applyEmail: profile.apply_email || null,
     forwardToPersonal: profile.apply_email_forward_to_personal !== false,
-    messages: results || [],
+    messages: (results || []).map(decodeMessageHeaders),
   });
 }
 

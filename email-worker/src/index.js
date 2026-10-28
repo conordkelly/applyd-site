@@ -17,10 +17,11 @@ export default {
     const envelopeFrom = String(message.from || "").trim();
     // Prefer the visible From header: the envelope sender is often a
     // bounce-tracking ID (e.g. 0102...@amazonses.com) with no readable name.
-    const from =
-      String(message.headers.get("from") || "").trim() || envelopeFrom;
+    const from = decodeMimeWords(
+      String(message.headers.get("from") || "").trim() || envelopeFrom
+    );
     const replyToHeader = String(message.headers.get("reply-to") || "").trim();
-    const subject = message.headers.get("subject") || "(no subject)";
+    const subject = decodeMimeWords(message.headers.get("subject") || "(no subject)");
     const receivedAt = new Date().toISOString();
     const id = crypto.randomUUID();
 
@@ -216,6 +217,42 @@ function extractMimePart(raw, mime) {
   return decodeTransfer(body, enc, charsetOf(partHeaders)).trim();
 }
 
+// Header text like =?UTF-8?B?...?= or =?utf-8?Q?We=E2=80=99ve?= -> real characters.
+function decodeMimeWords(value) {
+  const str = String(value || "");
+  if (!str.includes("=?")) return str;
+  return str
+    .replace(/(\?=)\s+(?==\?)/g, "$1")
+    .replace(/=\?([^?\s]+)\?([bBqQ])\?([^?]*)\?=/g, (whole, charset, enc, text) => {
+      try {
+        let bytes;
+        if (enc.toLowerCase() === "b") {
+          bytes = Uint8Array.from(atob(text), (c) => c.charCodeAt(0));
+        } else {
+          const out = [];
+          for (const piece of text.replace(/_/g, " ").split(/(=[0-9A-Fa-f]{2})/)) {
+            if (/^=[0-9A-Fa-f]{2}$/.test(piece)) out.push(parseInt(piece.slice(1), 16));
+            else for (let i = 0; i < piece.length; i++) out.push(piece.charCodeAt(i) & 255);
+          }
+          bytes = Uint8Array.from(out);
+        }
+        return bytesToText(bytes, charset.split("*")[0]);
+      } catch {
+        return whole;
+      }
+    });
+}
+
+// A Reply-To / From header -> one plain address, or "" if there isn't a valid one.
+// Resend rejects the whole send if reply_to is malformed.
+function cleanReplyTo(raw) {
+  const text = decodeMimeWords(raw);
+  const m =
+    text.match(/<\s*([^<>\s,;"]+@[^<>\s,;"]+\.[^<>\s,;"]+)\s*>/) ||
+    text.match(/([^\s<>",;()]+@[^\s<>",;()]+\.[^\s<>",;()]+)/);
+  return m ? m[1] : "";
+}
+
 function charsetOf(headers) {
   const m = String(headers || "").match(/charset\s*=\s*"?([^";\s]+)/i);
   return m ? m[1] : "utf-8";
@@ -336,18 +373,32 @@ async function forwardViaResend(env, opts) {
     text,
     html,
   };
-  const replyTo =
-    String(opts.replyTo || "").trim() || String(opts.originalFrom || "").trim();
+  const replyTo = cleanReplyTo(opts.replyTo) || cleanReplyTo(opts.originalFrom);
   if (replyTo) payload.reply_to = replyTo;
 
-  const res = await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: "Bearer " + apiKey,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(payload),
-  });
+  const send = () =>
+    fetch("https://api.resend.com/emails", {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + apiKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
+    });
+  let res = await send();
+  if (!res.ok && payload.reply_to) {
+    // A bad reply_to must never lose the email: try once more without it.
+    let msg = "";
+    try {
+      msg = JSON.stringify(await res.clone().json());
+    } catch {
+      /* ignore */
+    }
+    if (/reply_to/i.test(msg)) {
+      delete payload.reply_to;
+      res = await send();
+    }
+  }
 
   if (!res.ok) {
     let err = "Resend HTTP " + res.status;

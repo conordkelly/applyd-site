@@ -2,6 +2,7 @@
 // Stores messages in D1 and optionally re-sends a copy to the user's
 // personal email via Resend (Cloudflare message.forward only works to
 // pre-verified destinations — Resend handles arbitrary personal inboxes).
+// If Resend fails, it falls back to message.forward for verified destinations.
 
 const APPLY_EMAIL_DOMAIN = "everydaymail.ca";
 
@@ -85,10 +86,22 @@ export default {
         if (fwd.ok) {
           forwardStatus = "sent";
           forwardedAt = new Date().toISOString();
-        } else if (fwd.skipped) {
-          forwardStatus = "skipped:" + (fwd.reason || "skipped");
         } else {
-          forwardStatus = "error:" + String(fwd.error || "failed").slice(0, 120);
+          const resendProblem = fwd.skipped
+            ? "skipped:" + (fwd.reason || "skipped")
+            : "error:" + String(fwd.error || "failed").slice(0, 120);
+          // Backup: Resend refused (paused account, bad key, ...). Cloudflare's
+          // own forward passes the original email along untouched, but only to
+          // addresses verified under Email Routing > Destination addresses.
+          try {
+            await message.forward(personal);
+            forwardStatus = "sent:cloudflare";
+            forwardedAt = new Date().toISOString();
+          } catch (e) {
+            forwardStatus = (
+              resendProblem + " | cloudflare:" + String((e && e.message) || e)
+            ).slice(0, 240);
+          }
         }
       } else if (!forwardOn) {
         forwardStatus = "disabled";

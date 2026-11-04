@@ -962,6 +962,14 @@ ignored in favour of the HTML's text, which is also what the reply quote uses
 (`inboxPlainText`). Remote images load as they do in Gmail (no "Show images"
 step).
 
+**Times (2026-11-04).** Stored times are UTC; every one the dashboard shows
+is converted to the viewer's time zone in 12-hour form. Two-line cells use
+`formatLocalDateTime` ("Nov 4/2026" over "1:28 PM"); one-line spots (Inbox and
+Admin → Mail lists and headers, Admin jobs created/completed) use
+`formatLocalInline` ("Nov 4/2026, 1:28 PM"). The only raw UTC timestamp left is
+the "On ..., X wrote:" line in a reply quote, on purpose (the reader may be in
+another zone).
+
 **First-time tour (2026-09-25).** A 5-step guided tour for new users: a
 dimmed page with a spotlight on each area and a small card explaining it
 (My Info, My Jobs, the Submission/Processing/Completed tabs, Inbox, then a

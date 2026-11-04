@@ -3594,6 +3594,14 @@ table.list td.shot-cell {
     };
   }
 
+  // One-line version for lists and headers: "Nov 4/2026, 1:28 PM" in the viewer's
+  // time zone. Empty/unparseable values come back as given (or '').
+  function formatLocalInline(ts) {
+    if (!ts) return '';
+    var w = formatLocalDateTime(ts);
+    return w ? w.date + ', ' + w.time : String(ts);
+  }
+
   function reportIssueDraft(r, completedLabel) {
     var email = (window.Clerk && window.Clerk.user && window.Clerk.user.primaryEmailAddress)
       ? window.Clerk.user.primaryEmailAddress.emailAddress : '';
@@ -3658,7 +3666,7 @@ table.list td.shot-cell {
             var w = formatLocalDateTime(r[dateField]);
             return w ? escapeHtml(w.date) + '<br>' + escapeHtml(w.time) : '';
           }
-          return escapeHtml((r[dateField] || '').replace('T', ' ').slice(0, 16));
+          return escapeHtml(formatLocalInline(r[dateField]));
         })() + '</td>';
       if (withReason) {
         html += '<td class="reason-cell">' + (r.rejected_reason ? escapeHtml(r.rejected_reason) : '<span class="reason-empty">—</span>') + '</td>';
@@ -4128,8 +4136,8 @@ table.list td.shot-cell {
       var statusTitle = isRejected && r.rejected_reason ? ' title="' + escapeHtml(r.rejected_reason) + '"' : '';
       html += '<tr><td class="link-cell"><a href="' + escapeHtml(r.job_url) + '" target="_blank" rel="noopener">' + escapeHtml(r.job_url) + '</a></td>' +
         '<td><span class="' + statusClass + '"' + statusTitle + '>' + escapeHtml(statusLabel) + '</span></td>' +
-        '<td class="date-cell">' + escapeHtml((r.created_at || '').replace('T', ' ').slice(0, 16)) + '</td>' +
-        '<td class="date-cell">' + escapeHtml((r.completed_at || '').replace('T', ' ').slice(0, 16)) + '</td></tr>';
+        '<td class="date-cell">' + escapeHtml(formatLocalInline(r.created_at)) + '</td>' +
+        '<td class="date-cell">' + escapeHtml(formatLocalInline(r.completed_at)) + '</td></tr>';
     });
     html += '</tbody></table>';
     return html;
@@ -4197,7 +4205,7 @@ table.list td.shot-cell {
         btn.innerHTML =
           '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
           '<p class="inbox-msg-meta">' + escapeHtml(m.from_address || '') +
-          ' · ' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 16)) + '</p>';
+          ' · ' + escapeHtml(formatLocalInline(m.received_at)) + '</p>';
         btn.addEventListener('click', function () { openInboxMessage(m.id); });
         li.appendChild(btn);
         ul.appendChild(li);
@@ -4233,7 +4241,7 @@ table.list td.shot-cell {
         '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
         '<p class="inbox-msg-meta">From: ' + escapeHtml(m.from_address || '') +
         '<br>To: ' + escapeHtml(m.to_address || '') +
-        '<br>' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 19)) + '</p>' +
+        '<br>' + escapeHtml(formatLocalInline(m.received_at)) + '</p>' +
         inboxBodyHtml(m);
       fitInboxFrames(detail);
       document.getElementById('inbox-back').addEventListener('click', function () {
@@ -4580,7 +4588,7 @@ table.list td.shot-cell {
         btn.innerHTML =
           '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
           '<p class="inbox-msg-meta">' + escapeHtml(m.from_address || '') +
-          ' · ' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 16)) + '</p>';
+          ' · ' + escapeHtml(formatLocalInline(m.received_at)) + '</p>';
         btn.addEventListener('click', function () {
           openAdminMailMessage(userId, m.id, pane, head);
         });
@@ -4607,7 +4615,7 @@ table.list td.shot-cell {
         '<p class="inbox-msg-subject">' + escapeHtml(m.subject || '(no subject)') + '</p>' +
         '<p class="inbox-msg-meta">From: ' + escapeHtml(m.from_address || '') +
         '<br>To: ' + escapeHtml(m.to_address || '') +
-        '<br>' + escapeHtml((m.received_at || '').replace('T', ' ').slice(0, 19)) + '</p>' +
+        '<br>' + escapeHtml(formatLocalInline(m.received_at)) + '</p>' +
         inboxBodyHtml(m);
       fitInboxFrames(pane);
       document.getElementById('admin-mail-back').addEventListener('click', function () {

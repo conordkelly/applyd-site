@@ -595,6 +595,26 @@ table.grid input[type="text"]:focus {
   cursor: pointer;
 }
 
+.add-rows {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--hairline-strong);
+  border-radius: 6px;
+  overflow: hidden;
+}
+.add-rows .add-row-btn { border: none; border-radius: 0; }
+.add-rows .add-row-btn:hover { background: rgba(29, 95, 209, 0.07); }
+.add-rows select {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12.5px;
+  color: var(--text);
+  background: var(--surface-2);
+  border: none;
+  border-left: 1px solid var(--hairline-strong);
+  padding: 0 10px;
+  cursor: pointer;
+}
+
 .submit-btn {
   font-family: 'Hanken Grotesk', sans-serif;
   font-weight: 700;
@@ -1377,7 +1397,14 @@ table.list td.shot-cell {
           </table>
         </div>
         <div class="grid-actions">
-          <button class="add-row-btn" id="add-row-btn">+ Add row</button>
+          <span class="add-rows">
+            <button type="button" class="add-row-btn" id="add-row-btn">+ Add rows</button>
+            <select id="add-row-count" aria-label="Number of rows to add">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="20">20</option>
+            </select>
+          </span>
           <button class="submit-btn" id="submit-btn">Submit</button>
         </div>
         <p class="submit-note" id="submit-note" style="display:none;"></p>
@@ -1801,7 +1828,13 @@ table.list td.shot-cell {
   }
 
   for (var i = 0; i < ROW_MIN; i++) addRow();
-  document.getElementById('add-row-btn').addEventListener('click', addRow);
+  document.getElementById('add-row-btn').addEventListener('click', function () {
+    var count = parseInt(document.getElementById('add-row-count').value, 10) || 5;
+    var firstNew = gridBody.children.length;
+    for (var i = 0; i < count; i++) addRow();
+    var input = gridBody.children[firstNew] && gridBody.children[firstNew].querySelector('input');
+    if (input) input.focus();
+  });
 
   function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });

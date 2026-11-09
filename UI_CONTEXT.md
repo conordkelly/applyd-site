@@ -265,8 +265,10 @@ Segmented pill switcher (`.tabs` / `.tab-btn`, active tab filled solid,
 accent background) between three panels:
 
 - **Submission** — a blank grid (`table.grid`) the user pastes job links
-  into, `+ Add row`, `Submit`. Submitting POSTs to `/api/dashboard/jobs`
-  and clears the grid.
+  into (starts at 6 rows), `+ Add rows` with a 5 / 10 / 20 dropdown beside it
+  (`.add-rows`, `#add-row-count`; adds that many rows and focuses the first new
+  one), `Submit`. Submitting POSTs to `/api/dashboard/jobs` and resets the grid
+  to 6 rows.
 - **Processing** — jobs with `status = 'processing'`, fetched from
   `/api/dashboard/jobs` (GET), rendered as a table with a "Submitted"
   date column.
